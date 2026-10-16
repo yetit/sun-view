@@ -1,34 +1,69 @@
-// Точка входа: город, данные, мир, воркер, затем панель и таймбар.
+// Точка входа: язык и подписи, город, данные → мир → воркер → карта; затем панель и таймбар.
 import { cities } from '../../cities.config.mjs';
-import { $, city, num, params, setWorld, startWorker, state } from './app.ts';
+import { $, $$, BASE, city, num, params, setWorld, startWorker, state } from './app.ts';
 import { hasData, loadCityData } from './data.ts';
 import { createWorld } from './grid.ts';
-import { bindBuildings, map } from './map/layers.ts';
+import { cityName, lang, langHref, t } from './i18n.ts';
+import { bindBuildings, map, mapReady } from './map/layers.ts';
 import { initPanel, select } from './ui/panel.ts';
-import { applyMode, initTimebar, updateLight } from './ui/timebar.ts';
+import { initSheet } from './ui/sheet.ts';
+import { applyMode, initTimebar, setPrecomputed, updateLight } from './ui/timebar.ts';
 
-document.title = `Sun & View — ${city.name}`;
-$('.brand span').textContent = city.name;
+// Статические подписи: data-i — текст, data-i-ph / -title / -aria — атрибуты.
+for (const el of $$('[data-i]')) el.textContent = (t as any)[el.dataset.i!];
+for (const el of $$('[data-i-ph]')) el.setAttribute('placeholder', (t as any)[el.dataset.iPh!]);
+for (const el of $$('[data-i-title]')) el.title = (t as any)[el.dataset.iTitle!];
+for (const el of $$('[data-i-aria]')) el.setAttribute('aria-label', (t as any)[el.dataset.iAria!]);
+$('.about2').innerHTML = t.about2(`${BASE}method${lang === 'en' ? '?lang=en' : ''}`);
+$('.compare thead tr').innerHTML = t.compareHead.map((h) => `<th>${h}</th>`).join('');
+const langLink = $<HTMLAnchorElement>('.lang');
+langLink.textContent = t.langSwitch;
+langLink.title = t.langSwitchTitle;
+langLink.href = langHref(lang === 'en' ? 'ru' : 'en');
+
+document.title = `Sun & View — ${cityName(city)}`;
 const citySel = $<HTMLSelectElement>('.city');
-citySel.innerHTML = cities.filter((c) => hasData(c.id)).map((c) => `<option value="${c.id}"${c.id === city.id ? ' selected' : ''}>${c.name}</option>`).join('');
-citySel.addEventListener('change', () => (location.search = `?c=${citySel.value}`));
+citySel.innerHTML = cities.filter((c) => hasData(c.id)).map((c) => `<option value="${c.id}"${c.id === city.id ? ' selected' : ''}>${cityName(c)}</option>`).join('');
+citySel.addEventListener('change', () => { const u = new URL(location.href); u.search = `?c=${citySel.value}${params.get('lang') ? `&lang=${lang}` : ''}`; location.href = u.href; });
+initSheet();
 
+// Загрузка по этапам: отмечаем пройденные в списке.
+const stages = $('.stages');
+stages.innerHTML = t.stages.map((s) => `<li>${s}</li>`).join('');
+const stage = (i: number) => [...stages.children].forEach((li, j) => li.className = j < i ? 'done' : j === i ? 'active' : '');
+const timing: Record<string, number> = {};
+const t0 = performance.now();
+const mark = (k: string) => (timing[k] = Math.round(performance.now() - t0));
+
+stage(0);
 const data = await loadCityData(city.id);
+mark('data');
+stage(1);
+await new Promise((r) => setTimeout(r)); // дать отрисоваться этапу
 const world = createWorld(city, data.geojson, data.greenery, data.demMeta, data.demBuf);
 setWorld(world, data.geojson);
-if (import.meta.env.DEV) Object.assign(window, { map, world }); // для проверки из консоли
+setPrecomputed(data.precomputed);
+mark('world');
 (data.geojson.features as any[]).forEach((f, i) => { f.properties.h = world.blds[i].h; f.properties.assumed = world.blds[i].assumed; });
-startWorker({ city, geojson: data.geojson, greenery: data.greenery, demMeta: data.demMeta, demBuf: data.demBuf });
+stage(2);
+await startWorker({ city, geojson: data.geojson, greenery: data.greenery, demMeta: data.demMeta, demBuf: data.demBuf });
+mark('worker');
+stage(3);
+await mapReady;
+mark('map');
+if (import.meta.env.DEV) Object.assign(window, { map, world, timing }); // для проверки и замеров из консоли
 
 initTimebar();
 initPanel();
-
-map.once('load', () => {
-  bindBuildings(select);
-  $('.hint').textContent = `${world.blds.length} зданий, у ${world.blds.filter((b) => !b.assumed).length} известна этажность`;
-  $<HTMLButtonElement>('.example').disabled = false;
-  updateLight();
-  applyMode();
-  const b = world.blds.find((x) => x.id === num(params.get('b'), -1));
-  if (b) select(b, { floor: num(params.get('f'), 0) || undefined, side: state.side });
-});
+bindBuildings(select);
+const known = world.blds.filter((b) => !b.assumed).length;
+$('.hint').textContent = t.count(world.blds.length, known);
+$('.accuracy').textContent = t.accuracy(Math.round((100 * known) / world.blds.length));
+$('.loading').hidden = true;
+$('.empty').hidden = false;
+updateLight();
+await applyMode();
+mark('painted');
+map.on('moveend', () => !state.current && updateLight()); // тени вокруг центра карты
+const b = world.blds.find((x) => x.id === num(params.get('b'), -1));
+if (b) select(b, { floor: num(params.get('f'), 0) || undefined, side: state.side, floors: state.floorsOverride });

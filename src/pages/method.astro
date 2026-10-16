@@ -1,75 +1,106 @@
 ---
 import '@fontsource-variable/inter';
 import '../styles/global.css';
+import Meta from '../components/Meta.astro';
 import { cities } from '../../cities.config.mjs';
 const base = import.meta.env.BASE_URL;
+const repo = 'https://github.com/yetit/sun-view';
 ---
 
 <!doctype html>
 <html lang="ru">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Как считается — Sun & View</title>
-    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    <Meta title="How it works — Sun & View" description="Ray-marching sunlight and sea views over a terrain grid and a roof raster, in the browser, from OpenStreetMap and Copernicus DEM. · Как Sun & View считает солнце и вид на море." />
+    <script is:inline>
+      // Тот же выбор языка, что в приложении: ?lang=, иначе язык браузера.
+      const q = new URL(location.href).searchParams.get('lang');
+      document.documentElement.lang = q === 'en' || q === 'ru' ? q : navigator.language.toLowerCase().startsWith('ru') ? 'ru' : 'en';
+    </script>
   </head>
   <body class="doc">
     <main class="doc-main">
-      <p><a href={base}>← к карте</a></p>
-      <h1>Как считается</h1>
-      <p class="lead">Всё происходит в браузере на открытых данных: контуры зданий из OpenStreetMap, рельеф Copernicus DEM GLO-30, положение солнца по suncalc. Никаких серверов и ключей.</p>
+      <p class="doc-nav">
+        <a lang="ru" href={`${base}?lang=ru`}>← к карте</a><a lang="en" href={`${base}?lang=en`}>← back to the map</a>
+        <span><a lang="ru" href="?lang=en">EN</a><a lang="en" href="?lang=ru">RU</a></span>
+      </p>
 
-      <h2>1. Мир в метрах</h2>
-      <p>Город переводится в локальную систему: метры на восток и север от центра, высота над морем. Два растра: <b>рельеф</b> с шагом около 60 м (Copernicus 1″, прорежен до 2″) и <b>крыши</b> с шагом 6 м — абсолютная отметка верха каждого здания (высота из OSM, иначе этажи × 3 м, иначе 2 этажа) и деревьев (леса и парки OSM, 10 м над землёй).</p>
+      <h1><span lang="ru">Как считается</span><span lang="en">How it works</span></h1>
+      <p class="lead" lang="ru">Всё происходит в браузере на открытых данных: контуры зданий из OpenStreetMap, рельеф Copernicus DEM GLO-30, положение солнца по suncalc. Никаких серверов и ключей.</p>
+      <p class="lead" lang="en">Everything runs in your browser on open data: building footprints from OpenStreetMap, terrain from Copernicus DEM GLO-30, sun position from suncalc. No servers, no API keys.</p>
+
+      <h2><span lang="ru">1. Мир в метрах</span><span lang="en">1. A world in metres</span></h2>
+      <p lang="ru">Город переводится в локальную систему: метры на восток и север от центра, высота над морем. Два растра: <b>рельеф</b> с шагом около 60 м (Copernicus 1″, прорежен до 2″, примерно 15 км вокруг города) и <b>крыши</b> с шагом 6 м — абсолютная отметка верха каждого здания (высота из OSM, иначе этажи × 3 м, иначе 2 этажа) и деревьев (леса и парки OSM, 10 м над землёй).</p>
+      <p lang="en">The city is projected to a local frame: metres east and north of the centre, height above sea level. Two rasters: <b>terrain</b> at about 60 m (Copernicus 1″ resampled to 2″, roughly 15 km around the city) and <b>roofs</b> at 6 m, holding the absolute top of every building (OSM height, else floors × 3 m, else 2 floors) and of trees (OSM woods and parks, 10 m above ground).</p>
       <figure>
-        <svg viewBox="0 0 640 200" class="fig" aria-label="Два растра: рельеф и крыши">
+        <svg viewBox="0 0 640 200" class="fig" role="img" aria-label="Terrain grid and roof raster">
           <defs><pattern id="g6" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M12 0H0V12" fill="none" stroke="#d9d2c5" stroke-width="0.7"/></pattern></defs>
           <path d="M0 160 Q120 90 220 130 T420 110 T640 150 V200 H0Z" fill="#e6dfd0"/>
           <path d="M0 160 Q120 90 220 130 T420 110 T640 150" fill="none" stroke="#7a6a52" stroke-width="2" stroke-dasharray="4 4"/>
           <rect x="240" y="60" width="140" height="80" fill="url(#g6)" stroke="#b7ab97"/>
           <rect x="262" y="92" width="26" height="40" fill="#ffb703"/><rect x="300" y="78" width="40" height="54" fill="#b7ab97"/><rect x="350" y="100" width="18" height="32" fill="#6cc4a1"/>
-          <text x="30" y="60" class="cap">рельеф, ячейка 60 м</text><text x="400" y="55" class="cap">крыши и деревья, ячейка 6 м</text>
+          <text x="30" y="60" class="cap" lang="ru">рельеф, ячейка 60 м</text><text x="30" y="60" class="cap" lang="en">terrain, 60 m cell</text>
+          <text x="400" y="55" class="cap" lang="ru">крыши и деревья, ячейка 6 м</text><text x="400" y="55" class="cap" lang="en">roofs and trees, 6 m cell</text>
         </svg>
       </figure>
 
-      <h2>2. Солнце в окнах</h2>
-      <p>Для выбранного дня каждые 10 минут берём положение солнца (азимут и высоту) и пускаем из окна луч в его сторону. Окно — середина этажа; если выбрана сторона, окно стоит на стене этого румба и видит солнце только из своей полусферы. Луч идёт шагами по 3 м до 1 км (проверяем крыши, деревья и рельеф), дальше по 30 м до 15 км (только рельеф). Упёрся — тень. Часы солнца = доля освещённых отсчётов; «из N часов» — время, когда солнце вообще над горизонтом (для стороны — перед фасадом).</p>
+      <h2><span lang="ru">2. Солнце в окнах</span><span lang="en">2. Sun in the windows</span></h2>
+      <p lang="ru">Для выбранного дня каждые 10 минут берём положение солнца (азимут и высоту) и пускаем из окна луч в его сторону. Окно — середина этажа; если выбрана сторона, окно стоит на стене этого направления и видит солнце только из своей полусферы. Луч идёт шагами по 3 м до 1 км (крыши, деревья, рельеф), дальше по 30 м до 15 км (только рельеф). Упёрся — тень. Часы солнца = доля освещённых отсчётов; «из N часов» — время, когда солнце вообще над горизонтом (для стороны — перед фасадом). Карты «солнце» и «море» для всех зданий считаются заранее скриптом и лежат рядом с данными; если их нет — считает Web Worker.</p>
+      <p lang="en">For the chosen day, every 10 minutes we take the sun's azimuth and altitude and march a ray from the window toward it. The window sits at mid-floor height; if a side is chosen, it sits on that wall and only sees the sun in front of it. The ray steps 3 m up to 1 km (roofs, trees, terrain), then 30 m up to 15 km (terrain only). A hit means shade. Sun hours are the share of lit samples; "of N h" is the time the sun is above the horizon (for a side, in front of the facade). The citywide sun and sea maps are precomputed by a script and shipped with the data; without them a Web Worker computes them on the fly.</p>
       <figure>
-        <svg viewBox="0 0 640 220" class="fig" aria-label="Луч от окна к солнцу над рельефом и соседним зданием">
+        <svg viewBox="0 0 640 220" class="fig" role="img" aria-label="Ray from a window toward the sun">
           <path d="M0 180 Q200 170 330 120 T640 60 V220 H0Z" fill="#e6dfd0"/>
           <rect x="60" y="100" width="70" height="80" fill="#efe2cd" stroke="#b7ab97"/><rect x="60" y="130" width="70" height="12" fill="#ff7a1a"/>
           <rect x="210" y="120" width="50" height="55" fill="#b7ab97"/>
           <circle cx="600" cy="40" r="14" fill="#ffb703"/>
           <path d="M130 136 L600 40" stroke="#ffb703" stroke-width="3" stroke-linecap="round"/>
           <path d="M130 136 L260 110" stroke="#8c8c8c" stroke-width="3" stroke-dasharray="6 5"/>
-          <text x="70" y="90" class="cap">окно на этаже</text><text x="150" y="205" class="cap">вечернее солнце ниже — луч упрётся в соседа или в гору</text>
+          <text x="70" y="90" class="cap" lang="ru">окно на этаже</text><text x="70" y="90" class="cap" lang="en">window on a floor</text>
+          <text x="150" y="205" class="cap" lang="ru">вечернее солнце ниже — луч упрётся в соседа или в гору</text><text x="150" y="205" class="cap" lang="en">a lower evening sun: the ray hits a neighbour or a hill</text>
         </svg>
       </figure>
 
-      <h2>3. Вид на море</h2>
-      <p>По каждому из восьми румбов луч идёт с уровня окна на своей стене, держа максимальный угол места препятствий. Ячейка моря (0 м по береговой линии OSM) видна, если угол на неё выше всех препятствий до неё — так дальняя вода видна поверх низкого берега. Результат — расстояние до первой видимой воды.</p>
+      <h2><span lang="ru">3. Вид на море</span><span lang="en">3. Sea view</span></h2>
+      <p lang="ru">По каждому из восьми направлений луч идёт с уровня окна на своей стене, держа максимальный угол места препятствий. Ячейка моря (0 м по береговой линии OSM) видна, если угол на неё выше всех препятствий до неё — так дальняя вода видна поверх низкого берега. Результат — расстояние до первой видимой воды.</p>
+      <p lang="en">Along each of eight directions a ray leaves the window on that wall and keeps the highest elevation angle of anything in the way. A sea cell (0 m, from the OSM coastline) is visible if the angle to it beats every obstacle before it, so distant water shows over a low shore. The result is the distance to the first visible water.</p>
       <figure>
-        <svg viewBox="0 0 640 200" class="fig" aria-label="Угол на препятствие и на воду">
+        <svg viewBox="0 0 640 200" class="fig" role="img" aria-label="Angle to an obstacle versus angle to the water">
           <rect x="0" y="150" width="640" height="50" fill="#e6dfd0"/><rect x="430" y="150" width="210" height="50" fill="#7fb0d2"/>
           <rect x="40" y="70" width="60" height="80" fill="#efe2cd" stroke="#b7ab97"/><rect x="40" y="96" width="60" height="10" fill="#ff7a1a"/>
           <rect x="200" y="120" width="40" height="30" fill="#b7ab97"/>
           <path d="M100 100 L240 120" stroke="#d9534f" stroke-width="2"/><path d="M100 100 L520 150" stroke="#1a9c6b" stroke-width="3"/>
-          <text x="250" y="112" class="cap">угол на крышу</text><text x="470" y="140" class="cap">угол на воду выше — море видно</text>
+          <text x="250" y="112" class="cap" lang="ru">угол на крышу</text><text x="250" y="112" class="cap" lang="en">angle to the roof</text>
+          <text x="450" y="140" class="cap" lang="ru">угол на воду выше — море видно</text><text x="450" y="140" class="cap" lang="en">water angle is higher: sea visible</text>
         </svg>
       </figure>
 
-      <h2>4. Что упрощено</h2>
-      <ul>
-        <li>Copernicus — модель поверхности: в ячейках есть крыши и кроны. Под зданиями DSM сглажен минимумом соседей, у набережной ячейки моря в отметку земли не берутся. Для точной земли нужен DTM (например, FABDEM, лицензия CC BY-NC-SA).</li>
-        <li>Шаг рельефа 60 м: гребни и узкие проходы могут быть сглажены. За пределами сетки луч считается свободным.</li>
-        <li>Деревья — леса и парки OSM одной высотой; отдельные деревья и живые изгороди не учитываются.</li>
-        <li>Этажность известна не у всех зданий; остальным даётся 2 этажа, на карте они светлее.</li>
-        <li>Отражения, остекление, глубина лоджий не моделируются: «солнце в окне» значит «прямая видимость солнца из точки окна».</li>
-        <li>Цифры не сверялись с натурными наблюдениями; ядро проверяется синтетическими тестами.</li>
+      <h2><span lang="ru">4. Проверка</span><span lang="en">4. Validation</span></h2>
+      <p lang="ru">Горизонт по рельефу сверен с профилем <a href="https://re.jrc.ec.europa.eu/pvg_tools/en/">PVGIS</a> (Еврокомиссия, JRC) в 16 точках Тивата и Котора по 48 азимутам. На ровных местах у моря расхождение в среднем 0,2–0,3°, зимний восход 21 декабря совпадает до минуты. На крутых склонах расходится сама отметка земли (до 20–70 м между источниками), и восход может уехать на час и больше — для домов на склонах результат со стороны склона ненадёжен. <a href={`${repo}/blob/main/docs/horizon-check.md`}>Полный отчёт</a>.</p>
+      <p lang="en">The terrain horizon was checked against <a href="https://re.jrc.ec.europa.eu/pvg_tools/en/">PVGIS</a> (European Commission JRC) at 16 points in Tivat and Kotor, 48 azimuths each. On flat ground by the sea the mean difference is 0.2–0.3° and the 21 December sunrise matches within a minute. On steep slopes the ground elevation itself differs between sources by 20–70 m and sunrise can shift by an hour or more, so results for hillside buildings on the uphill side are unreliable. <a href={`${repo}/blob/main/docs/horizon-check.md`}>Full report (Russian)</a>.</p>
+
+      <h2><span lang="ru">5. Что упрощено</span><span lang="en">5. Simplifications</span></h2>
+      <ul lang="ru">
+        <li>Copernicus — модель поверхности: в ячейках есть крыши и кроны. Под зданиями DSM сглажен минимумом соседей. Для точной земли нужен DTM (например, FABDEM, лицензия CC BY-NC-SA).</li>
+        <li>Шаг рельефа 60 м: гребни и узкие проходы сглажены, на склонах отметка дома может ошибаться на десятки метров.</li>
+        <li>Деревья — леса и парки OSM одной высотой; отдельные деревья не учитываются.</li>
+        <li>Этажность в OSM известна примерно у 14 % зданий Тивата и 3 % Котора; остальным даётся 2 этажа (на карте они полупрозрачные), этажность можно уточнить в панели.</li>
+        <li>Отражения, остекление, глубина лоджий не моделируются: «солнце в окне» значит прямую видимость солнца из точки окна.</li>
+        <li>Тени на карте — иллюстрация (проекция контура на ровную землю); часы солнца считаются лучами.</li>
+      </ul>
+      <ul lang="en">
+        <li>Copernicus is a surface model: cells include roofs and canopies. Under buildings the DSM is flattened to the minimum of its neighbours. Exact ground needs a DTM (e.g. FABDEM, CC BY-NC-SA).</li>
+        <li>The 60 m terrain grid smooths ridges and gaps; on slopes a building's ground can be off by tens of metres.</li>
+        <li>Trees are OSM woods and parks at one height; single trees are ignored.</li>
+        <li>OSM has floor counts for about 14% of buildings in Tivat and 3% in Kotor; the rest get 2 floors (shown semi-transparent), and you can correct it in the panel.</li>
+        <li>Reflections, glazing and balcony depth are not modelled: "sun in the window" means a direct line of sight to the sun from the window point.</li>
+        <li>Shadows on the map are an illustration (footprints projected on flat ground); sun hours come from the rays.</li>
       </ul>
 
-      <h2>Города</h2>
-      <p>{cities.map((c) => <a href={`${base}?c=${c.id}`}>{c.name}</a>).reduce((a, b) => [a, ' · ', b])}. Добавить город — один объект в <code>cities.config.mjs</code> и <code>npm run fetch -- id</code>.</p>
+      <h2><span lang="ru">Города</span><span lang="en">Cities</span></h2>
+      <p>
+        {cities.map((c, i) => <>{i > 0 && ' · '}<a href={`${base}?c=${c.id}`}><span lang="ru">{c.name}</span><span lang="en">{c.nameEn}</span></a></>)}
+      </p>
+      <p lang="ru">Добавить город — один объект в <code>cities.config.mjs</code> и <code>npm run fetch -- id</code>. Исходники: <a href={repo}>GitHub</a>.</p>
+      <p lang="en">To add a city, describe it in <code>cities.config.mjs</code> and run <code>npm run fetch -- id</code>. Source: <a href={repo}>GitHub</a>.</p>
     </main>
   </body>
 </html>

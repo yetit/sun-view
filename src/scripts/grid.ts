@@ -4,12 +4,14 @@
 export type City = {
   id: string;
   name: string;
+  nameEn?: string;
   bbox: { south: number; west: number; north: number; east: number };
   dem: { bbox: { south: number; west: number; north: number; east: number }; step: number };
   camera: { center: [number, number]; zoom: number; pitch: number; bearing: number };
   timezone: string;
   floorHeight: number;
   treeHeight: number;
+  examples?: { b: number; f: number; d: number | null; s: number; ru: string; en: string }[];
 };
 
 export type Proj = { toXY: (lon: number, lat: number) => [number, number]; toLonLat: (x: number, y: number) => [number, number]; mLat: number; mLon: number };
@@ -44,6 +46,7 @@ export function groundAt(dem: Dem, lon: number, lat: number): number {
 export type Bld = {
   idx: number;
   id: number;
+  osmType: 'way' | 'relation'; // мультиполигоны в buildings.json — из relation
   name: string | null;
   levels: number | null;
   height: number | null;
@@ -70,7 +73,7 @@ export function prepareBuildings(city: City, geojson: any, dem: Dem, proj: Proj)
     const { levels, height } = f.properties;
     const floors = levels ?? (height ? Math.max(1, Math.round(height / city.floorHeight)) : DEFAULT_FLOORS);
     return {
-      idx, id: f.properties.id, name: f.properties.name, levels, height, floors, assumed: levels == null && height == null,
+      idx, id: f.properties.id, osmType: f.geometry.type === 'MultiPolygon' ? 'relation' : 'way', name: f.properties.name, levels, height, floors, assumed: levels == null && height == null,
       h: height ?? floors * city.floorHeight, ground: groundAt(dem, center[0], center[1]), center, xy,
       radius: Math.max(...pts.map((p) => Math.hypot(p[0] - xy[0], p[1] - xy[1]))), rings,
     };

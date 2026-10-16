@@ -2,6 +2,7 @@
 import { Map, NavigationControl, setWorkerUrl } from 'maplibre-gl';
 import { dayPath, eye, SEASONS, STEP_MIN, type SeaDir } from '../analysis.ts';
 import { BASE, city, fmtH, geojson, state, world } from '../app.ts';
+import { t } from '../i18n.ts';
 import type { Bld } from '../grid.ts';
 import { buildingColor, style } from '../style.ts';
 
@@ -11,6 +12,9 @@ const R_PATH = 220; // м, радиус солнечной диаграммы в
 setWorkerUrl(`${BASE}maplibre/maplibre-gl-worker.mjs`);
 export const map = new Map({ container: 'map', style, ...city.camera, maxPitch: 75, attributionControl: { compact: true } });
 map.addControl(new NavigationControl({ visualizePitch: true }), 'top-left');
+// Событие load может прийти раньше, чем загрузятся данные, — ловим его сразу.
+export const mapReady = new Promise<void>((r) => map.once('load', () => r()));
+const BUILDING_LAYERS = ['buildings', 'buildings-assumed'];
 
 // Точка на расстоянии dist (м) по азимуту bearing (рад) от lngLat.
 export function offset([lon, lat]: [number, number], bearing: number, dist: number): [number, number] {
@@ -19,22 +23,25 @@ export function offset([lon, lat]: [number, number], bearing: number, dist: numb
 // Положение солнца на наземной диаграмме: зенит — центр, горизонт — кольцо.
 export const pathPoint = (b: Bld, altitude: number, bearing: number) => offset(b.center, bearing, R_PATH * (1 - altitude / (Math.PI / 2)));
 export const setData = (id: string, features: any[]) => (map.getSource(id) as any).setData({ type: 'FeatureCollection', features });
-export const applyColors = () => map.setPaintProperty('buildings', 'fill-extrusion-color', buildingColor(state.mode, !!state.current) as any);
+export const applyColors = () => BUILDING_LAYERS.forEach((id) => map.setPaintProperty(id, 'fill-extrusion-color', buildingColor(state.mode, !!state.current) as any));
+
+// На телефоне карта под листом: центрируем выбранное в видимой части.
+export const sheetPadding = () => (matchMedia('(max-width: 720px)').matches ? { top: 40, bottom: document.querySelector<HTMLElement>('.panel')!.offsetHeight, left: 0, right: 0 } : { top: 0, bottom: 0, left: 0, right: 0 });
 
 // Здания: данные, клик и подсветка при наведении.
 export function bindBuildings(onSelect: (b: Bld) => void) {
   (map.getSource('buildings') as any).setData(geojson);
-  map.on('click', 'buildings', (e) => { const b = world.blds.find((x) => x.id === e.features![0].id); if (b) onSelect(b); });
+  map.on('click', BUILDING_LAYERS, (e) => { const b = world.blds.find((x) => x.id === e.features![0].id); if (b) onSelect(b); });
   let hovered: number | null = null;
   const unhover = () => hovered != null && map.setFeatureState({ source: 'buildings', id: hovered }, { hover: false });
-  map.on('mousemove', 'buildings', (e) => {
+  map.on('mousemove', BUILDING_LAYERS, (e) => {
     const id = e.features![0].id as number;
     if (id === hovered) return;
     unhover(); hovered = id;
     map.setFeatureState({ source: 'buildings', id }, { hover: true });
     map.getCanvas().style.cursor = 'pointer';
   });
-  map.on('mouseleave', 'buildings', () => { unhover(); hovered = null; map.getCanvas().style.cursor = ''; });
+  map.on('mouseleave', BUILDING_LAYERS, () => { unhover(); hovered = null; map.getCanvas().style.cursor = ''; });
 }
 
 export function drawFloor(b: Bld) {
@@ -44,14 +51,15 @@ export function drawFloor(b: Bld) {
 // Секторы на карте: зелёный тянется до воды (не дальше 1,2 км), красный — короткий.
 export function drawSectors(b: Bld, sea: SeaDir[]) {
   const features: any[] = [];
-  for (const { dir, bearing, dist } of sea) {
+  for (const [i, { bearing, dist }] of sea.entries()) {
+    const dir = t.dirs[i];
     const r = dist != null ? Math.min(dist, 1200) + 25 : 70;
     const ring: [number, number][] = [b.center];
     for (let a = bearing - Math.PI / 8; a <= bearing + Math.PI / 8 + 1e-9; a += Math.PI / 48) ring.push(offset(b.center, a, r));
     ring.push(b.center);
     const sea = dist != null;
     features.push({ type: 'Feature', properties: { sea }, geometry: { type: 'Polygon', coordinates: [ring] } });
-    features.push({ type: 'Feature', properties: { sea, label: sea ? `${dir}\n${fmtH.format(dist / 1000)} км` : dir }, geometry: { type: 'Point', coordinates: offset(b.center, bearing, 105) } });
+    features.push({ type: 'Feature', properties: { sea, label: sea ? `${dir}\n${fmtH.format(dist / 1000)} ${t.km}` : `${dir}\n—` }, geometry: { type: 'Point', coordinates: offset(b.center, bearing, 105) } });
   }
   setData('sectors', features);
 }

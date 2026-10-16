@@ -2,79 +2,92 @@
 import '@fontsource-variable/inter';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '../styles/global.css';
-const base = import.meta.env.BASE_URL;
+import Meta from '../components/Meta.astro';
 ---
 
 <!doctype html>
 <html lang="ru">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Sun & View — сколько солнца и видно ли море из окон любого здания: расчёт по открытым данным прямо в браузере." />
-    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
-    <title>Sun & View</title>
+    <Meta title="Sun & View" description="How many hours of sun reach each window, and can you see the sea? Click any building in Tivat or Kotor — computed in the browser from open data. · Сколько солнца в окнах и видно ли море: расчёт в браузере по открытым данным." />
   </head>
-  <body>
-    <div id="map" class="map" role="region" aria-label="3D-карта"></div>
-
-    <div class="timebar" role="group" aria-label="Время, сезон и режим карты">
-      <div class="chips">
-        <button class="chip" type="button" title="Весеннее равноденствие">Весна</button>
-        <button class="chip" type="button" title="Летнее солнцестояние">Лето</button>
-        <button class="chip" type="button" title="Осеннее равноденствие">Осень</button>
-        <button class="chip" type="button" title="Зимнее солнцестояние">Зима</button>
-      </div>
-      <label class="time"><button class="play" type="button" aria-pressed="false" title="Сутки (пробел)">▶</button><input class="hour" type="range" min="4" max="22" step="0.1667" value="10" aria-label="Время суток (стрелки ← →)" /><span class="clock">10:00</span></label>
-      <label class="mode-wrap">Карта <select class="mode" aria-label="Режим карты"><option value="normal">обычная</option><option value="sun">солнце</option><option value="sea">море</option></select></label>
-      <label class="floor-mode-wrap"><select class="floor-mode" aria-label="Этаж для карты"><option value="1">1-й этаж</option><option value="mid">средний этаж</option><option value="top">верхний этаж</option></select></label>
-      <span class="progress" aria-live="polite"></span>
-    </div>
-    <div class="legend-box" hidden><b class="legend-title"></b><i class="legend-bar"></i><span><small class="legend-min"></small><small class="legend-max"></small></span></div>
+  <body data-mode="sun" data-sheet="peek">
+    <div id="map" class="map" role="region" aria-label="3D map"></div>
+    <div class="legend-box" hidden><b class="legend-title"></b><i class="legend-bar"></i><span><small class="legend-min"></small><small class="legend-max"></small></span><small class="legend-assumed"></small></div>
 
     <aside class="panel">
-      <button class="sheet-handle" type="button" aria-label="Развернуть панель"></button>
-      <header class="brand"><h1>Sun &amp; View</h1><span></span><select class="city" aria-label="Город"></select></header>
-      <div class="search-wrap">
-        <input class="search" type="search" placeholder="Адрес или место…" autocomplete="off" aria-label="Поиск адреса" />
-        <div class="search-results" hidden></div>
+      <button class="sheet-handle" type="button" data-i-aria="expand" aria-expanded="false"></button>
+
+      <div class="timebar" role="group" aria-label="Time, season, map mode">
+        <div class="chips">
+          <button class="chip" type="button"></button><button class="chip" type="button"></button><button class="chip" type="button"></button><button class="chip" type="button"></button>
+        </div>
+        <label class="time"><button class="play" type="button" aria-pressed="false" data-i-title="play">▶</button><input class="hour" type="range" min="4" max="22" step="0.1667" value="11" data-i-aria="hourAria" /><span class="clock">11:00</span></label>
+        <div class="modes" role="radiogroup" data-i-aria="map">
+          <button class="mode-chip" type="button" role="radio" data-mode="normal"></button><button class="mode-chip" type="button" role="radio" data-mode="sun"></button><button class="mode-chip" type="button" role="radio" data-mode="sea"></button>
+          <select class="floor-mode" data-i-aria="floor"></select>
+        </div>
+        <span class="progress" aria-live="polite"></span>
       </div>
 
-      <div class="empty">
-        <svg class="empty-art" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="11" /><g stroke-width="3" stroke-linecap="round"><path d="M32 6v8M32 50v8M6 32h8M50 32h8M13.6 13.6l5.7 5.7M44.7 44.7l5.7 5.7M13.6 50.4l5.7-5.7M44.7 19.3l5.7-5.7" /></g></svg>
-        <p class="lead">Кликните здание на карте — покажем, сколько солнца в окнах на каждом этаже и видно ли море.</p>
-        <p class="hint">Загрузка данных…</p>
-        <button class="example" type="button" disabled>Показать на примере</button>
+      <header class="brand">
+        <h1>Sun &amp; View</h1>
+        <select class="city" data-i-aria="city"></select>
+        <a class="lang" href="?lang=en" hreflang="en">EN</a>
+      </header>
+      <p class="tagline" data-i="tagline"></p>
+      <div class="search-wrap">
+        <input class="search" type="search" data-i-ph="searchPh" data-i-aria="searchPh" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="search-results" />
+        <div class="search-results" id="search-results" role="listbox" hidden></div>
+      </div>
+
+      <div class="loading" aria-live="polite">
+        <ol class="stages"></ol>
+        <div class="skeleton" aria-hidden="true"><i class="sk-title"></i><i class="sk-line"></i><i class="sk-line short"></i><div class="sk-cards"><i></i><i></i><i></i><i></i></div><i class="sk-ribbon"></i></div>
+      </div>
+
+      <div class="empty" hidden>
+        <p class="lead" data-i="lead"></p>
+        <p class="accuracy"></p>
+        <div class="examples-box" hidden>
+          <h3 data-i="examples"></h3>
+          <div class="examples"></div>
+        </div>
+        <p class="hint"></p>
       </div>
 
       <div class="result" hidden>
         <h2 class="b-name"></h2>
         <p class="b-meta"></p>
-        <div class="floor-row"><label>Этаж <select class="floor"></select></label><span class="eye"></span></div>
-        <div class="sides-row"><span>Окна</span><div class="sides"></div></div>
+        <div class="assumed" hidden>
+          <p data-i="assumedNote"></p>
+          <div><input class="assumed-input" type="number" min="1" max="60" step="1" inputmode="numeric" data-i-aria="floor" /><button class="assumed-apply" type="button" data-i="assumedApply"></button></div>
+        </div>
+        <div class="floor-row"><label><span data-i="floor"></span> <select class="floor"></select></label><span class="eye"></span></div>
+        <div class="sides-row"><span data-i="windows"></span><div class="sides"></div></div>
         <p class="now"></p>
 
-        <h3>Солнце в окнах</h3>
+        <h3 data-i="sunTitle"></h3>
         <div class="seasons"></div>
-        <canvas class="ribbon" aria-label="Солнце в окнах по дням года и часам суток"></canvas>
-        <p class="legend">Год по горизонтали, сутки по вертикали (местное время): жёлтое — солнце в окнах, серое — закрыто рельефом, домами или с другой стороны дома, тёмное — ночь.</p>
+        <canvas class="ribbon" role="img" data-i-aria="ribbonLegend"></canvas>
+        <p class="legend" data-i="ribbonLegend"></p>
 
-        <h3>Вид на море</h3>
+        <h3 data-i="seaTitle"></h3>
         <div class="rose"></div>
-        <p class="legend">Луч с уровня окна на стене каждого румба: зелёный — до воды нет препятствий, в секторе — расстояние до неё. Клик по сектору выбирает сторону.</p>
+        <p class="legend" data-i="roseLegend"></p>
 
-        <div class="actions"><button class="pin-btn" type="button">+ В сравнение</button><button class="share-btn" type="button">Скачать PNG</button></div>
+        <div class="actions"><button class="pin-btn" type="button" data-i="addCompare"></button><button class="share-btn" type="button" data-i="downloadPng"></button></div>
       </div>
 
       <div class="compare" hidden>
-        <h3>Сравнение</h3>
-        <table><thead><tr><th>Квартира</th><th>Вес</th><th>Лет</th><th>Осн</th><th>Зим</th><th>Море</th><th></th></tr></thead><tbody class="compare-rows"></tbody></table>
-        <p class="legend">Часы солнца в окнах по сезонам и румбы с морем.</p>
+        <h3 data-i="compare"></h3>
+        <table><thead><tr></tr></thead><tbody class="compare-rows"></tbody></table>
+        <p class="legend" data-i="compareLegend"></p>
       </div>
 
       <details class="about">
-        <summary>Данные и метод</summary>
-        <p>Здания и зелень — © OpenStreetMap (ODbL). Рельеф — Copernicus DEM GLO-30, море — береговая линия OSM. Солнце — suncalc. Подложка — OpenFreeMap, Terrain Tiles. Поиск — Photon.</p>
-        <p>Для каждых 10 минут дня луч из окна идёт к солнцу по сетке рельефа и растру крыш и деревьев; для моря — по 8 румбам до первой видимой воды. Всё считается в браузере. <a href={`${base}method`}>Подробнее о методе →</a></p>
+        <summary data-i="aboutTitle"></summary>
+        <p data-i="about1"></p>
+        <p class="about2"></p>
       </details>
     </aside>
 

@@ -47,6 +47,7 @@ export const style: StyleSpecification = {
     sectors: empty(), // секторы видимости моря
     sunpath: empty(), // солнечная диаграмма вокруг здания
     sunnow: empty(), // солнце в момент ползунка
+    shadows: empty(), // тени выбранного здания и соседей на земле
   },
   terrain: { source: 'dem', exaggeration: 1 },
   light: { anchor: 'map', position: [1.5, 180, 40], intensity: 0.45 },
@@ -64,15 +65,24 @@ export const style: StyleSpecification = {
       paint: { 'line-color': '#fffdf8', 'line-width': ['interpolate', ['exponential', 1.6], ['zoom'], 11, 0.5, 16, 5] },
     },
     { id: 'sectors', type: 'fill', source: 'sectors', paint: { 'fill-color': ['case', ['get', 'sea'], COLORS.sea, COLORS.noSea], 'fill-opacity': ['case', ['get', 'sea'], 0.28, 0.22] } },
-    { id: 'sectors-line', type: 'line', source: 'sectors', paint: { 'line-color': ['case', ['get', 'sea'], COLORS.sea, COLORS.noSea], 'line-width': 1.2, 'line-opacity': 0.8 } },
+    { id: 'shadows', type: 'fill', source: 'shadows', paint: { 'fill-color': '#2b2a3a', 'fill-opacity': 0.22, 'fill-antialias': false } },
+    { id: 'sectors-line', type: 'line', source: 'sectors', filter: ['==', ['get', 'sea'], true], paint: { 'line-color': COLORS.sea, 'line-width': 1.4, 'line-opacity': 0.85 } },
+    // Без моря — пунктир: различимо и без цвета.
+    { id: 'sectors-line-no', type: 'line', source: 'sectors', filter: ['==', ['get', 'sea'], false], paint: { 'line-color': COLORS.noSea, 'line-width': 1.2, 'line-opacity': 0.8, 'line-dasharray': [2, 2] } },
     { id: 'sunpath-ring', type: 'line', source: 'sunpath', filter: ['==', ['get', 'kind'], 'ring'], paint: { 'line-color': '#7a6a52', 'line-width': 1, 'line-dasharray': [2, 2], 'line-opacity': 0.6 } },
     {
       id: 'sunpath', type: 'line', source: 'sunpath', filter: ['==', ['get', 'kind'], 'path'], layout: { 'line-cap': 'round' },
       paint: { 'line-color': ['match', ['get', 'state'], 'lit', COLORS.lit, 'shade', COLORS.shade, '#cfc7ba'], 'line-width': ['match', ['get', 'state'], 'back', 2, 4] },
     },
+    // Этажность известна — плотные объёмы; предположена — полупрозрачные (opacity не зависит от данных,
+    // поэтому два слоя с фильтром).
     {
-      id: 'buildings', type: 'fill-extrusion', source: 'buildings',
+      id: 'buildings', type: 'fill-extrusion', source: 'buildings', filter: ['!=', ['get', 'assumed'], true],
       paint: { 'fill-extrusion-color': buildingColor('normal', false) as any, 'fill-extrusion-height': ['get', 'h'], 'fill-extrusion-opacity': 0.95 },
+    },
+    {
+      id: 'buildings-assumed', type: 'fill-extrusion', source: 'buildings', filter: ['==', ['get', 'assumed'], true],
+      paint: { 'fill-extrusion-color': buildingColor('normal', false) as any, 'fill-extrusion-height': ['get', 'h'], 'fill-extrusion-opacity': 0.55 },
     },
     {
       id: 'floor', type: 'fill-extrusion', source: 'floor',

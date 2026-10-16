@@ -6,13 +6,13 @@ let w: World;
 const CHUNK = 150;
 
 export type Req =
-  | { type: 'init'; city: any; geojson: any; greenery: any; demMeta: any; demBuf: ArrayBuffer }
+  | { type: 'init'; id: number; city: any; geojson: any; greenery: any; demMeta: any; demBuf: ArrayBuffer }
   | { type: 'sun'; id: number; season: number; mode: FloorMode }
   | { type: 'sea'; id: number; mode: FloorMode }
   | { type: 'ribbon'; id: number; idx: number; floor: number; side: number | null };
 
 self.onmessage = async ({ data: m }: MessageEvent<Req>) => {
-  if (m.type === 'init') { w = createWorld(m.city, m.geojson, m.greenery, m.demMeta, m.demBuf); return; }
+  if (m.type === 'init') { w = createWorld(m.city, m.geojson, m.greenery, m.demMeta, m.demBuf); self.postMessage({ id: m.id, done: true }); return; }
   if (m.type === 'ribbon') {
     const r = yearRibbon(w, w.blds[m.idx], eye(w, w.blds[m.idx], m.floor, m.side));
     self.postMessage({ id: m.id, done: true, ...r }, { transfer: [r.data.buffer] });
