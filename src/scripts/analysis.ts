@@ -1,50 +1,76 @@
-// Расчёт для выбранного здания и этажа: часы солнца по сезонам и видимость моря по 8 румбам.
+// Расчёт для здания и этажа: траектория солнца за сутки, часы солнца по сезонам,
+// лента года (день × час), видимость моря по 8 румбам.
 import SunCalc from 'suncalc';
 import city from '../../city.config.mjs';
 import { blocked, seaVisible, toXY, type Bld, type World } from './grid';
 
-const STEP_MIN = 10;
-const year = new Date().getUTCFullYear();
+export const STEP_MIN = 10;
+export const N = (24 * 60) / STEP_MIN; // отсчётов в сутках
+export const YEAR = new Date().getUTCFullYear();
 export const SEASONS = [
-  { name: 'Весеннее равноденствие', date: new Date(Date.UTC(year, 2, 20)) },
-  { name: 'Летнее солнцестояние', date: new Date(Date.UTC(year, 5, 21)) },
-  { name: 'Осеннее равноденствие', date: new Date(Date.UTC(year, 8, 22)) },
-  { name: 'Зимнее солнцестояние', date: new Date(Date.UTC(year, 11, 21)) },
+  { name: 'Весеннее равноденствие', short: 'Весна', date: new Date(Date.UTC(YEAR, 2, 20)) },
+  { name: 'Летнее солнцестояние', short: 'Лето', date: new Date(Date.UTC(YEAR, 5, 21)) },
+  { name: 'Осеннее равноденствие', short: 'Осень', date: new Date(Date.UTC(YEAR, 8, 22)) },
+  { name: 'Зимнее солнцестояние', short: 'Зима', date: new Date(Date.UTC(YEAR, 11, 21)) },
 ];
 export const DIRECTIONS = ['С', 'СВ', 'В', 'ЮВ', 'Ю', 'ЮЗ', 'З', 'СЗ'];
 
-export type Season = { name: string; sun: number; daylight: number; samples: Uint8Array; sunrise: Date | null; sunset: Date | null };
-export type Result = { eyeZ: number; seasons: Season[]; sea: { dir: string; dist: number | null }[] };
+export type Sun = { altitude: number; bearing: number }; // рад; bearing — от севера по часовой
 
-// Окно на середине высоты этажа.
-export function eyeHeight(b: Bld, floor: number) {
-  return b.ground + (floor - 0.5) * city.floorHeight;
+// suncalc считает азимут от юга к западу; переводим в компасный.
+export function sunAt(t: Date, lon: number, lat: number): Sun {
+  const p = SunCalc.getPosition(t, lat, lon);
+  return { altitude: p.altitude, bearing: p.azimuth + Math.PI };
 }
 
-export function analyze(w: World, b: Bld, floor: number): Result {
+// Окно на середине высоты этажа.
+export const eyeHeight = (b: Bld, floor: number) => b.ground + (floor - 0.5) * city.floorHeight;
+
+export type Sample = Sun & { t: Date; lit: boolean };
+
+// Солнце над горизонтом за сутки (UTC) с шагом 10 минут и признак «не закрыто».
+export function dayPath(w: World, b: Bld, floor: number, date: Date): Sample[] {
   const [x, y] = toXY(...b.center);
   const z = eyeHeight(b, floor);
-  const [lon, lat] = b.center;
+  const out: Sample[] = [];
+  for (let i = 0; i < N; i++) {
+    const t = new Date(date.getTime() + i * STEP_MIN * 60000);
+    const s = sunAt(t, b.center[0], b.center[1]);
+    if (s.altitude <= 0) continue;
+    out.push({ ...s, t, lit: !blocked(w, b, x, y, z, s.bearing, s.altitude) });
+  }
+  return out;
+}
 
-  const seasons = SEASONS.map(({ name, date }) => {
-    const n = (24 * 60) / STEP_MIN;
-    const samples = new Uint8Array(n); // 0 ночь, 1 тень, 2 солнце
-    let sun = 0, daylight = 0;
-    let sunrise: Date | null = null, sunset: Date | null = null;
-    for (let i = 0; i < n; i++) {
-      const t = new Date(date.getTime() + i * STEP_MIN * 60000);
-      const { altitude, azimuth } = SunCalc.getPosition(t, lat, lon);
-      if (altitude <= 0) continue;
-      daylight++;
-      sunrise ??= t;
-      sunset = t;
-      // suncalc: азимут от юга к западу; нам нужен от севера по часовой.
-      samples[i] = blocked(w, b, x, y, z, azimuth + Math.PI, altitude) ? 1 : 2;
-      if (samples[i] === 2) sun++;
+export type Season = { name: string; short: string; sun: number; daylight: number; sunrise: Date | null; sunset: Date | null };
+
+export function seasonCalc(w: World, b: Bld, floor: number, i: number): Season {
+  const path = dayPath(w, b, floor, SEASONS[i].date);
+  const lit = path.filter((s) => s.lit).length;
+  return { ...SEASONS[i], sun: (lit * STEP_MIN) / 60, daylight: (path.length * STEP_MIN) / 60, sunrise: path[0]?.t ?? null, sunset: path.at(-1)?.t ?? null };
+}
+
+// Лента года: столбец — каждый 5-й день, строка — 10 минут суток (UTC). 0 ночь, 1 тень, 2 солнце.
+export const RIBBON_DAY_STEP = 5;
+export function yearRibbon(w: World, b: Bld, floor: number) {
+  const [x, y] = toXY(...b.center);
+  const z = eyeHeight(b, floor);
+  const cols = Math.ceil(365 / RIBBON_DAY_STEP);
+  const data = new Uint8Array(cols * N);
+  for (let c = 0; c < cols; c++) {
+    const day = Date.UTC(YEAR, 0, 1 + c * RIBBON_DAY_STEP);
+    for (let i = 0; i < N; i++) {
+      const s = sunAt(new Date(day + i * STEP_MIN * 60000), b.center[0], b.center[1]);
+      if (s.altitude <= 0) continue;
+      data[i * cols + c] = blocked(w, b, x, y, z, s.bearing, s.altitude) ? 1 : 2;
     }
-    return { name, sun: (sun * STEP_MIN) / 60, daylight: (daylight * STEP_MIN) / 60, samples, sunrise, sunset };
-  });
+  }
+  return { cols, rows: N, data };
+}
 
-  const sea = DIRECTIONS.map((dir, i) => ({ dir, dist: seaVisible(w, b, x, y, z, (i * Math.PI) / 4) }));
-  return { eyeZ: z, seasons, sea };
+export type SeaDir = { dir: string; bearing: number; dist: number | null };
+export function seaRose(w: World, b: Bld, floor: number): SeaDir[] {
+  const [x, y] = toXY(...b.center);
+  const z = eyeHeight(b, floor);
+  return DIRECTIONS.map((dir, i) => ({ dir, bearing: (i * Math.PI) / 4, dist: seaVisible(w, b, x, y, z, (i * Math.PI) / 4) }));
 }

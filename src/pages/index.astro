@@ -1,4 +1,5 @@
 ---
+import '@fontsource-variable/inter';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '../styles/global.css';
 import city from '../../city.config.mjs';
@@ -9,34 +10,56 @@ import city from '../../city.config.mjs';
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={`Sun & View — сколько солнца и виден ли море из окон любого здания ${city.name}: расчёт по открытым данным прямо в браузере.`} />
+    <meta name="description" content={`Sun & View — сколько солнца и видно ли море из окон любого здания: ${city.name}, расчёт по открытым данным прямо в браузере.`} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Sun & View — {city.name}</title>
   </head>
   <body>
     <div id="map" class="map" role="region" aria-label={`3D-карта: ${city.name}`}></div>
 
+    <div class="timebar" role="group" aria-label="Время и сезон">
+      <div class="chips">
+        <button class="chip" type="button" title="Весеннее равноденствие">Весна</button>
+        <button class="chip active" type="button" title="Летнее солнцестояние">Лето</button>
+        <button class="chip" type="button" title="Осеннее равноденствие">Осень</button>
+        <button class="chip" type="button" title="Зимнее солнцестояние">Зима</button>
+      </div>
+      <label class="time"><input class="hour" type="range" min="4" max="22" step="0.1667" value="10" aria-label="Время суток" /><span class="clock">10:00</span></label>
+      <button class="sunmap-btn" type="button" aria-pressed="false">Карта солнца</button>
+      <span class="progress" aria-live="polite"></span>
+    </div>
+
     <aside class="panel">
-      <h1>Sun &amp; View <small>{city.name}</small></h1>
-      <p class="hint">Загрузка данных…</p>
+      <header class="brand"><h1>Sun &amp; View</h1><span>{city.name}</span></header>
+
+      <div class="empty">
+        <svg class="empty-art" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="11" /><g stroke-width="3" stroke-linecap="round"><path d="M32 6v8M32 50v8M6 32h8M50 32h8M13.6 13.6l5.7 5.7M44.7 44.7l5.7 5.7M13.6 50.4l5.7-5.7M44.7 19.3l5.7-5.7" /></g></svg>
+        <p class="lead">Кликните здание на карте — покажем, сколько солнца в окнах на каждом этаже и видно ли море.</p>
+        <p class="hint">Загрузка данных…</p>
+        <button class="example" type="button" disabled>Показать на примере</button>
+      </div>
 
       <div class="result" hidden>
         <h2 class="b-name"></h2>
         <p class="b-meta"></p>
-        <label class="floor-row">Этаж <select class="floor"></select> <span class="eye"></span></label>
+        <div class="floor-row"><label>Этаж <select class="floor"></select></label><span class="eye"></span></div>
+        <p class="now"></p>
 
         <h3>Солнце в окнах</h3>
-        <ul class="seasons"></ul>
-        <p class="legend">Полоса — сутки по часам (0–24 UTC), яркость — доля часа, когда солнце не закрыто рельефом и соседними домами.</p>
+        <div class="seasons"></div>
+        <canvas class="ribbon" aria-label="Солнце в окнах по дням года и часам суток"></canvas>
+        <p class="legend">Год по горизонтали, сутки по вертикали (местное время): жёлтое — солнце в окнах, серое — закрыто рельефом или домами, тёмное — ночь.</p>
 
         <h3>Вид на море</h3>
         <div class="rose"></div>
-        <p class="legend">Луч с уровня окна по каждому румбу: зелёный — до воды нет препятствий, красный — закрыто.</p>
+        <p class="legend">Луч с уровня окна по каждому румбу: зелёный — до воды нет препятствий, в секторе — расстояние до неё.</p>
       </div>
 
-      <footer>
-        Здания — © OpenStreetMap (ODbL). Рельеф — Copernicus DEM GLO-30. Солнце — suncalc. Всё считается в браузере, см. README.
-      </footer>
+      <details class="about">
+        <summary>Данные и метод</summary>
+        <p>Здания — © OpenStreetMap (ODbL). Рельеф — Copernicus DEM GLO-30. Солнце — suncalc. Подложка — OpenFreeMap, Terrain Tiles.</p>
+        <p>Для каждых 10 минут дня луч из окна идёт к солнцу по сетке рельефа и растру крыш; для моря — по 8 румбам до первой видимой воды. Всё считается в браузере, подробности в README.</p>
+      </details>
     </aside>
 
     <script src="../scripts/main.ts"></script>
