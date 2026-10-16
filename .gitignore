@@ -6,3 +6,6 @@ public/maplibre/
 .DS_Store
 .claude/
 .idea/
+test-results/
+playwright-report/
+.lighthouseci/

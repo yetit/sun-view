@@ -12,6 +12,9 @@
   "exclude": [
     "dist",
     "public",
-    "node_modules"
+    "node_modules",
+    "test-results",
+    "playwright-report",
+    ".lighthouseci"
   ]
 }
