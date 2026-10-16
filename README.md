@@ -1,14 +1,15 @@
 # Sun & View
 
 [![Build and deploy](https://github.com/yetit/sun-view/actions/workflows/deploy.yml/badge.svg)](https://github.com/yetit/sun-view/actions/workflows/deploy.yml)
+[![Smoke & Lighthouse](https://github.com/yetit/sun-view/actions/workflows/live.yml/badge.svg)](https://github.com/yetit/sun-view/actions/workflows/live.yml)
 [![Tests: node --test](https://img.shields.io/badge/tests-node%20--test-3c873a)](tests/)
 [Русская версия](README.ru.md)
 
-![Sun & View: a building in Tivat with sea-view sectors, the sun path and a result card](docs/screenshot.png)
+![Sun & View: Tivat coloured by winter sun, a click on a building, then the time of day runs from morning to evening](docs/demo.gif)
 
 **Click any building, pick a floor, and see how many hours of direct sun reach its windows in each season, and in which directions the sea is visible. Everything is computed in your browser from open data.**
 
-**Demo: [yetit.github.io/sun-view](https://yetit.github.io/sun-view/)** · Tivat and Kotor, Montenegro · English and Russian (`?lang=en|ru`)
+**Demo: [yetit.github.io/sun-view](https://yetit.github.io/sun-view/)** · Tivat and Kotor (Montenegro), Bergen (Norway) · English and Russian (`?lang=en|ru`)
 
 ## What it does
 
@@ -18,6 +19,18 @@
 - **Time slider.** Building shading, ground shadows and the sun marker follow the time of day; ▶ plays a whole day.
 - **Reliability label.** Each building gets high, medium or low reliability with the reasons: floor count estimated, steep slope, woods next to it.
 - **Compare and share.** Pin up to four flats side by side, download a PNG card, or share the URL. The URL keeps the city, building, floor, side, season and time.
+
+## Cities
+
+| City | Why | Buildings | Floor count in OSM |
+| --- | --- | --- | --- |
+| Tivat | Bay town on the Adriatic, terrain to the north-east | 3,625 | 14% |
+| Kotor | Old town at the foot of a steep mountain, a narrow fjord-like bay | 3,654 | 3% |
+| Bergen | 60° N: in December the sun rises only about 6° at noon; the centre sits between a fjord and the "seven mountains" | 5,030 | 58% |
+
+**Why Bergen.** I wanted a third city that differs in latitude and terrain and has decent floor data. Among Tromsø, Bergen, Trondheim, Ålesund, Bodø, Innsbruck and Lugano, Bergen has the best floor coverage at 54–58% of central buildings. It also has the sea, so the sea view still means something. Innsbruck has similar coverage but no sea. Tromsø is further north, but only 34% of its buildings have floor counts. Buildings in Bergen carry no addresses in OSM, because Norway maps them as separate points. They are labelled with the nearest street instead.
+
+![A building in Tivat with sea-view sectors, the sun path and a result card](docs/screenshot.png)
 
 ## How it works
 
@@ -86,8 +99,17 @@ npm install
 npm run dev        # http://localhost:4325
 npm test           # ray-core tests
 npm run check      # types
+npm run test:e2e   # Playwright smoke test against the production build
 ```
 
 **Adding a city.** Describe it in `cities.config.mjs` and run `npm run fetch -- <id>`. That runs buildings, terrain with coastline, and the precompute. The city then appears in the switcher as `?c=<id>`.
 
-**Deploy.** `.github/workflows/deploy.yml` runs type check, tests and build, then publishes to GitHub Pages on push to `main`. It only publishes while the repository is public. For Cloudflare Pages, use build `npm run build`, output `dist`, and env `NODE_VERSION=24`.
+**Deploy.** `.github/workflows/deploy.yml` runs type check, tests and build, then publishes to GitHub Pages on push to `main`. It only publishes while the repository is public. After each deploy, `.github/workflows/live.yml` checks the published page:
+- **Playwright smoke test** for every city: the map container has height, the map is drawn, and a click on an example fills the panel.
+- **Lighthouse**, 3 runs on the mobile profile. Thresholds are in `lighthouserc.json` and are set from measurements. Locally, the live demo scored 30–36 for performance, 98 for accessibility before a heading fix, and 100 for best practices and SEO.
+
+**Moving to Cloudflare Pages.** GitHub Pages serves every file with `max-age=600` and cannot be configured. That means even hashed assets are revalidated every 10 minutes, and a fresh HTML can take up to 10 minutes to appear. Cloudflare Pages lets you set headers. To move:
+1. In Cloudflare, go to Workers & Pages → Create → Pages → Connect to Git and pick this repository.
+2. Set build command `npm run build`, output `dist`, env `NODE_VERSION=24`. Leave `BASE_PATH` unset: the site is served from the root.
+3. Add `public/_headers` with `/_astro/*` → `Cache-Control: public, max-age=31536000, immutable`.
+4. Point `SITE` to the new domain for `og:image`, and update the demo link, `homepage` and `DEMO` in `live.yml`.
