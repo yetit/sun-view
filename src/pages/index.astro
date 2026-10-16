@@ -2,7 +2,7 @@
 import '@fontsource-variable/inter';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '../styles/global.css';
-import city from '../../city.config.mjs';
+const base = import.meta.env.BASE_URL;
 ---
 
 <!doctype html>
@@ -10,27 +10,34 @@ import city from '../../city.config.mjs';
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={`Sun & View — сколько солнца и видно ли море из окон любого здания: ${city.name}, расчёт по открытым данным прямо в браузере.`} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Sun & View — {city.name}</title>
+    <meta name="description" content="Sun & View — сколько солнца и видно ли море из окон любого здания: расчёт по открытым данным прямо в браузере." />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    <title>Sun & View</title>
   </head>
   <body>
-    <div id="map" class="map" role="region" aria-label={`3D-карта: ${city.name}`}></div>
+    <div id="map" class="map" role="region" aria-label="3D-карта"></div>
 
-    <div class="timebar" role="group" aria-label="Время и сезон">
+    <div class="timebar" role="group" aria-label="Время, сезон и режим карты">
       <div class="chips">
         <button class="chip" type="button" title="Весеннее равноденствие">Весна</button>
-        <button class="chip active" type="button" title="Летнее солнцестояние">Лето</button>
+        <button class="chip" type="button" title="Летнее солнцестояние">Лето</button>
         <button class="chip" type="button" title="Осеннее равноденствие">Осень</button>
         <button class="chip" type="button" title="Зимнее солнцестояние">Зима</button>
       </div>
-      <label class="time"><input class="hour" type="range" min="4" max="22" step="0.1667" value="10" aria-label="Время суток" /><span class="clock">10:00</span></label>
-      <button class="sunmap-btn" type="button" aria-pressed="false">Карта солнца</button>
+      <label class="time"><button class="play" type="button" aria-pressed="false" title="Сутки (пробел)">▶</button><input class="hour" type="range" min="4" max="22" step="0.1667" value="10" aria-label="Время суток (стрелки ← →)" /><span class="clock">10:00</span></label>
+      <label class="mode-wrap">Карта <select class="mode" aria-label="Режим карты"><option value="normal">обычная</option><option value="sun">солнце</option><option value="sea">море</option></select></label>
+      <label class="floor-mode-wrap"><select class="floor-mode" aria-label="Этаж для карты"><option value="1">1-й этаж</option><option value="mid">средний этаж</option><option value="top">верхний этаж</option></select></label>
       <span class="progress" aria-live="polite"></span>
     </div>
+    <div class="legend-box" hidden><b class="legend-title"></b><i class="legend-bar"></i><span><small class="legend-min"></small><small class="legend-max"></small></span></div>
 
     <aside class="panel">
-      <header class="brand"><h1>Sun &amp; View</h1><span>{city.name}</span></header>
+      <button class="sheet-handle" type="button" aria-label="Развернуть панель"></button>
+      <header class="brand"><h1>Sun &amp; View</h1><span></span><select class="city" aria-label="Город"></select></header>
+      <div class="search-wrap">
+        <input class="search" type="search" placeholder="Адрес или место…" autocomplete="off" aria-label="Поиск адреса" />
+        <div class="search-results" hidden></div>
+      </div>
 
       <div class="empty">
         <svg class="empty-art" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="11" /><g stroke-width="3" stroke-linecap="round"><path d="M32 6v8M32 50v8M6 32h8M50 32h8M13.6 13.6l5.7 5.7M44.7 44.7l5.7 5.7M13.6 50.4l5.7-5.7M44.7 19.3l5.7-5.7" /></g></svg>
@@ -43,22 +50,31 @@ import city from '../../city.config.mjs';
         <h2 class="b-name"></h2>
         <p class="b-meta"></p>
         <div class="floor-row"><label>Этаж <select class="floor"></select></label><span class="eye"></span></div>
+        <div class="sides-row"><span>Окна</span><div class="sides"></div></div>
         <p class="now"></p>
 
         <h3>Солнце в окнах</h3>
         <div class="seasons"></div>
         <canvas class="ribbon" aria-label="Солнце в окнах по дням года и часам суток"></canvas>
-        <p class="legend">Год по горизонтали, сутки по вертикали (местное время): жёлтое — солнце в окнах, серое — закрыто рельефом или домами, тёмное — ночь.</p>
+        <p class="legend">Год по горизонтали, сутки по вертикали (местное время): жёлтое — солнце в окнах, серое — закрыто рельефом, домами или с другой стороны дома, тёмное — ночь.</p>
 
         <h3>Вид на море</h3>
         <div class="rose"></div>
-        <p class="legend">Луч с уровня окна по каждому румбу: зелёный — до воды нет препятствий, в секторе — расстояние до неё.</p>
+        <p class="legend">Луч с уровня окна на стене каждого румба: зелёный — до воды нет препятствий, в секторе — расстояние до неё. Клик по сектору выбирает сторону.</p>
+
+        <div class="actions"><button class="pin-btn" type="button">+ В сравнение</button><button class="share-btn" type="button">Скачать PNG</button></div>
+      </div>
+
+      <div class="compare" hidden>
+        <h3>Сравнение</h3>
+        <table><thead><tr><th>Квартира</th><th>Вес</th><th>Лет</th><th>Осн</th><th>Зим</th><th>Море</th><th></th></tr></thead><tbody class="compare-rows"></tbody></table>
+        <p class="legend">Часы солнца в окнах по сезонам и румбы с морем.</p>
       </div>
 
       <details class="about">
         <summary>Данные и метод</summary>
-        <p>Здания — © OpenStreetMap (ODbL). Рельеф — Copernicus DEM GLO-30. Солнце — suncalc. Подложка — OpenFreeMap, Terrain Tiles.</p>
-        <p>Для каждых 10 минут дня луч из окна идёт к солнцу по сетке рельефа и растру крыш; для моря — по 8 румбам до первой видимой воды. Всё считается в браузере, подробности в README.</p>
+        <p>Здания и зелень — © OpenStreetMap (ODbL). Рельеф — Copernicus DEM GLO-30, море — береговая линия OSM. Солнце — suncalc. Подложка — OpenFreeMap, Terrain Tiles. Поиск — Photon.</p>
+        <p>Для каждых 10 минут дня луч из окна идёт к солнцу по сетке рельефа и растру крыш и деревьев; для моря — по 8 румбам до первой видимой воды. Всё считается в браузере. <a href={`${base}method`}>Подробнее о методе →</a></p>
       </details>
     </aside>
 

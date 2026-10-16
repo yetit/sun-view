@@ -14,15 +14,21 @@ const empty = () => ({ type: 'geojson' as const, data: { type: 'FeatureCollectio
 
 export const COLORS = { known: '#b7ab97', assumed: '#d3cbbd', hover: '#9c8f78', selected: '#efe2cd', floor: '#ff7a1a', sea: '#1a9c6b', noSea: '#d9534f', lit: '#ffb703', shade: '#8c8c8c' };
 
-// Цвет зданий: обычный режим или «карта солнца» (доля светового дня с солнцем в окнах).
-export function buildingColor(sunMap: boolean, dim: boolean) {
+export type Mode = 'normal' | 'sun' | 'sea';
+export const SUN_RAMP = ['#3b4a6b', '#d8c9a3', '#ffd23f'];
+export const SEA_RAMP = ['#e2ddd2', '#bfe4d4', '#6cc4a1', '#2aa377', '#0b6b47'];
+
+// Цвет зданий: обычный режим, «карта солнца» (доля светового дня с солнцем в окнах)
+// или «карта моря» (сколько румбов с водой). Значение — feature-state v.
+export function buildingColor(mode: Mode, dim: boolean) {
   const sel = ['boolean', ['feature-state', 'selected'], false];
   const hov = ['boolean', ['feature-state', 'hover'], false];
-  const base = sunMap
-    ? ['interpolate', ['linear'], ['coalesce', ['feature-state', 'sun'], 0], 0.3, '#3b4a6b', 0.65, '#d8c9a3', 0.95, '#ffd23f']
-    : dim
-      ? ['case', ['get', 'assumed'], '#e4dfd5', '#d9d2c5']
-      : ['case', ['get', 'assumed'], COLORS.assumed, COLORS.known];
+  const v = ['coalesce', ['feature-state', 'v'], 0];
+  const base =
+    mode === 'sun' ? ['interpolate', ['linear'], v, 0.3, SUN_RAMP[0], 0.65, SUN_RAMP[1], 0.95, SUN_RAMP[2]]
+    : mode === 'sea' ? ['step', v, SEA_RAMP[0], 1, SEA_RAMP[1], 3, SEA_RAMP[2], 5, SEA_RAMP[3], 7, SEA_RAMP[4]]
+    : dim ? ['case', ['get', 'assumed'], '#e4dfd5', '#d9d2c5']
+    : ['case', ['get', 'assumed'], COLORS.assumed, COLORS.known];
   return ['case', sel, COLORS.selected, hov, COLORS.hover, base];
 }
 
@@ -60,10 +66,13 @@ export const style: StyleSpecification = {
     { id: 'sectors', type: 'fill', source: 'sectors', paint: { 'fill-color': ['case', ['get', 'sea'], COLORS.sea, COLORS.noSea], 'fill-opacity': ['case', ['get', 'sea'], 0.28, 0.22] } },
     { id: 'sectors-line', type: 'line', source: 'sectors', paint: { 'line-color': ['case', ['get', 'sea'], COLORS.sea, COLORS.noSea], 'line-width': 1.2, 'line-opacity': 0.8 } },
     { id: 'sunpath-ring', type: 'line', source: 'sunpath', filter: ['==', ['get', 'kind'], 'ring'], paint: { 'line-color': '#7a6a52', 'line-width': 1, 'line-dasharray': [2, 2], 'line-opacity': 0.6 } },
-    { id: 'sunpath', type: 'line', source: 'sunpath', filter: ['==', ['get', 'kind'], 'path'], layout: { 'line-cap': 'round' }, paint: { 'line-color': ['case', ['get', 'lit'], COLORS.lit, COLORS.shade], 'line-width': 4 } },
+    {
+      id: 'sunpath', type: 'line', source: 'sunpath', filter: ['==', ['get', 'kind'], 'path'], layout: { 'line-cap': 'round' },
+      paint: { 'line-color': ['match', ['get', 'state'], 'lit', COLORS.lit, 'shade', COLORS.shade, '#cfc7ba'], 'line-width': ['match', ['get', 'state'], 'back', 2, 4] },
+    },
     {
       id: 'buildings', type: 'fill-extrusion', source: 'buildings',
-      paint: { 'fill-extrusion-color': buildingColor(false, false) as any, 'fill-extrusion-height': ['get', 'h'], 'fill-extrusion-opacity': 0.95 },
+      paint: { 'fill-extrusion-color': buildingColor('normal', false) as any, 'fill-extrusion-height': ['get', 'h'], 'fill-extrusion-opacity': 0.95 },
     },
     {
       id: 'floor', type: 'fill-extrusion', source: 'floor',

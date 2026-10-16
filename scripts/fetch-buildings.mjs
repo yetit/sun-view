@@ -1,38 +1,41 @@
-// Здания города из OSM (Overpass) → data/<id>/buildings.json (GeoJSON).
-// Запускать вручную: данные коммитятся, сайт в рантайме Overpass не дёргает.
+// Здания и зелень города из OSM (Overpass) → data/<id>/buildings.json и greenery.json (GeoJSON).
+// Запуск: node scripts/fetch-buildings.mjs <id>. Данные коммитятся, сайт в рантайме Overpass не дёргает.
 import { mkdirSync, writeFileSync } from 'node:fs';
-import city from '../city.config.mjs';
+import { getCity } from '../cities.config.mjs';
+import { bboxStr, overpass, ring } from './overpass.mjs';
 
-const { south, west, north, east } = city.bbox;
-const query = `[out:json][timeout:180];(way["building"](${south},${west},${north},${east});relation["building"]["type"="multipolygon"](${south},${west},${north},${east}););out geom tags;`;
+const city = getCity(process.argv[2]);
+const bb = bboxStr(city.bbox);
 const num = (v) => (v != null && /^\d+([.,]\d+)?/.test(v.trim()) ? parseFloat(v.replace(',', '.')) : null);
 
-const res = await fetch(process.env.OVERPASS ?? 'https://overpass-api.de/api/interpreter', {
-  method: 'POST',
-  headers: { 'User-Agent': 'sun-view/0.1', Accept: 'application/json' },
-  body: new URLSearchParams({ data: query }),
-});
-if (!res.ok) throw new Error(`Overpass ${res.status}: ${(await res.text()).slice(0, 300)}`);
-const { elements } = await res.json();
-
-const ring = (geom) => geom.map((p) => [+p.lon.toFixed(6), +p.lat.toFixed(6)]);
-const features = [];
-for (const e of elements) {
-  const levels = num(e.tags['building:levels']);
-  const height = num(e.tags.height);
-  const props = { id: e.id, levels, height, name: e.tags.name ?? null, building: e.tags.building };
-  if (e.type === 'way' && e.geometry?.length > 3) {
-    features.push({ type: 'Feature', id: e.id, properties: props, geometry: { type: 'Polygon', coordinates: [ring(e.geometry)] } });
-  } else if (e.type === 'relation') {
-    // Мультиполигон: внешние кольца с замкнутой геометрией; дыры для прототипа не нужны.
-    const outers = (e.members ?? []).filter((m) => m.role === 'outer' && m.geometry?.length > 3).map((m) => ring(m.geometry));
-    if (outers.length) features.push({ type: 'Feature', id: e.id, properties: props, geometry: { type: 'MultiPolygon', coordinates: outers.map((r) => [r]) } });
+// Полигоны из way и мультиполигонов (внешние кольца; дыры для прототипа не нужны).
+function polygons(elements, props) {
+  const features = [];
+  for (const e of elements) {
+    if (e.type === 'way' && e.geometry?.length > 3) {
+      features.push({ type: 'Feature', id: e.id, properties: props(e), geometry: { type: 'Polygon', coordinates: [ring(e.geometry)] } });
+    } else if (e.type === 'relation') {
+      const outers = (e.members ?? []).filter((m) => m.role === 'outer' && m.geometry?.length > 3).map((m) => ring(m.geometry));
+      if (outers.length) features.push({ type: 'Feature', id: e.id, properties: props(e), geometry: { type: 'MultiPolygon', coordinates: outers.map((r) => [r]) } });
+    }
   }
+  return features;
 }
+const fc = (features, extra) => JSON.stringify({ type: 'FeatureCollection', source: 'OpenStreetMap, Overpass API, ODbL', fetched: new Date().toISOString().slice(0, 10), ...extra, features });
 
 mkdirSync(`data/${city.id}`, { recursive: true });
-writeFileSync(
-  `data/${city.id}/buildings.json`,
-  JSON.stringify({ type: 'FeatureCollection', source: 'OpenStreetMap, Overpass API, ODbL', fetched: new Date().toISOString().slice(0, 10), bbox: city.bbox, features }),
+
+const buildings = polygons(
+  await overpass(`[out:json][timeout:180];(way["building"](${bb});relation["building"]["type"="multipolygon"](${bb}););out geom tags;`),
+  (e) => ({ id: e.id, levels: num(e.tags['building:levels']), height: num(e.tags.height), name: e.tags.name ?? null, building: e.tags.building }),
 );
-console.log(`${features.length} зданий, с этажностью или высотой: ${features.filter((f) => f.properties.levels ?? f.properties.height).length}`);
+writeFileSync(`data/${city.id}/buildings.json`, fc(buildings, { bbox: city.bbox }));
+console.log(`${city.id}: ${buildings.length} зданий, с этажностью или высотой: ${buildings.filter((f) => f.properties.levels ?? f.properties.height).length}`);
+
+// Деревья: леса и парки как препятствия высотой city.treeHeight (в DSM они уже есть, но сетка там грубая).
+const green = polygons(
+  await overpass(`[out:json][timeout:180];(way["natural"="wood"](${bb});way["landuse"="forest"](${bb});way["leisure"="park"](${bb});relation["natural"="wood"](${bb});relation["landuse"="forest"](${bb});relation["leisure"="park"](${bb}););out geom tags;`),
+  (e) => ({ id: e.id, kind: e.tags.natural ?? e.tags.landuse ?? e.tags.leisure }),
+);
+writeFileSync(`data/${city.id}/greenery.json`, fc(green, {}));
+console.log(`${city.id}: ${green.length} зелёных массивов`);

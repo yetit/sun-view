@@ -115,3 +115,74 @@ button { font: inherit; cursor: pointer; }
   .timebar { left: 8px; right: 8px; bottom: calc(52vh + 8px); gap: 8px; padding: 8px; }
   .time input { width: 110px; }
 }
+
+/* --- Шапка панели: город, поиск --- */
+.brand select { margin-left: auto; font: inherit; font-size: 13px; padding: 4px 8px; border-radius: 8px; border: 1px solid #cfc8bb; background: #fff; }
+.search-wrap { position: relative; }
+.search { width: 100%; font: inherit; padding: 8px 12px; border-radius: 10px; border: 1px solid #cfc8bb; background: #fff; }
+.search-results { position: absolute; z-index: 3; top: 100%; left: 0; right: 0; margin-top: 4px; background: #fff; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(60, 40, 10, 0.12); overflow: hidden; }
+.search-results button { display: block; width: 100%; text-align: left; padding: 8px 12px; border: 0; background: none; }
+.search-results button:hover { background: #f3efe6; }
+.search-results small { display: block; color: var(--muted); font-size: 11.5px; }
+.search-results span { display: block; padding: 8px 12px; color: var(--muted); font-size: 12.5px; }
+
+/* --- Стороны --- */
+.sides-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.sides-row > span { color: var(--muted); font-size: 12.5px; }
+.sides { display: flex; gap: 3px; flex-wrap: wrap; }
+.side { padding: 4px 8px; border-radius: 999px; border: 1px solid #d9d2c5; background: #fff; font-size: 12px; font-weight: 500; }
+.side.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.card.current { outline: 2px solid var(--sun); outline-offset: -2px; }
+.rose path.sel { stroke: var(--ink); stroke-width: 2.5; }
+.rose path { cursor: pointer; }
+
+/* --- Действия, сравнение --- */
+.actions { display: flex; gap: 8px; margin-top: 14px; }
+.actions button { padding: 7px 12px; border-radius: 999px; border: 1px solid #cfc8bb; background: #fff; font-weight: 500; font-size: 13px; }
+.actions button:disabled { opacity: 0.4; cursor: default; }
+.compare table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.compare th { text-align: right; font-weight: 500; color: var(--muted); padding: 4px 4px; border-bottom: 1px solid var(--line); }
+.compare th:first-child { text-align: left; }
+.compare td { text-align: right; padding: 6px 4px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.compare td:first-child { text-align: left; }
+.compare td small { display: block; color: var(--muted); font-size: 11px; }
+.compare .link { padding: 0; border: 0; background: none; font: inherit; font-weight: 500; color: var(--ink); text-decoration: underline; text-decoration-color: #cfc8bb; }
+.compare .x { border: 0; background: none; color: var(--muted); font-size: 16px; padding: 0 2px; }
+
+/* --- Панель времени: воспроизведение и режимы --- */
+.play { width: 28px; height: 28px; border-radius: 50%; border: 0; background: var(--ink); color: #fff; font-size: 11px; display: grid; place-items: center; }
+.timebar.night .play { background: #fff; color: var(--ink); }
+.mode-wrap, .floor-mode-wrap { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.timebar.night .mode-wrap, .timebar.night .floor-mode-wrap { color: #c8cedc; }
+.mode-wrap select, .floor-mode-wrap select { font: inherit; font-size: 13px; padding: 5px 8px; border-radius: 999px; border: 1px solid #cfc8bb; background: #fff; color: var(--ink); }
+body[data-mode='normal'] .floor-mode-wrap { display: none; }
+.legend-box { position: fixed; right: calc(var(--panel) + 16px); top: 16px; z-index: 5; width: 230px; padding: 10px 12px; border-radius: 12px; background: rgba(255, 252, 246, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.7); box-shadow: 0 6px 24px rgba(60, 40, 10, 0.12); font-size: 12px; }
+.legend-box b { display: block; font-weight: 500; margin-bottom: 6px; }
+.legend-box i { display: block; height: 8px; border-radius: 4px; }
+.legend-box span { display: flex; justify-content: space-between; color: var(--muted); margin-top: 4px; }
+
+/* --- Мобильный лист --- */
+.sheet-handle { display: none; }
+@media (max-width: 720px) {
+  .map { bottom: 42vh; }
+  .panel { height: 42vh; transition: height 0.3s ease; padding-top: 6px; }
+  body.sheet-open .panel { height: 85vh; }
+  body.sheet-open .map { bottom: 42vh; }
+  .sheet-handle { display: block; width: 44px; height: 5px; margin: 0 auto 8px; border-radius: 3px; border: 0; background: #cfc8bb; padding: 0; }
+  .timebar { bottom: calc(42vh + 8px); }
+  .legend-box { right: 8px; top: 8px; width: 200px; }
+  .time input { width: 90px; }
+}
+
+/* --- Страница метода --- */
+.doc { background: var(--bg); }
+.doc-main { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; font-size: 15px; line-height: 1.6; }
+.doc-main h1 { font-size: 32px; letter-spacing: -0.02em; margin: 8px 0 12px; }
+.doc-main h2 { font-size: 20px; margin: 32px 0 8px; }
+.doc-main .lead { font-size: 17px; color: #4a4540; max-width: none; }
+.doc-main a { color: var(--ink); }
+.doc-main figure { margin: 16px 0; }
+.fig { width: 100%; height: auto; background: #f7f3eb; border-radius: 12px; }
+.fig .cap { font: 500 12px var(--font); fill: var(--muted); }
+.doc-main code { background: #f3efe6; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+.doc-main li { margin-bottom: 6px; }
