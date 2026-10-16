@@ -14,7 +14,7 @@
 
 - **Sun in the windows.** Hours of direct sun for the March equinox, June solstice, September equinox and December solstice, plus a year ribbon (day × hour). Pick the whole building or one facing (N … NW).
 - **Sea view.** For each of 8 directions, whether water is visible from the window level and how far away it is.
-- **City maps.** On load the whole city is coloured by winter sun; switch to the sea map, or to the ground, middle or top floor.
+- **City maps.** On load the whole city is coloured by winter sun; switch to the sea map, or pick the window height: 2, 5 or 10 m above ground. Colours follow the actual spread of hours in the current layer, and the legend shows them. Buildings lower than the chosen height are faded and shown from their top floor.
 - **Time slider.** Building shading, ground shadows and the sun marker follow the time of day; ▶ plays a whole day.
 - **Compare and share.** Pin up to four flats side by side, download a PNG card, or share the URL. The URL keeps the city, building, floor, side, season and time.
 

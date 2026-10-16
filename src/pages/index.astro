@@ -12,7 +12,7 @@ import Meta from '../components/Meta.astro';
   </head>
   <body data-mode="sun" data-sheet="peek">
     <div id="map" class="map" role="region" aria-label="3D map"></div>
-    <div class="legend-box" hidden><b class="legend-title"></b><i class="legend-bar"></i><span><small class="legend-min"></small><small class="legend-max"></small></span><small class="legend-assumed"></small></div>
+    <div class="legend-box" hidden><b class="legend-title"></b><i class="legend-bar"></i><span><small class="legend-min"></small><small class="legend-mid"></small><small class="legend-max"></small></span><small class="legend-note"></small><small class="legend-assumed"></small></div>
 
     <aside class="panel">
       <button class="sheet-handle" type="button" data-i-aria="expand" aria-expanded="false"></button>
@@ -24,7 +24,7 @@ import Meta from '../components/Meta.astro';
         <label class="time"><button class="play" type="button" aria-pressed="false" data-i-title="play">▶</button><input class="hour" type="range" min="4" max="22" step="0.1667" value="11" data-i-aria="hourAria" /><span class="clock">11:00</span></label>
         <div class="modes" role="radiogroup" data-i-aria="map">
           <button class="mode-chip" type="button" role="radio" data-mode="normal"></button><button class="mode-chip" type="button" role="radio" data-mode="sun"></button><button class="mode-chip" type="button" role="radio" data-mode="sea"></button>
-          <select class="floor-mode" data-i-aria="floor"></select>
+          <select class="floor-mode" data-i-aria="heightAria"></select>
         </div>
         <span class="progress" aria-live="polite"></span>
       </div>

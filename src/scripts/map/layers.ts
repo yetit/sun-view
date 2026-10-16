@@ -24,7 +24,12 @@ export function offset([lon, lat]: [number, number], bearing: number, dist: numb
 // Положение солнца на наземной диаграмме: зенит — центр, горизонт — кольцо.
 export const pathPoint = (b: Bld, altitude: number, bearing: number) => offset(b.center, bearing, R_PATH * (1 - altitude / (Math.PI / 2)));
 export const setData = (id: string, features: any[]) => (map.getSource(id) as any).setData({ type: 'FeatureCollection', features });
-export const applyColors = () => BUILDING_LAYERS.forEach((id) => map.setPaintProperty(id, 'fill-extrusion-color', buildingColor(state.mode, !!state.current) as any));
+// scale — часы для трёх цветов карты солнца, запоминается до следующего слоя.
+let sunScale = [0, 1, 2];
+export function applyColors(scale = sunScale) {
+  sunScale = scale;
+  BUILDING_LAYERS.forEach((id) => map.setPaintProperty(id, 'fill-extrusion-color', buildingColor(state.mode, !!state.current, scale) as any));
+}
 
 // На телефоне карта под листом: центрируем выбранное в видимой части.
 export const sheetPadding = () => (matchMedia('(max-width: 720px)').matches ? { top: 40, bottom: document.querySelector<HTMLElement>('.panel')!.offsetHeight, left: 0, right: 0 } : { top: 0, bottom: 0, left: 0, right: 0 });

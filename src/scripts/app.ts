@@ -1,6 +1,6 @@
 // Общее состояние приложения: город и параметры из URL, мир, воркер, форматтеры.
 import { getCity } from '../../cities.config.mjs';
-import { SEASONS, type FloorMode } from './analysis.ts';
+import { HEIGHTS, SEASONS } from './analysis.ts';
 import type { Bld, City, World } from './grid.ts';
 import type { Mode } from './style.ts';
 import { t } from './i18n.ts';
@@ -16,6 +16,9 @@ export const city = getCity(params.get('c') ?? '') as City;
 export const fmtH = new Intl.NumberFormat(t.locale, { maximumFractionDigits: 1 });
 export const fmtT = new Intl.DateTimeFormat(t.locale, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: city.timezone });
 
+// fm — высота окна на картах, м; старые ссылки с этажами 1/mid/top — на ближайшую высоту.
+const legacyFm: Record<string, number> = { '1': 2, mid: 2, top: 5 };
+const fm = params.get('fm') ?? '';
 const pick = <T extends string>(v: string | null, ok: readonly T[], d: T) => (ok.includes(v as T) ? (v as T) : d);
 export const state = {
   current: null as Bld | null,
@@ -24,14 +27,14 @@ export const state = {
   season: Math.min(3, Math.max(0, num(params.get('s'), 3))),
   hour: Math.min(22, Math.max(4, num(params.get('t'), 11))), // местное время, ч
   mode: pick<Mode>(params.get('m'), ['normal', 'sea'], 'sun'), // на входе город сразу окрашен
-  floorMode: pick<FloorMode>(params.get('fm'), ['1', 'mid', 'top'], 'mid'),
+  height: legacyFm[fm] ?? (HEIGHTS.includes(+fm) ? +fm : 5),
   floorsOverride: params.get('n') != null ? num(params.get('n'), 0) || null : null, // этажность, уточнённая пользователем
 };
 
 export function syncUrl() {
-  const { current, floor, side, season, hour, mode, floorMode, floorsOverride } = state;
+  const { current, floor, side, season, hour, mode, height, floorsOverride } = state;
   const p = new URLSearchParams({ c: city.id, s: String(season), t: hour.toFixed(2), m: mode });
-  if (mode !== 'normal') p.set('fm', floorMode);
+  if (mode !== 'normal') p.set('fm', String(height));
   if (current) { p.set('b', String(current.id)); p.set('f', String(floor)); if (side != null) p.set('d', String(side)); if (floorsOverride) p.set('n', String(floorsOverride)); }
   if (params.get('lang')) p.set('lang', params.get('lang')!);
   history.replaceState(null, '', `?${p}`);

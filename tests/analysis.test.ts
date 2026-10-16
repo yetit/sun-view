@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { eye, seaRose, seasonCalc, floorFor, yearRibbon } from '../src/scripts/analysis.ts';
+import { eye, seaRose, seasonCalc, floorAt, yearRibbon } from '../src/scripts/analysis.ts';
 import { makeWorld } from './world.ts';
 
 test('здание целиком: летом на плоской суше солнце весь день, кроме утра за горой', () => {
@@ -45,9 +45,9 @@ test('лента года: 73 столбца × 144 строки, ночь св�
   assert.equal(r.data[72 * 73 + 36], 2); // полдень UTC, июль
 });
 
-test('этаж для массовой карты', () => {
-  const b = makeWorld().blds[0];
-  assert.equal(floorFor(b, '1'), 1);
-  assert.equal(floorFor(b, 'mid'), 3);
-  assert.equal(floorFor(b, 'top'), 5);
+test('этаж для высоты окна на карте', () => {
+  const w = makeWorld(); // этаж 3 м: окна на 1,5 / 4,5 / 10,5 м
+  assert.equal(floorAt(w, 2), 1);
+  assert.equal(floorAt(w, 5), 2);
+  assert.equal(floorAt(w, 10), 4);
 });

@@ -15,18 +15,22 @@ const empty = () => ({ type: 'geojson' as const, data: { type: 'FeatureCollectio
 export const COLORS = { known: '#b7ab97', assumed: '#d3cbbd', hover: '#9c8f78', selected: '#efe2cd', floor: '#ff7a1a', sea: '#1a9c6b', noSea: '#d9534f', lit: '#ffb703', shade: '#8c8c8c' };
 
 export type Mode = 'normal' | 'sun' | 'sea';
-export const SUN_RAMP = ['#3b4a6b', '#d8c9a3', '#ffd23f'];
+export const SUN_RAMP = ['#3b4a6b', '#d9775b', '#ffd23f'];
 export const SEA_RAMP = ['#e2ddd2', '#bfe4d4', '#6cc4a1', '#2aa377', '#0b6b47'];
+// Блёклый цвет для домов ниже выбранной высоты окна: 35 % цвета + 65 % светлой подложки.
+const fade = (c: string) => '#' + [1, 3, 5].map((i) => Math.round(0.35 * parseInt(c.slice(i, i + 2), 16) + 0.65 * parseInt('e4dfd5'.slice(i - 1, i + 1), 16)).toString(16).padStart(2, '0')).join('');
 
-// Цвет зданий: обычный режим, «карта солнца» (доля светового дня с солнцем в окнах)
-// или «карта моря» (сколько румбов с водой). Значение — feature-state v.
-export function buildingColor(mode: Mode, dim: boolean) {
+// Цвет зданий: обычный режим, «карта солнца» (часы солнца в окнах; scale — часы для трёх цветов шкалы)
+// или «карта моря» (сколько румбов с водой). Значение — feature-state v, low — дом ниже высоты окна.
+export function buildingColor(mode: Mode, dim: boolean, scale: number[]) {
   const sel = ['boolean', ['feature-state', 'selected'], false];
   const hov = ['boolean', ['feature-state', 'hover'], false];
   const v = ['coalesce', ['feature-state', 'v'], 0];
+  const ramp = (r: string[]) =>
+    mode === 'sun' ? ['interpolate', ['linear'], v, ...scale.flatMap((h, i) => [h, r[i]])]
+    : ['step', v, r[0], 1, r[1], 2, r[2], 3, r[3], 4, r[4]]; // море дальше 4 румбов видно у ~1 % зданий
   const base =
-    mode === 'sun' ? ['interpolate', ['linear'], v, 0.3, SUN_RAMP[0], 0.65, SUN_RAMP[1], 0.95, SUN_RAMP[2]]
-    : mode === 'sea' ? ['step', v, SEA_RAMP[0], 1, SEA_RAMP[1], 3, SEA_RAMP[2], 5, SEA_RAMP[3], 7, SEA_RAMP[4]]
+    mode !== 'normal' ? ['case', ['boolean', ['feature-state', 'low'], false], ramp((mode === 'sun' ? SUN_RAMP : SEA_RAMP).map(fade)), ramp(mode === 'sun' ? SUN_RAMP : SEA_RAMP)]
     : dim ? ['case', ['get', 'assumed'], '#e4dfd5', '#d9d2c5']
     : ['case', ['get', 'assumed'], COLORS.assumed, COLORS.known];
   return ['case', sel, COLORS.selected, hov, COLORS.hover, base];
@@ -78,11 +82,11 @@ export const style: StyleSpecification = {
     // поэтому два слоя с фильтром).
     {
       id: 'buildings', type: 'fill-extrusion', source: 'buildings', filter: ['!=', ['get', 'assumed'], true],
-      paint: { 'fill-extrusion-color': buildingColor('normal', false) as any, 'fill-extrusion-height': ['get', 'h'], 'fill-extrusion-opacity': 0.95 },
+      paint: { 'fill-extrusion-color': buildingColor('normal', false, []) as any, 'fill-extrusion-height': ['get', 'h'], 'fill-extrusion-opacity': 0.95 },
     },
     {
       id: 'buildings-assumed', type: 'fill-extrusion', source: 'buildings', filter: ['==', ['get', 'assumed'], true],
-      paint: { 'fill-extrusion-color': buildingColor('normal', false) as any, 'fill-extrusion-height': ['get', 'h'], 'fill-extrusion-opacity': 0.55 },
+      paint: { 'fill-extrusion-color': buildingColor('normal', false, []) as any, 'fill-extrusion-height': ['get', 'h'], 'fill-extrusion-opacity': 0.55 },
     },
     {
       id: 'floor', type: 'fill-extrusion', source: 'floor',
