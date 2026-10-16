@@ -1,7 +1,7 @@
 // Расчёт для здания, этажа и стороны: траектория солнца за сутки, часы по сезонам,
 // лента года (день × час), видимость моря по 8 румбам, массовые расчёты для карты.
 import SunCalc from 'suncalc';
-import { blocked, seaVisible, wallPoint, type Bld, type World } from './grid.ts';
+import { BCELL, blocked, demAt, seaVisible, TREE, wallPoint, type Bld, type World } from './grid.ts';
 
 export const STEP_MIN = 10;
 export const N = (24 * 60) / STEP_MIN; // отсчётов в сутках
@@ -82,6 +82,43 @@ export function seaRose(w: World, b: Bld, floor: number): SeaDir[] {
     const [x, y] = wallPoint(b, dirBearing(i));
     return { dir, bearing: dirBearing(i), dist: seaVisible(w, b, x, y, z, dirBearing(i)) };
   });
+}
+
+// --- Надёжность результата для здания ------------------------------------------
+// Причины, известные из сверок: этажность предположена; крутой склон — перепад DEM больше 30 м
+// в квадрате ±60 м, отметка глаза на сетке 60 м неточна и горизонт вверх по склону завышен
+// (docs/horizon-check.md, п. 4); деревья растра (лес и парки OSM, 10 м) в 20 м от описанной окружности.
+// Нет причин — высокая, одна — средняя, две и больше — низкая.
+export type Reason = 'assumed' | 'slope' | 'trees';
+export type Reliability = { level: 'high' | 'medium' | 'low'; reasons: Reason[]; drop: number };
+const SLOPE_R = 60, SLOPE_DROP = 30, TREES_R = 20; // м
+
+export function reliability(w: World, b: Bld, assumed = b.assumed): Reliability {
+  const [lon0, lat0] = b.center;
+  let lo = Infinity, hi = -Infinity;
+  for (let dx = -SLOPE_R; dx <= SLOPE_R; dx += SLOPE_R / 2) for (let dy = -SLOPE_R; dy <= SLOPE_R; dy += SLOPE_R / 2) {
+    const v = demAt(w.dem, lon0 + dx / w.proj.mLon, lat0 + dy / w.proj.mLat);
+    if (v != null && v > 0) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+  }
+  const drop = hi > lo ? hi - lo : 0;
+  const reasons: Reason[] = [];
+  if (assumed) reasons.push('assumed');
+  if (drop > SLOPE_DROP) reasons.push('slope');
+  if (treesNear(w, b, TREES_R)) reasons.push('trees');
+  return { level: reasons.length === 0 ? 'high' : reasons.length === 1 ? 'medium' : 'low', reasons, drop };
+}
+
+// Есть ли ячейка деревьев в растре на расстоянии до d от описанной окружности здания.
+function treesNear(w: World, b: Bld, d: number): boolean {
+  const { x0, y0, cols, rows, idx } = w.roofs;
+  const R = b.radius + d;
+  const c0 = Math.max(0, Math.floor((b.xy[0] - R - x0) / BCELL)), c1 = Math.min(cols - 1, Math.floor((b.xy[0] + R - x0) / BCELL));
+  const r0 = Math.max(0, Math.floor((b.xy[1] - R - y0) / BCELL)), r1 = Math.min(rows - 1, Math.floor((b.xy[1] + R - y0) / BCELL));
+  for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
+    if (idx[r * cols + c] !== TREE) continue;
+    if (Math.hypot(x0 + (c + 0.5) * BCELL - b.xy[0], y0 + (r + 0.5) * BCELL - b.xy[1]) <= R) return true;
+  }
+  return false;
 }
 
 // --- Массовые расчёты для карты (все здания) ---------------------------------

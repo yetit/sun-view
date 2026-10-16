@@ -14,7 +14,7 @@ const mLat = 111320, mLon = 111320 * Math.cos((42 * Math.PI) / 180);
 export const rect = (cx: number, cy: number, w: number, h: number) =>
   [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2], [-w / 2, -h / 2]].map(([dx, dy]) => [18 + (cx + dx) / mLon, 42 + (cy + dy) / mLat]);
 
-export function makeWorld(extra: { ring: number[][]; levels: number | null; height?: number | null }[] = []) {
+export function makeWorld(extra: { ring: number[][]; levels: number | null; height?: number | null; building?: string }[] = [], woods: number[][][] = []) {
   const { bbox, step } = city.dem;
   const cell = step / 3600;
   const cols = Math.round((bbox.east - bbox.west) / cell), rows = Math.round((bbox.north - bbox.south) / cell);
@@ -24,7 +24,8 @@ export function makeWorld(extra: { ring: number[][]; levels: number | null; heig
     data[r * cols + c] = x < -300 ? 0 : x > 1500 ? 400 : 10;
   }
   const features = [{ ring: rect(0, 0, 20, 20), levels: 5 }, ...extra].map((b, i) => ({
-    type: 'Feature', id: i + 1, properties: { id: i + 1, levels: b.levels, height: b.height ?? null, name: null }, geometry: { type: 'Polygon', coordinates: [b.ring] },
+    type: 'Feature', id: i + 1, properties: { id: i + 1, levels: b.levels, height: b.height ?? null, name: null, building: 'building' in b ? b.building : 'yes' }, geometry: { type: 'Polygon', coordinates: [b.ring] },
   }));
-  return createWorld(city, { type: 'FeatureCollection', features }, null, { bbox, cols, rows, cell, nodata: -32768, min: 0, max: 400 }, data.buffer);
+  const greenery = { features: woods.map((ring) => ({ geometry: { type: 'Polygon', coordinates: [ring] } })) };
+  return createWorld(city, { type: 'FeatureCollection', features }, greenery, { bbox, cols, rows, cell, nodata: -32768, min: 0, max: 400 }, data.buffer);
 }

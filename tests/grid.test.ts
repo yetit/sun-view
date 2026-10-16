@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { blocked, horizonAngle, seaVisible, wallPoint } from '../src/scripts/grid.ts';
+import { blocked, defaultFloors, horizonAngle, seaVisible, wallPoint } from '../src/scripts/grid.ts';
 import { makeWorld, rect } from './world.ts';
 
 const deg = (d: number) => (d * Math.PI) / 180;
@@ -12,6 +12,22 @@ test('земля и высота здания из DEM и этажей', () => {
   assert.equal(b.ground, 10);
   assert.equal(b.h, 15);
   assert.equal(b.floors, 5);
+});
+
+test('этажность по умолчанию: хозпостройки, руины и маленькие контуры — 1 этаж, остальное — 2', () => {
+  assert.equal(defaultFloors('yes', 120), 2);
+  assert.equal(defaultFloors(null, 120), 2);
+  assert.equal(defaultFloors('yes', 30), 1);
+  for (const type of ['shed', 'garage', 'garages', 'carport', 'container', 'roof', 'ruins', 'construction']) assert.equal(defaultFloors(type, 200), 1, type);
+  const w = makeWorld([
+    { ring: rect(200, 0, 10, 10), levels: null }, // 100 м², yes
+    { ring: rect(250, 0, 5, 6), levels: null }, // 30 м²
+    { ring: rect(300, 0, 10, 10), levels: null, building: 'garage' },
+    { ring: rect(350, 0, 10, 10), levels: 0 }, // 0 этажей в OSM — нет данных
+    { ring: rect(400, 0, 10, 10), levels: null, height: 9 },
+  ]);
+  assert.deepEqual(w.blds.slice(1).map((b) => [b.floors, b.h, b.assumed]), [[2, 6, true], [1, 3, true], [1, 3, true], [2, 6, true], [3, 9, false]]);
+  assert.equal(w.blds[4].levels, null);
 });
 
 test('точка на стене лежит на 1 м снаружи прямоугольника 20×20', () => {

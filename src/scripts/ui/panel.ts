@@ -1,6 +1,6 @@
 // Правая панель (на телефоне — лист): выбор здания, этаж и сторона, сезоны, лента года, роза моря,
 // сравнение, PNG, поиск, примеры.
-import { eye, eyeHeight, N, RIBBON_DAY_STEP, SEASONS, seaRose, seasonCalc, STEP_MIN, YEAR, type SeaDir, type Season } from '../analysis.ts';
+import { eye, eyeHeight, N, reliability, RIBBON_DAY_STEP, SEASONS, seaRose, seasonCalc, STEP_MIN, YEAR, type SeaDir, type Season } from '../analysis.ts';
 import { $, $$, ask, city, fmtH, fmtT, geojson, state, syncUrl, tzOffset, world } from '../app.ts';
 import type { Bld } from '../grid.ts';
 import { cityName, lang, t } from '../i18n.ts';
@@ -43,6 +43,13 @@ function fillFloors(b: Bld) {
   floorSel.value = String(state.floor);
   const src = b.levels != null ? t.srcLevels(b.levels) : b.height != null ? t.srcHeight(b.height, b.floors) : t.srcAssumed(b.floors);
   $('.b-meta').innerHTML = `${src} · ${t.ground(Math.round(b.ground))} · <a href="${osmUrl(b)}" target="_blank" rel="noopener">OSM ↗</a>`;
+  // Надёжность: уточнённая пользователем этажность уже не предположение.
+  const r = reliability(world, b, b.assumed && state.floorsOverride == null);
+  $('.trust').dataset.level = r.level;
+  $('.trust-level').textContent = t.trust[r.level];
+  $('.trust-reasons').innerHTML = r.reasons.length
+    ? r.reasons.map((k) => `<li>${k === 'slope' ? t.reasons.slope(Math.round(r.drop)) : t.reasons[k]}</li>`).join('')
+    : `<li>${t.trustOk}</li>`;
   // Этажность предположена — предлагаем уточнить.
   const box = $('.assumed');
   box.hidden = !b.assumed;

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { eye, seaRose, seasonCalc, floorFor, yearRibbon } from '../src/scripts/analysis.ts';
-import { makeWorld } from './world.ts';
+import { eye, seaRose, seasonCalc, floorFor, reliability, yearRibbon } from '../src/scripts/analysis.ts';
+import { makeWorld, rect } from './world.ts';
 
 test('здание целиком: летом на плоской суше солнце весь день, кроме утра за горой', () => {
   const w = makeWorld();
@@ -50,4 +50,20 @@ test('этаж для массовой карты', () => {
   assert.equal(floorFor(b, '1'), 1);
   assert.equal(floorFor(b, 'mid'), 3);
   assert.equal(floorFor(b, 'top'), 5);
+});
+
+test('надёжность: ровное место с этажностью — высокая; предположено, склон, лес — ниже', () => {
+  const w = makeWorld([
+    { ring: rect(300, 0, 10, 10), levels: null }, // этажность предположена
+    { ring: rect(1500, 300, 10, 10), levels: 3 }, // на уступе 10 → 400 м
+    { ring: rect(1500, -300, 10, 10), levels: null },
+  ], [rect(0, 200, 60, 40)]); // лес в 180 м от дома 0 — не в счёт
+  assert.deepEqual(reliability(w, w.blds[0]), { level: 'high', reasons: [], drop: 0 });
+  assert.deepEqual(reliability(w, w.blds[1]).reasons, ['assumed']);
+  assert.equal(reliability(w, w.blds[1]).level, 'medium');
+  assert.deepEqual(reliability(w, w.blds[2]).reasons, ['slope']);
+  assert.equal(reliability(w, w.blds[3]).level, 'low');
+  assert.deepEqual(reliability(w, w.blds[1], false).reasons, []); // этажность уточнил пользователь
+  const wood = makeWorld([], [rect(0, 30, 60, 30)]); // лес в 15 м к северу от стены
+  assert.deepEqual(reliability(wood, wood.blds[0]).reasons, ['trees']);
 });

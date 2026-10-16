@@ -29,8 +29,8 @@ const repo = 'https://github.com/yetit/sun-view';
       <p class="lead" lang="en">Everything runs in your browser on open data: building footprints from OpenStreetMap, terrain from Copernicus DEM GLO-30, sun position from suncalc. No servers, no API keys.</p>
 
       <h2><span lang="ru">1. Мир в метрах</span><span lang="en">1. A world in metres</span></h2>
-      <p lang="ru">Город переводится в локальную систему: метры на восток и север от центра, высота над морем. Два растра: <b>рельеф</b> с шагом около 60 м (Copernicus 1″, прорежен до 2″, примерно 15 км вокруг города) и <b>крыши</b> с шагом 6 м — абсолютная отметка верха каждого здания (высота из OSM, иначе этажи × 3 м, иначе 2 этажа) и деревьев (леса и парки OSM, 10 м над землёй).</p>
-      <p lang="en">The city is projected to a local frame: metres east and north of the centre, height above sea level. Two rasters: <b>terrain</b> at about 60 m (Copernicus 1″ resampled to 2″, roughly 15 km around the city) and <b>roofs</b> at 6 m, holding the absolute top of every building (OSM height, else floors × 3 m, else 2 floors) and of trees (OSM woods and parks, 10 m above ground).</p>
+      <p lang="ru">Город переводится в локальную систему: метры на восток и север от центра, высота над морем. Два растра: <b>рельеф</b> с шагом около 60 м (Copernicus 1″, прорежен до 2″, примерно 15 км вокруг города) и <b>крыши</b> с шагом 6 м — абсолютная отметка верха каждого здания (высота из OSM, иначе этажи × 3 м, иначе 1–2 этажа по типу и площади) и деревьев (леса и парки OSM, 10 м над землёй).</p>
+      <p lang="en">The city is projected to a local frame: metres east and north of the centre, height above sea level. Two rasters: <b>terrain</b> at about 60 m (Copernicus 1″ resampled to 2″, roughly 15 km around the city) and <b>roofs</b> at 6 m, holding the absolute top of every building (OSM height, else floors × 3 m, else 1–2 floors by type and footprint) and of trees (OSM woods and parks, 10 m above ground).</p>
       <figure>
         <svg viewBox="0 0 640 200" class="fig" role="img" aria-label="Terrain grid and roof raster">
           <defs><pattern id="g6" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M12 0H0V12" fill="none" stroke="#d9d2c5" stroke-width="0.7"/></pattern></defs>
@@ -82,7 +82,7 @@ const repo = 'https://github.com/yetit/sun-view';
         <li>Copernicus — модель поверхности: в ячейках есть крыши и кроны. Под зданиями DSM сглажен минимумом соседей. Для точной земли нужен DTM (например, FABDEM, лицензия CC BY-NC-SA).</li>
         <li>Шаг рельефа 60 м: гребни и узкие проходы сглажены, на склонах отметка дома может ошибаться на десятки метров.</li>
         <li>Деревья — леса и парки OSM одной высотой; отдельные деревья не учитываются.</li>
-        <li>Этажность в OSM известна примерно у 14 % зданий Тивата и 3 % Котора; остальным даётся 2 этажа (на карте они полупрозрачные), этажность можно уточнить в панели.</li>
+        <li>Этажность в OSM известна примерно у 14 % зданий Тивата и 3 % Котора; остальным даётся 1 этаж (хозпостройки, руины, стройки, контуры меньше 40 м²) или 2 этажа (на карте они полупрозрачные), этажность можно уточнить в панели. Метка надёжности в панели называет, что из этого списка касается выбранного здания: оценённая этажность, крутой склон, лес рядом.</li>
         <li>Отражения, остекление, глубина лоджий не моделируются: «солнце в окне» значит прямую видимость солнца из точки окна.</li>
         <li>Тени на карте — иллюстрация (проекция контура на ровную землю); часы солнца считаются лучами.</li>
       </ul>
@@ -90,7 +90,7 @@ const repo = 'https://github.com/yetit/sun-view';
         <li>Copernicus is a surface model: cells include roofs and canopies. Under buildings the DSM is flattened to the minimum of its neighbours. Exact ground needs a DTM (e.g. FABDEM, CC BY-NC-SA).</li>
         <li>The 60 m terrain grid smooths ridges and gaps; on slopes a building's ground can be off by tens of metres.</li>
         <li>Trees are OSM woods and parks at one height; single trees are ignored.</li>
-        <li>OSM has floor counts for about 14% of buildings in Tivat and 3% in Kotor; the rest get 2 floors (shown semi-transparent), and you can correct it in the panel.</li>
+        <li>OSM has floor counts for about 14% of buildings in Tivat and 3% in Kotor; the rest get 1 floor (sheds, garages, ruins, construction, footprints under 40 m²) or 2 floors (shown semi-transparent), and you can correct it in the panel. The reliability label in the panel says which of these limits apply to the selected building: estimated floors, steep slope, woods nearby.</li>
         <li>Reflections, glazing and balcony depth are not modelled: "sun in the window" means a direct line of sight to the sun from the window point.</li>
         <li>Shadows on the map are an illustration (footprints projected on flat ground); sun hours come from the rays.</li>
       </ul>

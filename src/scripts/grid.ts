@@ -60,8 +60,15 @@ export type Bld = {
   rings: [number, number][][]; // контуры в локальных метрах
 };
 
-const DEFAULT_FLOORS = 2;
+// Этажность, когда в OSM нет ни building:levels, ни height (86 % зданий Тивата, 97 % Котора).
+// По разбору data/*/buildings.json (2026-10-17): 85 % зданий — building=yes, их оставляем на 2 этажах;
+// хозпостройки (тип из списка или контур меньше 40 м² — сараи, гаражи), руины и стройки — 1 этаж.
+const LOW_TYPES = new Set(['shed', 'garage', 'garages', 'carport', 'container', 'roof', 'ruins', 'construction']);
+const SMALL_AREA = 40; // м²
+export const defaultFloors = (type: string | null, area: number) => (LOW_TYPES.has(type ?? '') || area < SMALL_AREA ? 1 : 2);
+
 const polyRings = (g: any): [number, number][][] => (g.type === 'Polygon' ? [g.coordinates[0]] : g.coordinates.map((p: any) => p[0]));
+const ringArea = (r: [number, number][]) => Math.abs(r.reduce((s, [x, y], i) => { const [x2, y2] = r[(i + 1) % r.length]; return s + x * y2 - x2 * y; }, 0)) / 2;
 
 export function prepareBuildings(city: City, geojson: any, dem: Dem, proj: Proj): Bld[] {
   return geojson.features.map((f: any, idx: number): Bld => {
@@ -70,8 +77,10 @@ export function prepareBuildings(city: City, geojson: any, dem: Dem, proj: Proj)
     const pts = rings.flatMap((r) => (r[0][0] === r.at(-1)![0] && r[0][1] === r.at(-1)![1] ? r.slice(0, -1) : r));
     const xy: [number, number] = [pts.reduce((s, p) => s + p[0], 0) / pts.length, pts.reduce((s, p) => s + p[1], 0) / pts.length];
     const center = proj.toLonLat(...xy);
-    const { levels, height } = f.properties;
-    const floors = levels ?? (height ? Math.max(1, Math.round(height / city.floorHeight)) : DEFAULT_FLOORS);
+    // 0 этажей или 0 м в OSM — это «нет данных», а не здание без высоты.
+    const levels = f.properties.levels || null, height = f.properties.height || null;
+    const area = rings.reduce((s, r) => s + ringArea(r), 0);
+    const floors = levels ?? (height ? Math.max(1, Math.round(height / city.floorHeight)) : defaultFloors(f.properties.building ?? null, area));
     return {
       idx, id: f.properties.id, osmType: f.geometry.type === 'MultiPolygon' ? 'relation' : 'way', name: f.properties.name, levels, height, floors, assumed: levels == null && height == null,
       h: height ?? floors * city.floorHeight, ground: groundAt(dem, center[0], center[1]), center, xy,
@@ -81,7 +90,7 @@ export function prepareBuildings(city: City, geojson: any, dem: Dem, proj: Proj)
 }
 
 // Растр препятствий: абсолютная отметка верха и индекс здания (+1) в каждой ячейке; деревья — TREE.
-const BCELL = 6; // м
+export const BCELL = 6; // м
 export const TREE = 0xffff;
 export type Roofs = { x0: number; y0: number; cols: number; rows: number; z: Float32Array; idx: Uint16Array };
 

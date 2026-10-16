@@ -16,6 +16,7 @@
 - **Sea view.** For each of 8 directions, whether water is visible from the window level and how far away it is.
 - **City maps.** On load the whole city is coloured by winter sun; switch to the sea map, or to the ground, middle or top floor.
 - **Time slider.** Building shading, ground shadows and the sun marker follow the time of day; ▶ plays a whole day.
+- **Reliability label.** Each building gets high, medium or low reliability with the reasons: floor count estimated, steep slope, woods next to it.
 - **Compare and share.** Pin up to four flats side by side, download a PNG card, or share the URL. The URL keeps the city, building, floor, side, season and time.
 
 ## How it works
@@ -68,7 +69,7 @@ The data lives in `data/<city>/` and is committed. The site calls no APIs at run
 
 ## Limitations
 
-- **Floor counts are known for only 14% of buildings in Tivat and 3% in Kotor.** The rest are assumed to have 2 floors. They are drawn semi-transparent, and the panel lets you correct the count.
+- **Floor counts are known for only 14% of buildings in Tivat and 3% in Kotor.** The rest get a default by OSM tag and footprint: sheds, garages, carports, containers, roofs, ruins, construction sites and footprints under 40 m² get 1 floor, everything else 2. They are drawn semi-transparent, and the panel lets you correct the count. Open height layers do not help here: [GHS-BUILT-H](https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_H_GLOBE_R2023A/) (JRC, 100 m, CC BY 4.0) correlates weakly with known OSM heights in these towns (r = 0.22 in Tivat, 0.30 in Kotor) and errs more than the 2-floor constant (mean error 3.8 vs 2.9 m in Tivat, 5.3 vs 3.6 m in Kotor). In [Overture Maps](https://overturemaps.org/) (release 2026-09-23) heights and floor counts here come only from OSM, and its Microsoft ML footprints carry none.
 - **Copernicus is a surface model**, so its cells include roofs and canopies. It is flattened under buildings. An exact ground needs a DTM.
 - **Trees are OSM woods and parks** at a single height of 10 m.
 - **"Sun in the window" means a direct line of sight** from the window point. Glazing, balconies and reflections are not modelled.
