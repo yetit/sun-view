@@ -6,5 +6,6 @@ export default defineConfig({
   site: process.env.SITE,
   base: (process.env.BASE_PATH ?? '/').replace(/\/?$/, '/'), // со слешем в конце: BASE_URL + 'file'
   server: { port: 4325 },
+  devToolbar: { enabled: false },
   vite: { optimizeDeps: { include: ['maplibre-gl', 'suncalc'] } },
 });

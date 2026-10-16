@@ -1,70 +1,89 @@
 # Sun & View
 
-Кликаешь здание на 3D-карте, выбираешь этаж и сторону окон — и видишь, сколько часов в день солнце попадает в окна по четырём сезонам (равноденствия и солнцестояния), ленту года и видно ли море по каждому из восьми румбов. Города: Тиват и Котор, добавить свой — один объект в конфиге. Всё на открытых данных, расчёт полностью в браузере, бэкенда нет.
+[![Build and deploy](https://github.com/yetit/sun-view/actions/workflows/deploy.yml/badge.svg)](https://github.com/yetit/sun-view/actions/workflows/deploy.yml)
+[![Tests: node --test](https://img.shields.io/badge/tests-node%20--test-3c873a)](tests/)
+[Русская версия](README.ru.md)
 
-Что на экране:
+![Sun & View: a building in Tivat with sea-view sectors, the sun path and a result card](docs/screenshot.png)
 
-- **Карта**: выбранное здание подсвечено, выбранный этаж — оранжевой полосой; вокруг — солнечная диаграмма (кольцо — горизонт, дуга — путь солнца в выбранный сезон: жёлтое — светит в окна, серое — закрыто, бледное — солнце за домом) и секторы по восьми румбам (зелёный тянется до воды, красный — море не видно).
-- **Сторона окон**: «Все» — здание целиком, или один из 8 румбов — окно на стене этого румба, солнце считается только из его полусферы.
-- **Ползунок времени**, сезон и ▶ (сутки за 12 секунд; клавиши ← → и пробел): освещение фасадов следует за солнцем, точка на диаграмме показывает его положение, панель — на солнце ли окно сейчас.
-- **Режимы карты** «солнце» и «море» (этаж: 1-й / средний / верхний): для всех зданий считается доля светового дня с солнцем в окнах или число румбов с водой; считает Web Worker, результат кэшируется.
-- **Панель**: часы солнца по четырём сезонам, лента года (день × час местного времени), роза видимости моря с расстоянием до воды, сравнение до четырёх квартир, PNG-карточка, поиск адреса (Photon), переключатель города.
-- **Ссылка** хранит состояние: `?c=tivat&b=<osm id>&f=<этаж>&d=<румб>&s=<сезон>&t=<час>&m=sun|sea&fm=1|mid|top`.
-- Страница `/method` — как считается, с картинками.
+**Click any building, pick a floor, and see how many hours of direct sun reach its windows in each season, and in which directions the sea is visible. Everything is computed in your browser from open data.**
+
+**Demo: [yetit.github.io/sun-view](https://yetit.github.io/sun-view/)** · Tivat and Kotor, Montenegro · English and Russian (`?lang=en|ru`)
+
+## What it does
+
+- **Sun in the windows.** Hours of direct sun for the March equinox, June solstice, September equinox and December solstice, plus a year ribbon (day × hour). Pick the whole building or one facing (N … NW).
+- **Sea view.** For each of 8 directions, whether water is visible from the window level and how far away it is.
+- **City maps.** On load the whole city is coloured by winter sun; switch to the sea map, or to the ground, middle or top floor.
+- **Time slider.** Building shading, ground shadows and the sun marker follow the time of day; ▶ plays a whole day.
+- **Compare and share.** Pin up to four flats side by side, download a PNG card, or share the URL. The URL keeps the city, building, floor, side, season and time.
+
+## How it works
+
+1. **A world in metres.** Footprints from OpenStreetMap become a 6 m roof raster holding the absolute height of every roof and tree canopy. Copernicus DEM GLO-30 becomes a 60 m terrain grid that reaches about 15 km around the city.
+2. **Ray-marching in the browser.** For every 10 minutes of the day the sun position comes from [suncalc](https://github.com/mourner/suncalc). A ray from the window steps 3 m up to 1 km, checking roofs, trees and terrain, then 30 m up to 15 km, checking terrain only. A hit means shade.
+3. **Sea view** uses the same march. It keeps the highest elevation angle of anything in the way, and a sea cell counts as visible if its angle beats every obstacle before it.
+4. **Web Worker and precompute.** City-wide sun and sea maps are 15 layers per city, 54 KB. `scripts/precompute.ts` builds them when the data is fetched, so the map is coloured instantly. Without them, and for the year ribbon, a Web Worker computes in the background. Results are cached per layer.
+
+Code: `src/scripts/grid.ts` (rasters, rays), `analysis.ts` (seasons, sea rose, city maps), `worker.ts`, `map/` (MapLibre layers, shadows), `ui/` (panel, timebar, mobile sheet). More detail with diagrams is on the [How it works](https://yetit.github.io/sun-view/method?lang=en) page.
+
+## Validation
+
+The terrain horizon was checked against [PVGIS](https://re.jrc.ec.europa.eu/pvg_tools/en/) from the European Commission JRC. The check covered 16 points in Tivat and Kotor, 48 azimuths each. The full report is in Russian: [docs/horizon-check.md](docs/horizon-check.md).
+
+| Where | Mean horizon difference | 21 December sunrise |
+| --- | --- | --- |
+| Flat ground by the sea, Tivat | 0.2–0.3° | same minute as PVGIS |
+| All 8 points, Tivat | 2.1° | — |
+| All 8 points, Kotor | 1.7° | — |
+| Steep slope, Vrmac | 8.3° | 84 min later than PVGIS |
+
+On steep slopes the error comes from the observer's own ground elevation. On a 60 m grid it differs between sources by 20–70 m. Results for hillside buildings on the uphill side are therefore unreliable. The ray core is covered by synthetic tests (`npm test`): scenes with a hill, a neighbouring wall and the sea.
+
+## Performance
+
+Measured on an Apple M2 Pro with the production build (`astro preview`), Tivat, 3,625 buildings.
+
+| | |
+| --- | --- |
+| JavaScript, gzip | 300 KB, mostly MapLibre |
+| City data, gzip | 190 KB of buildings, greenery and precomputed maps, plus a 0.9 MB terrain grid |
+| First load until the coloured map | 1.9 s: data 0.44 s, world 0.17 s, worker 0.23 s, then about 1 s waiting for basemap tiles |
+| Repeat load with HTTP cache | 0.55 s |
+| Click a building, 4 seasons + sea rose | 26 ms |
+| Year ribbon, 73 days × 144 samples, Web Worker | 60 ms |
+| City sun map without precompute, Web Worker | 2.3 s |
+| Switching a city map, precomputed or cached | 25 ms |
+
+## Data and licences
+
+| What | Source | Licence |
+| --- | --- | --- |
+| Buildings, floors, heights, woods and parks, coastline | [OpenStreetMap](https://www.openstreetmap.org/copyright) via Overpass API | ODbL, © OpenStreetMap contributors |
+| Terrain for the computation | [Copernicus DEM GLO-30](https://registry.opendata.aws/copernicus-dem/), AWS Open Data | © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the EU and ESA |
+| Basemap and display terrain | [OpenFreeMap](https://openfreemap.org) / © OpenMapTiles, [Terrain Tiles](https://registry.opendata.aws/terrain-tiles/) | open |
+| Address search | [Photon](https://photon.komoot.io) by Komoot | OSM data, ODbL |
+
+The data lives in `data/<city>/` and is committed. The site calls no APIs at runtime except address search.
+
+## Limitations
+
+- **Floor counts are known for only 14% of buildings in Tivat and 3% in Kotor.** The rest are assumed to have 2 floors. They are drawn semi-transparent, and the panel lets you correct the count.
+- **Copernicus is a surface model**, so its cells include roofs and canopies. It is flattened under buildings. An exact ground needs a DTM.
+- **Trees are OSM woods and parks** at a single height of 10 m.
+- **"Sun in the window" means a direct line of sight** from the window point. Glazing, balconies and reflections are not modelled.
+- **Ground shadows on the map are an illustration** on flat ground. Sun hours come from the rays.
+
+## Run locally
 
 ```bash
-nvm use          # Node ≥ 22.22 (.nvmrc → 24)
+nvm use            # Node ≥ 22.22 (.nvmrc → 24)
 npm install
-npm run dev      # http://localhost:4325
+npm run dev        # http://localhost:4325
+npm test           # ray-core tests
+npm run check      # types
 ```
 
-## Стек
+**Adding a city.** Describe it in `cities.config.mjs` and run `npm run fetch -- <id>`. That runs buildings, terrain with coastline, and the precompute. The city then appears in the switcher as `?c=<id>`.
 
-- Astro 7, одна страница `src/pages/index.astro`.
-- MapLibre GL 6: `src/scripts/style.ts` — светлая карта с рельефом, `src/scripts/main.ts` — карта, выбор здания, панель.
-- MapLibre 6 ищет воркер рядом со своим модулем, Vite этот путь ломает: `scripts/copy-maplibre-worker.mjs` (predev/prebuild) копирует воркер в `public/maplibre/`.
-- `suncalc` — положение солнца.
-- Ключи API не нужны.
-
-## Данные
-
-Лежат в `data/<город>/`, коммитятся; сайт в рантайме внешние API не дёргает (кроме поиска адреса через Photon). Обновить: `npm run fetch -- <id>`.
-
-| Что | Откуда | Лицензия | Скрипт |
-| --- | --- | --- | --- |
-| Контуры зданий, `building:levels`, `height` | OpenStreetMap через Overpass API | ODbL, © участники OSM | `scripts/fetch-buildings.mjs` → `buildings.json` (GeoJSON) |
-| Леса и парки (`natural=wood`, `landuse=forest`, `leisure=park`) — препятствия 10 м | OpenStreetMap | ODbL | тот же → `greenery.json` |
-| Рельеф для расчёта | [Copernicus DEM GLO-30](https://registry.opendata.aws/copernicus-dem/) с AWS Open Data (COG-тайлы 1°×1°, читается только окно bbox range-запросами) | © DLR / Airbus, предоставлено ЕС и ESA в рамках Copernicus, свободно с указанием источника | `scripts/fetch-dem.mjs` → `dem.bin` (Int16 LE, 2″ ≈ 60 м) + `dem.json` (мета) |
-| Море | береговая линия OSM `natural=coastline` (суша слева, вода справа); ячейки моря = 0 м, суша ниже 0 поднята до 1 м | ODbL | внутри `fetch-dem.mjs` |
-| Рельеф и подложка для показа | [Terrain Tiles](https://registry.opendata.aws/terrain-tiles/) (terrarium), [OpenFreeMap](https://openfreemap.org) / OpenMapTiles | открытые | в стиле карты |
-
-На 2026-10-16: Тиват — 3 625 зданий (у 494 известна этажность или высота), Котор — 3 654 (у 112). Overpass часто отвечает 5xx: скрипт повторяет по зеркалам, своё можно задать через `OVERPASS=<url>`.
-
-## Как считается
-
-Локальная система — метры от центра города; высоты — над уровнем моря. `src/scripts/grid.ts`:
-
-- **Здание**: центроид контура, отметка земли из DEM (минимум по 4 ближайшим ячейкам суши), высота = `height`, иначе `levels × 3 м`, иначе 2 этажа (такие здания на карте светлее, а в панели помечены). Окно — на середине высоты выбранного этажа; для стороны — на стене этого румба, на 1 м снаружи.
-- **Растр крыш**: здания и зелёные массивы растеризуются в сетку 6 м с абсолютной отметкой верха и индексом — так луч проверяет соседей за O(1) на шаг.
-- **Солнце** (`src/scripts/analysis.ts`): для каждого сезона (и для ленты года — каждого 5-го дня) с шагом 10 минут берём `SunCalc.getPosition`; если солнце над горизонтом, пускаем луч из окна по азимуту и высоте солнца: шаг 3 м до 1 км (здания + рельеф), дальше 30 м до 15 км (только рельеф). Луч упёрся в крышу чужого здания или в рельеф — тень. Часы солнца = доля освещённых отсчётов. Для стороны учитывается только солнце перед фасадом; «из N часов» — время, когда солнце вообще перед фасадом. Для «Все» — здание целиком: «солнце попадает хоть в какие-то окна этажа».
-- **Море**: по каждому из 8 румбов идём вдоль луча с уровня окна на стене этого румба, держим максимальный угол места препятствий (рельеф, крыши). Ячейка воды (DEM ≤ 0) видна, если угол на неё выше всех препятствий до неё — так дальняя вода видна поверх низкого берега. Результат — расстояние до первой видимой воды, на карте рисуется лучом (зелёный/красный).
-
-Допущения и ограничения:
-
-- Copernicus DEM — модель *поверхности* (DSM), в ячейку попадают и крыши, и деревья. Скрипт сглаживает DSM под контурами зданий минимумом соседей; под зданием берётся минимум из ближайших ячеек суши; своя ячейка DSM при трассировке пропускается. Для точной земли нужен DTM — например, FABDEM (CC BY-NC-SA, некоммерческая), в прототип не включён.
-- Шаг 2″ (≈60 м) и bbox рельефа из конфига — примерно на 15 км во все стороны от bbox зданий, то есть до предела трассировки; за пределами сетки луч считается свободным. Высота ячейки — ближайший пиксель 1″-тайла Copernicus (тайлы PixelIsPoint).
-- Море — по береговой линии OSM; озёра и реки морем не считаются.
-- Деревья — леса и парки OSM одной высотой 10 м (DSM их тоже содержит, но на сетке 60 м).
-- Цифры не сверялись с натурными наблюдениями: ядро проверяется синтетическими тестами (`npm test`, Node test runner, сцены с горой, стеной и морем).
-- Расчёт идёт по UTC, в ленте года и на ползунке время переведено в часовой пояс города из конфига.
-- Этажность по OSM известна у ~14 % зданий Тивата; остальные — 2 этажа по умолчанию.
-
-Рельефный горизонт сверен с PVGIS (EU JRC): `node scripts/check-horizon.mjs <id>`, разбор — в [docs/horizon-check.md](docs/horizon-check.md). На ровных местах у моря совпадение в среднем 0,2–0,4°, восход 21 декабря на набережных Тивата — до минуты (раньше bbox рельефа обрезал горы на юго-востоке и восход выходил на 10–16 минут раньше; bbox расширен). Остаётся одно систематическое расхождение: на крутых склонах отметка точки по ячейке 60 м расходится с другими источниками на 10–90 м, и горизонт вверх по склону завышен на 10–30°. Предел 15 км и кривизна Земли влияют меньше чем на 0,1°.
-
-## Другой город
-
-Все города — в `cities.config.mjs`: id, bbox зданий (по нему и растр крыш), bbox и шаг рельефа, центр камеры, часовой пояс, высота этажа и деревьев. Добавить объект, запустить `npm run fetch -- <id>` — данные лягут в `data/<id>/`, приложение подхватит их по `?c=<id>` и покажет в переключателе. Для места вне покрытия Copernicus (его нет только у части островов) надо заменить `fetch-dem.mjs`.
-
-## Деплой
-
-`.github/workflows/deploy.yml` собирает и публикует на GitHub Pages при пуше в `main` (Settings → Pages → Source: GitHub Actions); базовый путь `/<repo>` передаётся через `BASE_PATH`. Для Cloudflare Pages: build `npm run build`, output `dist`, без переменных.
+**Deploy.** `.github/workflows/deploy.yml` runs type check, tests and build, then publishes to GitHub Pages on push to `main`. It only publishes while the repository is public. For Cloudflare Pages, use build `npm run build`, output `dist`, and env `NODE_VERSION=24`.

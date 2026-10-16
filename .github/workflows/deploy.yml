@@ -1,5 +1,7 @@
-# Сборка и публикация на GitHub Pages: Settings → Pages → Source: GitHub Actions.
-name: Deploy to GitHub Pages
+# Проверка типов, тесты и сборка на каждый пуш в main; публикация на GitHub Pages
+# (Settings → Pages → Source: GitHub Actions). Pages для приватных репозиториев на бесплатном
+# плане недоступен — тогда только проверки и сборка.
+name: Build and deploy
 on:
   push:
     branches: [main]
@@ -8,23 +10,30 @@ permissions:
   contents: read
   pages: write
   id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 24, cache: npm }
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
       - run: npm ci
+      - run: npm run check
       - run: npm test
       - run: npm run build
         env:
-          BASE_PATH: /${{ github.event.repository.name }}
-      - uses: actions/upload-pages-artifact@v3
-        with: { path: dist }
+          BASE_PATH: /${{ github.event.repository.name }}/
+          SITE: https://${{ github.repository_owner }}.github.io
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
   deploy:
     needs: build
-    # Pages для приватных репозиториев на бесплатном плане недоступен — тогда только сборка и тесты.
     if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     environment:

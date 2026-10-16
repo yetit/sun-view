@@ -10,7 +10,8 @@ const DEG = 180 / Math.PI;
 const R_PATH = 220; // м, радиус солнечной диаграммы вокруг здания
 
 setWorkerUrl(`${BASE}maplibre/maplibre-gl-worker.mjs`);
-export const map = new Map({ container: 'map', style, ...city.camera, maxPitch: 75, attributionControl: { compact: true } });
+// В dev буфер сохраняется, чтобы снимать картинки (OG, README) из canvas.
+export const map = new Map({ container: 'map', style, ...city.camera, maxPitch: 75, attributionControl: { compact: true }, canvasContextAttributes: { preserveDrawingBuffer: import.meta.env.DEV } });
 map.addControl(new NavigationControl({ visualizePitch: true }), 'top-left');
 // Событие load может прийти раньше, чем загрузятся данные, — ловим его сразу.
 export const mapReady = new Promise<void>((r) => map.once('load', () => r()));

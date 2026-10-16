@@ -1,6 +1,6 @@
 // Точка входа: язык и подписи, город, данные → мир → воркер → карта; затем панель и таймбар.
 import { cities } from '../../cities.config.mjs';
-import { $, $$, BASE, city, num, params, setWorld, startWorker, state } from './app.ts';
+import { $, $$, ask, BASE, city, num, params, setWorld, startWorker, state } from './app.ts';
 import { hasData, loadCityData } from './data.ts';
 import { createWorld } from './grid.ts';
 import { cityName, lang, langHref, t } from './i18n.ts';
@@ -31,9 +31,9 @@ initSheet();
 const stages = $('.stages');
 stages.innerHTML = t.stages.map((s) => `<li>${s}</li>`).join('');
 const stage = (i: number) => [...stages.children].forEach((li, j) => li.className = j < i ? 'done' : j === i ? 'active' : '');
+// Этапы отмечаем в Performance API (sv:data, sv:world, …) — видно в DevTools и в продакшен-сборке.
 const timing: Record<string, number> = {};
-const t0 = performance.now();
-const mark = (k: string) => (timing[k] = Math.round(performance.now() - t0));
+const mark = (k: string) => (timing[k] = Math.round(performance.mark(`sv:${k}`).startTime));
 
 stage(0);
 const data = await loadCityData(city.id);
@@ -51,7 +51,7 @@ mark('worker');
 stage(3);
 await mapReady;
 mark('map');
-if (import.meta.env.DEV) Object.assign(window, { map, world, timing }); // для проверки и замеров из консоли
+if (import.meta.env.DEV) Object.assign(window, { map, world, timing, ask }); // для проверки и замеров из консоли
 
 initTimebar();
 initPanel();
