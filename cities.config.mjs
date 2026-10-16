@@ -36,6 +36,24 @@ export const cities = [
       { b: 270308497, f: 4, d: null, s: 3, ru: 'Вилла на склоне зимой', en: 'Hillside villa in winter' },
     ],
   },
+  {
+    // Берген: 60° с. ш. — зимой солнце в полдень поднимается всего на ~6°, город зажат между фьордом
+    // и «семью горами» (Флёйен, Ульрикен), этажность в OSM есть у ~половины зданий центра.
+    ...common,
+    timezone: 'Europe/Oslo',
+    id: 'bergen',
+    name: 'Берген',
+    nameEn: 'Bergen',
+    bbox: { south: 60.383, west: 5.305, north: 60.403, east: 5.345 },
+    // ±15 км: ±0.135° по широте, ±0.27° по долготе (на 60° градус долготы ≈ 55 км).
+    dem: { bbox: { south: 60.248, west: 5.035, north: 60.538, east: 5.615 }, step: 2 },
+    camera: { center: [5.325, 60.393], zoom: 14.4, pitch: 60, bearing: 120 },
+    examples: [
+      { b: 289528809, f: 13, d: null, s: 1, ru: '13-й этаж над фьордом', en: '13th floor over the fjord' },
+      { b: 26249100, f: 1, d: null, s: 3, ru: 'Хоконсхаллен: зимой без солнца', en: "Haakon's Hall: no winter sun" },
+      { b: 579246951, f: 3, d: null, s: 3, ru: 'Высоко на склоне зимой', en: 'High on the hillside in winter' },
+    ],
+  },
 ];
 
 export const getCity = (id) => cities.find((c) => c.id === id) ?? cities[0];
