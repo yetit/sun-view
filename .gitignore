@@ -5,3 +5,4 @@ public/maplibre/
 .env
 .DS_Store
 .claude/
+.idea/
