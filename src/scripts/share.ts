@@ -3,7 +3,7 @@ import type { SeaDir, Season } from './analysis.ts';
 import { t } from './i18n.ts';
 
 const fmt = new Intl.NumberFormat(t.locale, { maximumFractionDigits: 1 });
-export type CardData = { city: string; title: string; subtitle: string; seasons: Season[]; sea: SeaDir[]; ribbon: HTMLCanvasElement | null };
+export type CardData = { city: string; title: string; subtitle: string; summary: string; seasons: Season[]; sea: SeaDir[]; ribbon: HTMLCanvasElement | null };
 
 export async function shareCard(o: CardData): Promise<Blob> {
   const W = 1200, H = 630;
@@ -17,10 +17,11 @@ export async function shareCard(o: CardData): Promise<Blob> {
   ctx.fillStyle = '#fcfaf6'; ctx.fillRect(0, 0, W, H);
   font(650, 44); text(o.title, 56, 92, '#1f1d1a');
   font(400, 20); text(o.subtitle, 56, 126, '#7a746a');
-  font(600, 13); text(t.card.sun, 56, 178, '#7a746a');
+  font(600, 20); text(o.summary, 56, 158, '#1f1d1a');
+  font(600, 13); text(t.card.sun, 56, 196, '#7a746a');
 
   o.seasons.forEach((s, i) => {
-    const x = 56 + i * 156, y = 192;
+    const x = 56 + i * 156, y = 208;
     ctx.fillStyle = '#f3efe6'; ctx.beginPath(); ctx.roundRect(x, y, 142, 104, 12); ctx.fill();
     font(500, 15); text(t.seasons[i], x + 14, y + 30, '#7a746a');
     font(650, 32); text(`${fmt.format(s.sun)} ${t.h}`, x + 14, y + 68, '#1f1d1a');

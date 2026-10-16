@@ -3,7 +3,7 @@
 import { eye, eyeHeight, N, reliability, RIBBON_DAY_STEP, SEASONS, seaRose, seasonCalc, STEP_MIN, YEAR, type SeaDir, type Season } from '../analysis.ts';
 import { $, $$, ask, city, fmtH, fmtT, geojson, state, syncUrl, tzOffset, world } from '../app.ts';
 import type { Bld } from '../grid.ts';
-import { cityName, lang, t } from '../i18n.ts';
+import { buildingName, cityName, lang, summaryText, t } from '../i18n.ts';
 import { applyColors, drawFloor, drawSectors, drawSunPath, map, setData, sheetPadding } from '../map/layers.ts';
 import { shareCard } from '../share.ts';
 import { setSheet } from './sheet.ts';
@@ -23,7 +23,7 @@ export function select(b: Bld, opts: { floor?: number; side?: number | null; flo
   state.floor = Math.min(b.floors, Math.max(1, opts.floor ?? Math.ceil(b.floors / 2)));
   state.side = opts.side === undefined ? null : opts.side;
   fillFloors(b);
-  $('.b-name').textContent = b.name ?? t.building(b.id);
+  $('.b-name').textContent = buildingName(b);
   $('.loading').hidden = true;
   $('.empty').hidden = true;
   const result = $('.result');
@@ -75,6 +75,7 @@ function render() {
   $('.eye').textContent = t.eye(fmtH.format(eyeHeight(world, b, state.floor)));
   $('.seasons').innerHTML = seasonsHtml();
   lastSea = seaRose(world, b, state.floor);
+  $('.summary').textContent = summary();
   $('.rose').innerHTML = roseSvg(lastSea);
   drawSectors(b, lastSea);
   drawSunPath();
@@ -90,6 +91,8 @@ export function refreshSeason() {
   drawSunPath();
   $('.seasons').innerHTML = seasonsHtml();
 }
+
+const summary = () => summaryText(lastSeasons, lastSea.filter((s) => s.dist != null).length, (v) => fmtH.format(v));
 
 function seasonsHtml() {
   const e = eye(world, state.current!, state.floor, state.side);
@@ -167,7 +170,7 @@ function renderPins() {
   $('.compare').hidden = !pins.length;
   $('.pin-btn').toggleAttribute('disabled', pins.length >= 4);
   $('.compare-rows').innerHTML = pins.map((p, i) =>
-    `<tr><td><button type="button" class="link" data-i="${i}">${p.b.name ?? p.b.id}</button><small>${p.floor} ${t.fl} · ${p.side == null ? t.whole : t.dirs[p.side]}</small></td>${p.seasons.map((s) => `<td>${fmtH.format(s.sun)}</td>`).join('')}<td>${p.sea}/8</td><td><button type="button" class="x" data-i="${i}" aria-label="${t.remove}">×</button></td></tr>`,
+    `<tr><td><button type="button" class="link" data-i="${i}">${buildingName(p.b)}</button><small>${p.floor} ${t.fl} · ${p.side == null ? t.whole : t.dirs[p.side]}</small></td>${p.seasons.map((s) => `<td>${fmtH.format(s.sun)}</td>`).join('')}<td>${p.sea}/8</td><td><button type="button" class="x" data-i="${i}" aria-label="${t.remove}">×</button></td></tr>`,
   ).join('');
   $$('.compare .link').forEach((el) => el.addEventListener('click', () => { const p = pins[+el.dataset.i!]; select(p.b, { floor: p.floor, side: p.side }); }));
   $$('.compare .x').forEach((el) => el.addEventListener('click', () => { pins.splice(+el.dataset.i!, 1); renderPins(); }));
@@ -273,7 +276,7 @@ export function initPanel() {
     const b = state.current;
     if (!b) return;
     const name = cityName(city);
-    const blob = await shareCard({ city: name, title: b.name ?? t.building(b.id), subtitle: `${name} · ${t.card.floor(state.floor)} · ${sideLabel()}`, seasons: lastSeasons, sea: lastSea, ribbon: ribbonSmall });
+    const blob = await shareCard({ city: name, title: buildingName(b), summary: summary(), subtitle: `${name} · ${t.card.floor(state.floor)} · ${sideLabel()}`, seasons: lastSeasons, sea: lastSea, ribbon: ribbonSmall });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `sun-view-${city.id}-${b.id}-${state.floor}.png`;

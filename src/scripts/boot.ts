@@ -1,7 +1,8 @@
-// Точка входа: язык и подписи, город, данные → мир → воркер → карта; затем панель и таймбар.
+// Запуск приложения (после проверки WebGL в main.ts): подписи, город, данные → мир → воркер → карта.
 import { cities } from '../../cities.config.mjs';
 import { $, $$, ask, BASE, city, num, params, setWorld, startWorker, state } from './app.ts';
 import { hasData, loadCityData } from './data.ts';
+import { hideFallback, showFallback } from './fallback.ts';
 import { createWorld } from './grid.ts';
 import { cityName, lang, langHref, t } from './i18n.ts';
 import { bindBuildings, map, mapReady } from './map/layers.ts';
@@ -49,7 +50,11 @@ stage(2);
 await startWorker({ city, geojson: data.geojson, greenery: data.greenery, demMeta: data.demMeta, demBuf: data.demBuf });
 mark('worker');
 stage(3);
+// Карта не загрузилась за 10 с (сеть, сервер тайлов) — сообщение с кнопкой; если догрузится — убираем.
+const slow = setTimeout(() => showFallback(t.mapSlow, true), 10000);
 await mapReady;
+clearTimeout(slow);
+hideFallback();
 mark('map');
 if (import.meta.env.DEV) Object.assign(window, { map, world, timing, ask }); // для проверки и замеров из консоли
 

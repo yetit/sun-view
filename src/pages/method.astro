@@ -10,7 +10,12 @@ const repo = 'https://github.com/yetit/sun-view';
 <!doctype html>
 <html lang="ru">
   <head>
-    <Meta title="How it works — Sun & View" description="Ray-marching sunlight and sea views over a terrain grid and a roof raster, in the browser, from OpenStreetMap and Copernicus DEM. · Как Sun & View считает солнце и вид на море." />
+    <Meta
+      title="How it works — Sun & View"
+      description="How Sun & View ray-marches sunlight and sea views in the browser over a 60 m Copernicus terrain grid and a 6 m roof raster from OpenStreetMap, and how it was checked against PVGIS. · Как считаются солнце и вид на море и как это сверено с PVGIS."
+      image="og-method.png"
+      imageAlt="Diagram: a ray from a window toward the sun passes a neighbouring roof and a hillside; the angle to the sea is compared with the angle to obstacles"
+    />
     <script is:inline>
       // Тот же выбор языка, что в приложении: ?lang=, иначе язык браузера.
       const q = new URL(location.href).searchParams.get('lang');
@@ -82,7 +87,7 @@ const repo = 'https://github.com/yetit/sun-view';
         <li>Copernicus — модель поверхности: в ячейках есть крыши и кроны. Под зданиями DSM опущен до соседей с поправкой на наклон склона. Для точной земли нужен DTM (например, FABDEM, лицензия CC BY-NC-SA).</li>
         <li>Шаг рельефа 60 м, высота между ячейками интерполируется: гребни и узкие проходы сглажены, на крутых склонах отметка дома между источниками расходится на 20–70 м.</li>
         <li>Деревья — леса и парки OSM одной высотой; отдельные деревья не учитываются.</li>
-        <li>Этажность в OSM известна примерно у 14 % зданий Тивата и 3 % Котора; остальным даётся 1 этаж (хозпостройки, руины, стройки, контуры меньше 40 м²) или 2 этажа (на карте они полупрозрачные), этажность можно уточнить в панели. Метка надёжности в панели называет, что из этого списка касается выбранного здания: оценённая этажность, крутой склон, лес рядом.</li>
+        <li>Этажность в OSM известна примерно у 14 % зданий Тивата, 3 % Котора и 58 % Бергена; остальным даётся 1 этаж (хозпостройки, руины, стройки, контуры меньше 40 м²) или 2 этажа (на карте они полупрозрачные), этажность можно уточнить в панели. Метка надёжности в панели называет, что из этого списка касается выбранного здания: оценённая этажность, крутой склон, лес рядом.</li>
         <li>Отражения, остекление, глубина лоджий не моделируются: «солнце в окне» значит прямую видимость солнца из точки окна.</li>
         <li>Тени на карте — иллюстрация (проекция контура на ровную землю); часы солнца считаются лучами.</li>
       </ul>
@@ -90,7 +95,7 @@ const repo = 'https://github.com/yetit/sun-view';
         <li>Copernicus is a surface model: cells include roofs and canopies. Under buildings the DSM is lowered to its neighbours, corrected for the slope. Exact ground needs a DTM (e.g. FABDEM, CC BY-NC-SA).</li>
         <li>The 60 m terrain grid is interpolated between cells; it smooths ridges and gaps, and on steep slopes sources disagree on a building's ground by 20–70 m.</li>
         <li>Trees are OSM woods and parks at one height; single trees are ignored.</li>
-        <li>OSM has floor counts for about 14% of buildings in Tivat and 3% in Kotor; the rest get 1 floor (sheds, garages, ruins, construction, footprints under 40 m²) or 2 floors (shown semi-transparent), and you can correct it in the panel. The reliability label in the panel says which of these limits apply to the selected building: estimated floors, steep slope, woods nearby.</li>
+        <li>OSM has floor counts for about 14% of buildings in Tivat, 3% in Kotor and 58% in Bergen; the rest get 1 floor (sheds, garages, ruins, construction, footprints under 40 m²) or 2 floors (shown semi-transparent), and you can correct it in the panel. The reliability label in the panel says which of these limits apply to the selected building: estimated floors, steep slope, woods nearby.</li>
         <li>Reflections, glazing and balcony depth are not modelled: "sun in the window" means a direct line of sight to the sun from the window point.</li>
         <li>Shadows on the map are an illustration (footprints projected on flat ground); sun hours come from the rays.</li>
       </ul>

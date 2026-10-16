@@ -58,6 +58,9 @@ export type Bld = {
   id: number;
   osmType: 'way' | 'relation'; // мультиполигоны в buildings.json — из relation
   name: string | null;
+  addr: string | null; // addr:street + addr:housenumber
+  street: string | null; // ближайшая улица, если адреса нет
+  kind: string | null; // тег building
   levels: number | null;
   height: number | null;
   floors: number; // этажей (из OSM или оценка)
@@ -92,7 +95,7 @@ export function prepareBuildings(city: City, geojson: any, dem: Dem, proj: Proj)
     const area = rings.reduce((s, r) => s + ringArea(r), 0);
     const floors = levels ?? (height ? Math.max(1, Math.round(height / city.floorHeight)) : defaultFloors(f.properties.building ?? null, area));
     return {
-      idx, id: f.properties.id, osmType: f.geometry.type === 'MultiPolygon' ? 'relation' : 'way', name: f.properties.name, levels, height, floors, assumed: levels == null && height == null,
+      idx, id: f.properties.id, osmType: f.geometry.type === 'MultiPolygon' ? 'relation' : 'way', name: f.properties.name, addr: f.properties.addr ?? null, street: f.properties.street ?? null, kind: f.properties.building ?? null, levels, height, floors, assumed: levels == null && height == null,
       h: height ?? floors * city.floorHeight, ground: groundAt(dem, center[0], center[1]), center, xy,
       radius: Math.max(...pts.map((p) => Math.hypot(p[0] - xy[0], p[1] - xy[1]))), rings,
     };

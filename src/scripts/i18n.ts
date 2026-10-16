@@ -63,10 +63,10 @@ const ru = {
   modes: { normal: 'Обычная', sun: 'Солнце', sea: 'Море' },
   heightAria: 'Высота окна над землёй',
   heightOption: (h: number, floor: number) => `окна на ${h} м · ${floor}-й эт.`,
-  legendSun: (season: string, h: number) => `Часы солнца в окнах · ${season.toLowerCase()} · ${h} м`,
-  legendSea: (h: number) => `Направлений с видом на море · ${h} м`,
+  legendSun: (season: string, floor: number) => `Часы солнца в окнах · ${season.toLowerCase()} · ${floor} этаж`,
+  legendSea: (floor: number) => `Направлений с видом на море · ${floor} этаж`,
   legendQuantiles: 'У 10 % зданий меньше левого значения, у 10 % — больше правого',
-  legendLow: (h: number) => `Блёклые — дом ниже ${h} м, взят верхний этаж`,
+  legendLow: (floor: number) => `Блёклые — в доме меньше ${floor} этажей, взят верхний`,
   legendAssumed: 'полупрозрачные — этажность предположена',
   play: 'Сутки (пробел)',
   hourAria: 'Время суток (стрелки ← →)',
@@ -77,6 +77,19 @@ const ru = {
   city: 'Город',
   langSwitch: 'EN',
   langSwitchTitle: 'English',
+  // Подпись здания без имени: адрес → «тип на улице» → тип.
+  types: { apartments: 'Жилой дом', residential: 'Жилой дом', house: 'Дом', detached: 'Дом', semidetached_house: 'Дом', terrace: 'Таунхаус', hotel: 'Отель', retail: 'Магазин', commercial: 'Коммерческое здание', office: 'Офис', school: 'Школа', kindergarten: 'Детский сад', university: 'Университет', hospital: 'Больница', church: 'Церковь', chapel: 'Часовня', cathedral: 'Собор', public: 'Общественное здание', civic: 'Общественное здание', government: 'Госучреждение', industrial: 'Производственное здание', warehouse: 'Склад', garage: 'Гараж', garages: 'Гаражи', shed: 'Сарай', roof: 'Навес', ruins: 'Руины', construction: 'Стройка', service: 'Служебное здание' } as Record<string, string>,
+  genericBuilding: 'Здание',
+  onStreet: (type: string, street: string) => `${type} на ${street}`,
+  floorOption: (n: number) => `${n} этаж`,
+  heightTitle: (h: number) => `окна на ${h} м над землёй`,
+  legendInfo: 'Как читать шкалу',
+  // Сводка одной фразой: солнце по доле дня зимой и летом, море по числу направлений.
+  summarySun: { none: 'Прямого солнца почти нет', allYear: 'Солнечно круглый год', mostly: (w: string) => `Солнечно, зимой ${w} ч в день`, summer: (w: string) => `Солнце в основном летом, зимой ${w} ч`, little: 'Мало прямого солнца круглый год' },
+  summarySea: (n: number) => (n === 0 ? 'моря не видно' : n === 1 ? 'море видно в одну сторону' : `море видно на ${n} ${n < 5 ? 'стороны' : 'сторон'}`),
+  noWebgl: 'Карте нужен WebGL, а этот браузер его не поддерживает или он выключен. Откройте страницу в свежем Chrome, Firefox или Safari.',
+  mapSlow: 'Карта не загрузилась за 10 секунд. Возможно, медленная сеть или недоступен сервер тайлов.',
+  retry: 'Перезагрузить',
   card: { sun: 'СОЛНЦЕ В ОКНАХ', sea: 'ВИД НА МОРЕ', year: 'год →', day: '↓ сутки', floor: (n: number) => `${n} этаж`, footer: 'данные: OpenStreetMap (ODbL), Copernicus DEM GLO-30, suncalc' },
 };
 
@@ -141,10 +154,10 @@ const en: Dict = {
   modes: { normal: 'Plain', sun: 'Sun', sea: 'Sea' },
   heightAria: 'Window height above ground',
   heightOption: (h: number, floor: number) => `windows at ${h} m · floor ${floor}`,
-  legendSun: (season: string, h: number) => `Hours of sun in the windows · ${season.toLowerCase()} · ${h} m`,
-  legendSea: (h: number) => `Directions with a sea view · ${h} m`,
+  legendSun: (season: string, floor: number) => `Hours of sun in the windows · ${season.toLowerCase()} · floor ${floor}`,
+  legendSea: (floor: number) => `Directions with a sea view · floor ${floor}`,
   legendQuantiles: '10% of buildings get less than the left value, 10% more than the right',
-  legendLow: (h: number) => `Faded: building lower than ${h} m, top floor shown`,
+  legendLow: (floor: number) => `Faded: fewer than ${floor} floors, top floor shown`,
   legendAssumed: 'semi-transparent: floor count assumed',
   play: 'Play the day (space)',
   hourAria: 'Time of day (← → keys)',
@@ -155,10 +168,39 @@ const en: Dict = {
   city: 'City',
   langSwitch: 'RU',
   langSwitchTitle: 'Русский',
+  types: { apartments: 'Apartment building', residential: 'Residential building', house: 'House', detached: 'House', semidetached_house: 'House', terrace: 'Terraced house', hotel: 'Hotel', retail: 'Shop', commercial: 'Commercial building', office: 'Office', school: 'School', kindergarten: 'Kindergarten', university: 'University', hospital: 'Hospital', church: 'Church', chapel: 'Chapel', cathedral: 'Cathedral', public: 'Public building', civic: 'Public building', government: 'Government building', industrial: 'Industrial building', warehouse: 'Warehouse', garage: 'Garage', garages: 'Garages', shed: 'Shed', roof: 'Canopy', ruins: 'Ruins', construction: 'Construction site', service: 'Service building' },
+  genericBuilding: 'Building',
+  onStreet: (type: string, street: string) => `${type} on ${street}`,
+  floorOption: (n: number) => `floor ${n}`,
+  heightTitle: (h: number) => `windows ${h} m above ground`,
+  legendInfo: 'How to read the scale',
+  summarySun: { none: 'Almost no direct sun', allYear: 'Sunny all year round', mostly: (w: string) => `Sunny; ${w} h a day in winter`, summer: (w: string) => `Sun mostly in summer; ${w} h in winter`, little: 'Little direct sun all year' },
+  summarySea: (n: number) => (n === 0 ? 'no sea view' : n === 1 ? 'sea visible in one direction' : `sea visible in ${n} directions`),
+  noWebgl: 'The map needs WebGL, which this browser does not support or has turned off. Please open the page in a recent Chrome, Firefox or Safari.',
+  mapSlow: 'The map did not load within 10 seconds. The network may be slow or the tile server unavailable.',
+  retry: 'Reload',
   card: { sun: 'SUN IN THE WINDOWS', sea: 'SEA VIEW', year: 'year →', day: '↓ day', floor: (n: number) => `floor ${n}`, footer: 'data: OpenStreetMap (ODbL), Copernicus DEM GLO-30, suncalc' },
 };
 
 export const t: Dict = lang === 'en' ? en : ru;
+// Подпись здания: имя → адрес → «тип на улице» → тип → «Здание N».
+export function buildingName(b: { id: number; name: string | null; addr: string | null; street: string | null; kind: string | null }) {
+  if (b.name) return b.name;
+  if (b.addr) return b.addr;
+  const type = (b.kind && t.types[b.kind]) || null;
+  if (b.street) return t.onStreet(type ?? t.genericBuilding, b.street);
+  return type ?? t.building(b.id);
+}
+
+// Сводка одной фразой по сезонам (часы и световой день) и числу направлений с морем.
+export function summaryText(seasons: { sun: number; daylight: number }[], seaCount: number, fmt: (v: number) => string) {
+  const [, summer, , winter] = seasons;
+  const wf = winter.daylight ? winter.sun / winter.daylight : 0, sf = summer.daylight ? summer.sun / summer.daylight : 0;
+  const s = t.summarySun;
+  const sun = summer.sun < 1 && winter.sun < 0.5 ? s.none : wf >= 0.7 && sf >= 0.6 ? s.allYear : wf >= 0.4 ? s.mostly(fmt(winter.sun)) : sf >= 0.5 ? s.summer(fmt(winter.sun)) : s.little;
+  return `${sun}, ${t.summarySea(seaCount)}.`;
+}
+
 export const cityName = (c: { name: string; nameEn?: string }) => (lang === 'en' ? c.nameEn ?? c.name : c.name);
 
 // Ссылка на ту же страницу на другом языке.

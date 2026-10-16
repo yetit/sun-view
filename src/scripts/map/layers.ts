@@ -1,5 +1,5 @@
 // Карта MapLibre и всё, что рисуется на ней: здания, этаж, секторы моря, солнечная диаграмма.
-import { Map, NavigationControl, setWorkerUrl } from 'maplibre-gl';
+import { Map, NavigationControl, setWorkerUrl, type FilterSpecification } from 'maplibre-gl';
 import { dayPath, eye, SEASONS, STEP_MIN, type SeaDir } from '../analysis.ts';
 import { BASE, city, fmtH, geojson, state, world } from '../app.ts';
 import { t } from '../i18n.ts';
@@ -65,10 +65,21 @@ export function drawSectors(b: Bld, sea: SeaDir[]) {
     ring.push(b.center);
     const sea = dist != null;
     features.push({ type: 'Feature', properties: { sea }, geometry: { type: 'Polygon', coordinates: [ring] } });
-    features.push({ type: 'Feature', properties: { sea, label: sea ? `${dir}\n${fmtH.format(dist / 1000)} ${t.km}` : `${dir}\n—` }, geometry: { type: 'Point', coordinates: offset(b.center, bearing, 105) } });
+    features.push({ type: 'Feature', properties: { i, sea, label: sea ? `${dir}\n${fmtH.format(dist / 1000)} ${t.km}` : `${dir}\n—` }, geometry: { type: 'Point', coordinates: offset(b.center, bearing, 105) } });
   }
   setData('sectors', features);
+  updateSectorLabels();
 }
+
+// Подписи направлений в 3D налезают на дома: при наклоне камеры больше 45° оставляем только
+// подпись выбранной стороны (а если выбрано всё здание — ни одной; сектора и роза в панели остаются).
+const LABEL_PITCH = 45;
+export function updateSectorLabels() {
+  const point = ['==', ['geometry-type'], 'Point'];
+  const flat = map.getPitch() <= LABEL_PITCH;
+  map.setFilter('sector-labels', (flat ? point : ['all', point, ['==', ['get', 'i'], state.side ?? -1]]) as FilterSpecification);
+}
+map.on('pitchend', () => map.getLayer('sector-labels') && updateSectorLabels());
 
 // Солнечная диаграмма на земле: кольцо — горизонт, дуга — путь солнца в сезон (светит / тень / за домом).
 export function drawSunPath() {

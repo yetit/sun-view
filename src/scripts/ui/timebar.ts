@@ -62,9 +62,11 @@ export async function applyMode() {
   if (mode === 'normal') { $('.progress').textContent = ''; return; }
   const sun = mode === 'sun';
   const low = world.blds.map((b) => b.floors < floorAt(world, height));
-  $('.legend-title').textContent = sun ? t.legendSun(t.seasons[season], height) : t.legendSea(height);
+  const floor = floorAt(world, height);
+  $('.legend-title').textContent = sun ? t.legendSun(t.seasons[season], floor) : t.legendSea(floor);
   $('.legend-bar').style.background = `linear-gradient(90deg, ${(sun ? SUN_RAMP : SEA_RAMP).join(',')})`;
-  $('.legend-note').textContent = [sun ? t.legendQuantiles : '', low.some(Boolean) ? t.legendLow(height) : ''].filter(Boolean).join('. ');
+  // Пояснения — в подсказке за значком «i», на виду только шкала.
+  $('.legend-note').textContent = [sun ? t.legendQuantiles : '', low.some(Boolean) ? t.legendLow(floor) : ''].filter(Boolean).join('. ');
   if (!sun) ['0', '2', '≥ 4'].forEach((s, i) => ($(['.legend-min', '.legend-mid', '.legend-max'][i]).textContent = s));
   ++modeReq;
   const arr = await layerValues(sun ? `sun:${season}:${height}` : `sea:${height}`, $('.progress'));
@@ -122,9 +124,16 @@ export function initTimebar() {
     c.addEventListener('click', () => { state.mode = c.dataset.mode as Mode; applyMode(); });
   });
   const floorModeSel = $<HTMLSelectElement>('.floor-mode');
-  floorModeSel.innerHTML = HEIGHTS.map((h) => `<option value="${h}">${t.heightOption(h, floorAt(world, h))}</option>`).join('');
+  // В списке — этаж, метры над землёй — в подсказке.
+  floorModeSel.innerHTML = HEIGHTS.map((h) => `<option value="${h}" title="${t.heightTitle(h)}">${t.floorOption(floorAt(world, h))}</option>`).join('');
+  const syncTitle = () => (floorModeSel.title = t.heightTitle(+floorModeSel.value));
   floorModeSel.value = String(state.height);
-  floorModeSel.addEventListener('change', () => { state.height = +floorModeSel.value; applyMode(); });
+  syncTitle();
+  floorModeSel.addEventListener('change', () => { state.height = +floorModeSel.value; syncTitle(); applyMode(); });
+  // Подсказка легенды: наведение и фокус — через CSS, тап на телефоне — переключением класса.
+  const info = $('.legend-info');
+  info.setAttribute('aria-label', t.legendInfo);
+  info.addEventListener('click', () => $('.legend-box').classList.toggle('tip-open'));
   $('.legend-assumed').textContent = t.legendAssumed;
 }
 

@@ -36,7 +36,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .lang { font-weight: 600; }
 .tagline { margin: -4px 0 2px; color: var(--muted); }
 .panel h2 { margin: 10px 0 0; font-size: 20px; font-weight: 650; letter-spacing: -0.01em; }
-.panel h3 { margin: 18px 0 8px; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.panel h3, .panel h2.sect { margin: 18px 0 8px; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
 .panel p { margin: 0; }
 .hint, .b-meta, .legend, .about, .accuracy { color: var(--muted); font-size: 12.5px; }
 .b-meta a, .about a { color: inherit; }
@@ -240,3 +240,23 @@ body[data-mode='normal'] .floor-mode { display: none; }
 .doc-main table { border-collapse: collapse; font-size: 14px; margin: 8px 0; }
 .doc-main td, .doc-main th { padding: 4px 10px 4px 0; border-bottom: 1px solid var(--line); text-align: left; }
 html[lang='ru'] [lang='en'], html[lang='en'] [lang='ru'] { display: none; }
+
+/* --- Легенда: шкала на виду, пояснения — за значком «i» --- */
+.legend-head { display: flex; align-items: flex-start; gap: 8px; }
+.legend-head b { flex: 1; }
+.legend-info { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1px solid #cfc8bb; background: #fff; font: 600 12px/1 Georgia, serif; font-style: italic; color: var(--muted); padding: 0; }
+.legend-box .legend-ticks { display: flex; justify-content: space-between; color: var(--muted); margin-top: 4px; }
+.legend-tip { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); }
+.legend-tip p { margin: 0 0 4px; }
+.legend-tip p:empty { display: none; }
+.legend-box:has(.legend-info:hover) .legend-tip, .legend-box:has(.legend-info:focus-visible) .legend-tip, .legend-box.tip-open .legend-tip { display: block; }
+
+/* --- Сводка одной фразой --- */
+.summary { margin-top: 10px; font-size: 15px; font-weight: 600; line-height: 1.4; }
+.summary:empty { display: none; }
+
+/* --- Карта не загрузилась / нет WebGL --- */
+.map-fallback { position: fixed; inset: 0; right: var(--panel); z-index: 2; display: grid; place-content: center; gap: 14px; padding: 24px; text-align: center; background: #ede6d8; }
+.map-fallback p { max-width: 36ch; margin: 0 auto; font-size: 15px; line-height: 1.5; }
+.map-fallback button { justify-self: center; padding: 8px 16px; border-radius: 999px; border: 0; background: var(--ink); color: #fff; font-weight: 500; }
+@media (max-width: 720px) { .map-fallback { right: 0; } }

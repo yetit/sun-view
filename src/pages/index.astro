@@ -8,11 +8,17 @@ import Meta from '../components/Meta.astro';
 <!doctype html>
 <html lang="ru">
   <head>
-    <Meta title="Sun & View" description="How many hours of sun reach each window, and can you see the sea? Click any building in Tivat or Kotor — computed in the browser from open data. · Сколько солнца в окнах и видно ли море: расчёт в браузере по открытым данным." />
+    <Meta title="Sun & View" imageAlt="Sun & View: a 3D map of Tivat with buildings coloured by hours of winter sun, and the app's title card" description="How many hours of sun reach each window, and can you see the sea? Click any building in Tivat, Kotor or Bergen — computed in the browser from open data. · Сколько солнца в окнах и видно ли море: расчёт в браузере по открытым данным." />
   </head>
   <body data-mode="sun" data-sheet="peek">
     <div id="map" class="map" role="region" aria-label="3D map"></div>
-    <div class="legend-box" hidden><b class="legend-title"></b><i class="legend-bar"></i><span><small class="legend-min"></small><small class="legend-mid"></small><small class="legend-max"></small></span><small class="legend-note"></small><small class="legend-assumed"></small></div>
+    <div class="map-fallback" role="alert" hidden><p class="map-fallback-text"></p><button class="map-fallback-retry" type="button" hidden></button></div>
+    <div class="legend-box" hidden>
+      <div class="legend-head"><b class="legend-title"></b><button class="legend-info" type="button" aria-describedby="legend-tip">i</button></div>
+      <i class="legend-bar"></i>
+      <span class="legend-ticks"><small class="legend-min"></small><small class="legend-mid"></small><small class="legend-max"></small></span>
+      <div class="legend-tip" id="legend-tip" role="tooltip"><p class="legend-note"></p><p class="legend-assumed"></p></div>
+    </div>
 
     <aside class="panel">
       <button class="sheet-handle" type="button" data-i-aria="expand" aria-expanded="false"></button>
@@ -49,7 +55,7 @@ import Meta from '../components/Meta.astro';
         <p class="lead" data-i="lead"></p>
         <p class="accuracy"></p>
         <div class="examples-box" hidden>
-          <h3 data-i="examples"></h3>
+          <h2 class="sect" data-i="examples"></h2>
           <div class="examples"></div>
         </div>
         <p class="hint"></p>
@@ -66,6 +72,7 @@ import Meta from '../components/Meta.astro';
         <div class="floor-row"><label><span data-i="floor"></span> <select class="floor"></select></label><span class="eye"></span></div>
         <div class="sides-row"><span data-i="windows"></span><div class="sides"></div></div>
         <p class="now"></p>
+        <p class="summary" aria-live="polite"></p>
 
         <h3 data-i="sunTitle"></h3>
         <div class="seasons"></div>
