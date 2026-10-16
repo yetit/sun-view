@@ -79,16 +79,16 @@ const repo = 'https://github.com/yetit/sun-view';
 
       <h2><span lang="ru">5. Что упрощено</span><span lang="en">5. Simplifications</span></h2>
       <ul lang="ru">
-        <li>Copernicus — модель поверхности: в ячейках есть крыши и кроны. Под зданиями DSM сглажен минимумом соседей. Для точной земли нужен DTM (например, FABDEM, лицензия CC BY-NC-SA).</li>
-        <li>Шаг рельефа 60 м: гребни и узкие проходы сглажены, на склонах отметка дома может ошибаться на десятки метров.</li>
+        <li>Copernicus — модель поверхности: в ячейках есть крыши и кроны. Под зданиями DSM опущен до соседей с поправкой на наклон склона. Для точной земли нужен DTM (например, FABDEM, лицензия CC BY-NC-SA).</li>
+        <li>Шаг рельефа 60 м, высота между ячейками интерполируется: гребни и узкие проходы сглажены, на крутых склонах отметка дома между источниками расходится на 20–70 м.</li>
         <li>Деревья — леса и парки OSM одной высотой; отдельные деревья не учитываются.</li>
         <li>Этажность в OSM известна примерно у 14 % зданий Тивата и 3 % Котора; остальным даётся 2 этажа (на карте они полупрозрачные), этажность можно уточнить в панели.</li>
         <li>Отражения, остекление, глубина лоджий не моделируются: «солнце в окне» значит прямую видимость солнца из точки окна.</li>
         <li>Тени на карте — иллюстрация (проекция контура на ровную землю); часы солнца считаются лучами.</li>
       </ul>
       <ul lang="en">
-        <li>Copernicus is a surface model: cells include roofs and canopies. Under buildings the DSM is flattened to the minimum of its neighbours. Exact ground needs a DTM (e.g. FABDEM, CC BY-NC-SA).</li>
-        <li>The 60 m terrain grid smooths ridges and gaps; on slopes a building's ground can be off by tens of metres.</li>
+        <li>Copernicus is a surface model: cells include roofs and canopies. Under buildings the DSM is lowered to its neighbours, corrected for the slope. Exact ground needs a DTM (e.g. FABDEM, CC BY-NC-SA).</li>
+        <li>The 60 m terrain grid is interpolated between cells; it smooths ridges and gaps, and on steep slopes sources disagree on a building's ground by 20–70 m.</li>
         <li>Trees are OSM woods and parks at one height; single trees are ignored.</li>
         <li>OSM has floor counts for about 14% of buildings in Tivat and 3% in Kotor; the rest get 2 floors (shown semi-transparent), and you can correct it in the panel.</li>
         <li>Reflections, glazing and balcony depth are not modelled: "sun in the window" means a direct line of sight to the sun from the window point.</li>

@@ -2,7 +2,7 @@
 // Читаем только окно bbox через HTTP range-запросы, прореживаем до city.dem.step угловых секунд.
 // Затем: 1) море размечаем по береговой линии OSM (natural=coastline: суша слева, вода справа) —
 // ячейки моря получают 0, суша ниже 0 поднимается до 1; 2) под зданиями из buildings.json DSM
-// сглаживаем минимумом соседей — это модель поверхности, и крыши в ней есть.
+// опускаем до соседей (крыши в модели поверхности есть), не роняя дома на склоне.
 // Запуск: node scripts/fetch-dem.mjs <id>.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fromUrl } from 'geotiff';
@@ -101,11 +101,18 @@ if (existsSync(bPath)) {
       const r0 = Math.floor((bbox.north - Math.max(...ys)) / cell), r1 = Math.floor((bbox.north - Math.min(...ys)) / cell);
       for (let r = Math.max(0, r0); r <= Math.min(rows - 1, r1); r++) for (let c = Math.max(0, c0); c <= Math.min(cols - 1, c1); c++) {
         if (!inRing(lonAt(c), latAt(r), ring)) continue;
-        let min = src[r * cols + c];
+        // Крыша — горб над соседями: опускаем ячейку до самого низкого из восьми соседей суши, но
+        // сначала снимаем с них наклон (плоскость по разностям соседей). На ровном месте это просто
+        // минимум соседей, а дом на склоне не «съезжает» на ячейку вниз — на 20–30 м.
+        const nb = [];
+        let gx = 0, gy = 0;
         for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
           const v = src[(r + dr) * cols + c + dc];
-          if (r + dr >= 0 && r + dr < rows && c + dc >= 0 && c + dc < cols && v !== NODATA && v > 0 && v < min) min = v;
+          if ((dr || dc) && r + dr >= 0 && r + dr < rows && c + dc >= 0 && c + dc < cols && v !== NODATA && v > 0) nb.push([dr, dc, v]);
         }
+        if (nb.length === 8) for (const [dr, dc, v] of nb) { gx += (v * dc) / 6; gy += (v * dr) / 6; } // у моря и края — без наклона
+        let min = src[r * cols + c];
+        for (const [dr, dc, v] of nb) min = Math.min(min, Math.round(v - gx * dc - gy * dr));
         if (min < out[r * cols + c]) { out[r * cols + c] = min; flattened++; }
       }
     }

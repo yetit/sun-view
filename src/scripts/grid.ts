@@ -24,24 +24,34 @@ export type Dem = { west: number; north: number; cols: number; rows: number; cel
 export const makeDem = (meta: any, buf: ArrayBuffer): Dem => ({ west: meta.bbox.west, north: meta.bbox.north, cols: meta.cols, rows: meta.rows, cell: meta.cell, nodata: meta.nodata, max: meta.max, data: new Int16Array(buf) });
 
 // Высота рельефа в точке; null — за пределами сетки или нет данных. Море — 0.
-export function demAt(dem: Dem, lon: number, lat: number): number | null {
-  const c = Math.floor((lon - dem.west) / dem.cell);
-  const r = Math.floor((dem.north - lat) / dem.cell);
-  if (c < 0 || r < 0 || c >= dem.cols || r >= dem.rows) return null;
-  const v = dem.data[r * dem.cols + c];
-  return v === dem.nodata ? null : v;
+// Билинейно по четырём центрам ячеек вокруг точки: на склоне отметка меняется плавно, а не
+// ступенькой в ячейку (60 м по сетке — это 20–30 м по высоте). Ячейки без данных (и моря, если land)
+// пропускаются, веса остальных нормируются.
+export function demAt(dem: Dem, lon: number, lat: number, land = false): number | null {
+  const fx = (lon - dem.west) / dem.cell - 0.5, fy = (dem.north - lat) / dem.cell - 0.5;
+  if (fx < -0.5 || fy < -0.5 || fx >= dem.cols - 0.5 || fy >= dem.rows - 0.5) return null;
+  const c = Math.floor(fx), r = Math.floor(fy), tx = fx - c, ty = fy - r;
+  if (!land && c >= 0 && r >= 0 && c + 1 < dem.cols && r + 1 < dem.rows) {
+    // обычный случай — все четыре ячейки есть: без общего цикла заметно быстрее, лучи зовут demAt сотни раз
+    const k = r * dem.cols + c, a = dem.data[k], b = dem.data[k + 1], d = dem.data[k + dem.cols], e = dem.data[k + dem.cols + 1];
+    if (a !== dem.nodata && b !== dem.nodata && d !== dem.nodata && e !== dem.nodata) return (a + (b - a) * tx) * (1 - ty) + (d + (e - d) * tx) * ty;
+  }
+  let sum = 0, wsum = 0;
+  for (let i = 0; i < 4; i++) {
+    const cc = c + (i & 1), rr = r + (i >> 1);
+    const w = (i & 1 ? tx : 1 - tx) * (i >> 1 ? ty : 1 - ty);
+    if (!w || cc < 0 || rr < 0 || cc >= dem.cols || rr >= dem.rows) continue;
+    const v = dem.data[rr * dem.cols + cc];
+    if (v === dem.nodata || (land && v <= 0)) continue;
+    sum += v * w;
+    wsum += w;
+  }
+  return wsum ? sum / wsum : null;
 }
 
-// Земля под зданием: минимум по четырём ближайшим ячейкам суши (DSM включает крышу; ячейки моря
-// не берём, иначе дом на набережной «падает» на 0).
-export function groundAt(dem: Dem, lon: number, lat: number): number {
-  let min = Infinity;
-  for (const dl of [-0.5, 0.5]) for (const dp of [-0.5, 0.5]) {
-    const v = demAt(dem, lon + dl * dem.cell, lat + dp * dem.cell);
-    if (v != null && v > 0 && v < min) min = v;
-  }
-  return min === Infinity ? 0 : min;
-}
+// Земля под зданием: рельеф в центре, только по ячейкам суши — иначе дом на набережной «тонет»
+// к 0. Крыши из DSM убирает fetch-dem.mjs, не опуская ячейки на склоне (см. там).
+export const groundAt = (dem: Dem, lon: number, lat: number): number => demAt(dem, lon, lat, true) ?? 0;
 
 export type Bld = {
   idx: number;

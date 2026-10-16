@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { blocked, horizonAngle, seaVisible, wallPoint } from '../src/scripts/grid.ts';
+import { blocked, demAt, groundAt, horizonAngle, makeDem, seaVisible, wallPoint } from '../src/scripts/grid.ts';
 import { makeWorld, rect } from './world.ts';
 
 const deg = (d: number) => (d * Math.PI) / 180;
@@ -75,4 +75,16 @@ test('горизонт рельефа: гора на востоке ≈ 14,4°, 
   // from: ближе этого расстояния DEM не читаем — край плато в 1500 м пропущен, угол на него с 2 км
   const far = horizonAngle(w, 11, 0, 14.5, DIR.E, 2000) / deg(1);
   assert.ok(Math.abs(far - (Math.atan2(400 - 14.5, 2000) * 180) / Math.PI) < 0.3, `с 2 км ${far}`);
+});
+
+test('рельеф билинейно: на склоне отметка плавная, а не ступенька ячейки; дом не тонет к морю', () => {
+  // 4×3 ячейки по 1°: столбец 0 — море (0), дальше склон 100, 130, 160 м на восток; ряды одинаковые
+  const data = Int16Array.from({ length: 12 }, (_, i) => [0, 100, 130, 160][i % 4]);
+  const dem = makeDem({ bbox: { west: 0, north: 3 }, cols: 4, rows: 3, cell: 1, nodata: -32768, max: 160 }, data.buffer);
+  assert.equal(demAt(dem, 1.5, 1.5), 100); // центр ячейки
+  assert.equal(demAt(dem, 2.25, 1.5), 122.5); // ¾ пути от центра 1.5 (100 м) к центру 2.5 (130 м)
+  assert.equal(demAt(dem, 1.0, 1.5), 50); // между морем и сушей — склон к воде
+  assert.equal(demAt(dem, 5, 1.5), null); // за сеткой
+  assert.equal(groundAt(dem, 2.25, 1.5), 122.5); // дом на склоне — по склону; минимум соседей дал бы 100
+  assert.equal(groundAt(dem, 1.0, 1.5), 100); // у воды — по суше, а не 50
 });

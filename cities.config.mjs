@@ -32,7 +32,7 @@ export const cities = [
     camera: { center: [18.768, 42.43], zoom: 14.3, pitch: 60, bearing: -35 },
     examples: [
       { b: 224396499, f: 7, d: null, s: 1, ru: 'Верхний этаж у моря', en: 'Top floor by the sea' },
-      { b: 305481256, f: 2, d: null, s: 3, ru: 'Зимой без прямого солнца', en: 'No direct winter sun' },
+      { b: 305641952, f: 2, d: null, s: 3, ru: 'Зимой без прямого солнца', en: 'No direct winter sun' },
       { b: 270308497, f: 4, d: null, s: 3, ru: 'Вилла на склоне зимой', en: 'Hillside villa in winter' },
     ],
   },

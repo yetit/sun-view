@@ -108,7 +108,7 @@ for (const [name, lat, lon] of points) {
   const bigStr = big.length ? `${big.length}: ${big.slice(0, 4).map(([d, i]) => `${i * STEP}° ${f1(d)}`).join(', ')}` : '—';
   const so = sunWindow(ours, lat, lon), sp = sunWindow(pv.h, lat, lon);
   const mean = diff.reduce((s, d) => s + d, 0) / diff.length;
-  console.log(`| ${name} | ${ground} / ${pv.elevation} | ${Math.min(...edge).toFixed(1)}–${Math.max(...edge).toFixed(1)} | ${f1(mean)} | ${meanAbs(diff).toFixed(1)} | ${meanAbs(diffPv).toFixed(1)} | ${f1(diff[iMax])} (${iMax * STEP}°) | ${bigStr} | ${hhmm(so.first)} / ${hhmm(sp.first)} (${dmin(so.first, sp.first)}) | ${hhmm(so.last)} / ${hhmm(sp.last)} (${dmin(so.last, sp.last)}) |`);
+  console.log(`| ${name} | ${Math.round(ground)} / ${pv.elevation} | ${Math.min(...edge).toFixed(1)}–${Math.max(...edge).toFixed(1)} | ${f1(mean)} | ${meanAbs(diff).toFixed(1)} | ${meanAbs(diffPv).toFixed(1)} | ${f1(diff[iMax])} (${iMax * STEP}°) | ${bigStr} | ${hhmm(so.first)} / ${hhmm(sp.first)} (${dmin(so.first, sp.first)}) | ${hhmm(so.last)} / ${hhmm(sp.last)} (${dmin(so.last, sp.last)}) |`);
 }
 const sum = (a) => `Δ средн. ${f1(a.reduce((s, d) => s + d, 0) / a.length)}°, |Δ| средн. ${meanAbs(a).toFixed(2)}°, |Δ| > 3° — ${a.filter((d) => Math.abs(d) > 3).length} из ${a.length}`;
 console.log(`\nВсего: ${sum(all)}. При высоте PVGIS: ${sum(allPv)}.`);
