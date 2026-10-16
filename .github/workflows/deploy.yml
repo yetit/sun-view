@@ -18,13 +18,18 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
-        env: { BASE_PATH: /${{ github.event.repository.name }} }
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}
       - uses: actions/upload-pages-artifact@v3
         with: { path: dist }
   deploy:
     needs: build
+    # Pages для приватных репозиториев на бесплатном плане недоступен — тогда только сборка и тесты.
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
-    environment: { name: github-pages, url: '${{ steps.deployment.outputs.page_url }}' }
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
