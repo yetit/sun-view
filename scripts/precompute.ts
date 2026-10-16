@@ -46,7 +46,7 @@ const top = (list: typeof known, key: (b: (typeof known)[0]) => number) => [...l
 const describe = (b: (typeof known)[0], floor: number, side: number | null, season: number) => {
   const r = seasonCalc(w, b, eye(w, b, floor, side), season);
   const rose = seaRose(w, b, floor).filter((d) => d.dist != null).map((d) => d.dir).join(' ');
-  return `${b.id} «${b.name ?? ''}» ${b.floors} эт., земля ${b.ground} м · этаж ${floor} сторона ${side ?? 'все'} сезон ${season}: ${r.sun.toFixed(1)} ч из ${r.daylight.toFixed(1)}; море: ${rose || '—'}`;
+  return `${b.id} «${b.name ?? ''}» ${b.floors} эт., земля ${Math.round(b.ground)} м · этаж ${floor} сторона ${side ?? 'все'} сезон ${season}: ${r.sun.toFixed(1)} ч из ${r.daylight.toFixed(1)}; море: ${rose || '—'}`;
 };
 console.log('\nВид на море с верхнего этажа:');
 for (const b of top(known, (b) => sea(b.idx) * 100 + b.floors)) console.log(' ', describe(b, b.floors, null, 1));

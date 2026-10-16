@@ -34,12 +34,13 @@ The terrain horizon was checked against [PVGIS](https://re.jrc.ec.europa.eu/pvg_
 
 | Where | Mean horizon difference | 21 December sunrise |
 | --- | --- | --- |
-| Flat ground by the sea, Tivat | 0.2–0.3° | same minute as PVGIS |
-| All 8 points, Tivat | 2.1° | — |
-| All 8 points, Kotor | 1.7° | — |
-| Steep slope, Vrmac | 8.3° | 84 min later than PVGIS |
+| Flat ground by the sea, Tivat | 0.2° | same minute as PVGIS (±1) |
+| All 8 points, Tivat | 1.5° (was 2.1°) | — |
+| All 8 points, Kotor | 1.3° (was 1.7°) | — |
+| Steep slope, Vrmac | 5.6° (was 8.3°) | 98 min later than PVGIS; sunset now matches (was 39 min early) |
+| 7 hillside points vs the source Copernicus 1″ | 0.4° (was 2.2°) | — |
 
-On steep slopes the error comes from the observer's own ground elevation. On a 60 m grid it differs between sources by 20–70 m. Results for hillside buildings on the uphill side are therefore unreliable. The ray core is covered by synthetic tests (`npm test`): scenes with a hill, a neighbouring wall and the sea.
+Terrain height is interpolated bilinearly, both at the observer and along the ray. Before, the nearest 60 m cell was used: on a slope the eye sat 20–30 m below the surface the ray sees, and the hill looked steeper. What remains on slopes against PVGIS is mostly PVGIS's own ground elevation: 339 m on the Vrmac slope against 312–317 m in three Copernicus samples. For buildings on steep slopes, uphill results are an estimate good to tens of minutes. The ray core is covered by synthetic tests (`npm test`): scenes with a hill, a neighbouring wall and the sea.
 
 ## Performance
 
@@ -52,9 +53,11 @@ Measured on an Apple M2 Pro with the production build (`astro preview`), Tivat, 
 | First load until the coloured map | 1.9 s: data 0.44 s, world 0.17 s, worker 0.23 s, then about 1 s waiting for basemap tiles |
 | Repeat load with HTTP cache | 0.55 s |
 | Click a building, 4 seasons + sea rose | 26 ms |
-| Year ribbon, 73 days × 144 samples, Web Worker | 60 ms |
-| City sun map without precompute, Web Worker | 2.3 s |
+| Year ribbon, 73 days × 144 samples, Web Worker | 80 ms* |
+| City sun map without precompute, Web Worker | 3.4 s* |
 | Switching a city map, precomputed or cached | 25 ms |
+
+\* Rescaled after the switch to bilinear terrain, which made ray tracing about 1.3–1.5× slower in Node on the same machine (ribbon 47 → 62 ms, city map 2.2 → 3.4 s). A click changed by about 1 ms.
 
 ## Data and licences
 
