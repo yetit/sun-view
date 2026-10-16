@@ -1,0 +1,44 @@
+---
+import 'maplibre-gl/dist/maplibre-gl.css';
+import '../styles/global.css';
+import city from '../../city.config.mjs';
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={`Sun & View — сколько солнца и виден ли море из окон любого здания ${city.name}: расчёт по открытым данным прямо в браузере.`} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Sun & View — {city.name}</title>
+  </head>
+  <body>
+    <div id="map" class="map" role="region" aria-label={`3D-карта: ${city.name}`}></div>
+
+    <aside class="panel">
+      <h1>Sun &amp; View <small>{city.name}</small></h1>
+      <p class="hint">Загрузка данных…</p>
+
+      <div class="result" hidden>
+        <h2 class="b-name"></h2>
+        <p class="b-meta"></p>
+        <label class="floor-row">Этаж <select class="floor"></select> <span class="eye"></span></label>
+
+        <h3>Солнце в окнах</h3>
+        <ul class="seasons"></ul>
+        <p class="legend">Полоса — сутки по часам (0–24 UTC), яркость — доля часа, когда солнце не закрыто рельефом и соседними домами.</p>
+
+        <h3>Вид на море</h3>
+        <div class="rose"></div>
+        <p class="legend">Луч с уровня окна по каждому румбу: зелёный — до воды нет препятствий, красный — закрыто.</p>
+      </div>
+
+      <footer>
+        Здания — © OpenStreetMap (ODbL). Рельеф — Copernicus DEM GLO-30. Солнце — suncalc. Всё считается в браузере, см. README.
+      </footer>
+    </aside>
+
+    <script src="../scripts/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "sun-view",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/copy-maplibre-worker.mjs",
+    "dev": "astro dev",
+    "prebuild": "node scripts/copy-maplibre-worker.mjs",
+    "build": "astro build",
+    "preview": "astro preview",
+    "fetch:buildings": "node scripts/fetch-buildings.mjs",
+    "fetch:dem": "node scripts/fetch-dem.mjs",
+    "fetch": "npm run fetch:buildings && npm run fetch:dem"
+  },
+  "dependencies": {
+    "astro": "^7.4.0",
+    "maplibre-gl": "^6.14.0",
+    "suncalc": "^1.9.0"
+  },
+  "devDependencies": {
+    "@types/suncalc": "^1.9.2",
+    "geotiff": "^3.0.5"
+  }
+}
