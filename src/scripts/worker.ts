@@ -15,7 +15,7 @@ self.onmessage = async ({ data: m }: MessageEvent<Req>) => {
   if (m.type === 'init') { w = createWorld(m.city, m.geojson, m.greenery, m.demMeta, m.demBuf); return; }
   if (m.type === 'ribbon') {
     const r = yearRibbon(w, w.blds[m.idx], eye(w, w.blds[m.idx], m.floor, m.side));
-    self.postMessage({ id: m.id, done: true, ...r }, [r.data.buffer]);
+    self.postMessage({ id: m.id, done: true, ...r }, { transfer: [r.data.buffer] });
     return;
   }
   const n = w.blds.length;
@@ -26,5 +26,5 @@ self.onmessage = async ({ data: m }: MessageEvent<Req>) => {
     self.postMessage({ id: m.id, progress: Math.min(i + CHUNK, n), total: n });
     await new Promise((r) => setTimeout(r)); // дать очереди сообщений продвинуться
   }
-  self.postMessage({ id: m.id, done: true, data: out }, [out.buffer]);
+  self.postMessage({ id: m.id, done: true, data: out }, { transfer: [out.buffer] });
 };

@@ -10,6 +10,8 @@
     "**/*"
   ],
   "exclude": [
-    "dist"
+    "dist",
+    "public",
+    "node_modules"
   ]
 }
