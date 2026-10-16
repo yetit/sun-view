@@ -175,6 +175,21 @@ export function blocked(w: World, b: Bld, x: number, y: number, z: number, beari
   return false;
 }
 
+// Угол места рельефного горизонта (рад) из точки (x,y,z) по азимуту bearing: максимум по лучу
+// с тем же шагом, что в blocked(), только DEM, без зданий и деревьев. Ближе from DEM не читаем —
+// по умолчанию одна ячейка, как blocked() для точки без своего здания. Для сверки с PVGIS.
+export function horizonAngle(w: World, x: number, y: number, z: number, bearing: number, from = w.dem.cell * w.proj.mLat): number {
+  const sx = Math.sin(bearing), sy = Math.cos(bearing);
+  let max = -Math.PI / 2;
+  for (let d = 2; d < FAR; d += d < NEAR ? 3 : 30) {
+    if (d < from) continue;
+    const t = demAt(w.dem, ...w.proj.toLonLat(x + d * sx, y + d * sy));
+    if (t == null) break;
+    max = Math.max(max, Math.atan2(t - z, d));
+  }
+  return max;
+}
+
 // Видно ли море по азимуту: идём вдоль луча, держим максимальный угол места препятствий;
 // ячейка моря (0 м) видна, если угол на неё выше всех препятствий до неё. Возвращает расстояние.
 export function seaVisible(w: World, b: Bld, x: number, y: number, z: number, bearing: number): number | null {

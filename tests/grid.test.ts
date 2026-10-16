@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { blocked, seaVisible, wallPoint } from '../src/scripts/grid.ts';
+import { blocked, horizonAngle, seaVisible, wallPoint } from '../src/scripts/grid.ts';
 import { makeWorld, rect } from './world.ts';
 
 const deg = (d: number) => (d * Math.PI) / 180;
@@ -61,4 +61,18 @@ test('дальняя вода видна поверх низкого берег�
   const b = w.blds[0];
   assert.equal(seaVisible(w, b, -11, 0, b.ground + 1.5, DIR.W), null); // с 1-го этажа — нет
   assert.ok(seaVisible(w, b, -11, 0, b.ground + 25, DIR.W) != null); // с высоты 25 м — да
+});
+
+test('горизонт рельефа: гора на востоке ≈ 14,4°, на западе — чуть ниже нуля, сходится с blocked()', () => {
+  const w = makeWorld();
+  const b = w.blds[0];
+  const east = horizonAngle(w, 11, 0, 14.5, DIR.E) / deg(1);
+  assert.ok(Math.abs(east - 14.4) < 0.5, `восток ${east}`);
+  const west = horizonAngle(w, -11, 0, 14.5, DIR.W) / deg(1);
+  assert.ok(west < 0 && west > -1, `запад ${west}`); // вода 0 м на краю сетки, глаз на 14,5 м
+  assert.equal(blocked(w, b, 11, 0, 14.5, DIR.E, deg(east - 0.3)), true);
+  assert.equal(blocked(w, b, 11, 0, 14.5, DIR.E, deg(east + 0.3)), false);
+  // from: ближе этого расстояния DEM не читаем — край плато в 1500 м пропущен, угол на него с 2 км
+  const far = horizonAngle(w, 11, 0, 14.5, DIR.E, 2000) / deg(1);
+  assert.ok(Math.abs(far - (Math.atan2(400 - 14.5, 2000) * 180) / Math.PI) < 0.3, `с 2 км ${far}`);
 });
