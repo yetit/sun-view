@@ -28,20 +28,24 @@ for (let lat = Math.floor(bbox.south); lat < bbox.north; lat++) {
     const name = tileName(lat, lon);
     const tiff = await fromUrl(`https://copernicus-dem-30m.s3.amazonaws.com/${name}/${name}.tif`);
     const img = await tiff.getImage();
-    const [x0, y0, x1, y1] = img.getBoundingBox();
+    // Тайлы помечены PixelIsPoint: точка привязки (getOrigin) — центр первого пикселя, на целом градусе.
+    // Берём пиксель с ближайшим центром.
+    const [x0, y1] = img.getOrigin();
     const [rx, ry] = img.getResolution();
-    const w = Math.max(bbox.west, x0), e = Math.min(bbox.east, x1), s = Math.max(bbox.south, y0), n = Math.min(bbox.north, y1);
-    const px0 = Math.max(0, Math.floor((w - x0) / rx)), px1 = Math.min(img.getWidth(), Math.ceil((e - x0) / rx));
-    const py0 = Math.max(0, Math.floor((y1 - n) / -ry)), py1 = Math.min(img.getHeight(), Math.ceil((y1 - s) / -ry));
+    const ix = (lon) => Math.round((lon - x0) / rx), iy = (lat) => Math.round((y1 - lat) / -ry);
+    const px0 = Math.max(0, ix(bbox.west)), px1 = Math.min(img.getWidth(), ix(bbox.east) + 1);
+    const py0 = Math.max(0, iy(bbox.north)), py1 = Math.min(img.getHeight(), iy(bbox.south) + 1);
+    if (px0 >= px1 || py0 >= py1) continue;
     const [band] = await img.readRasters({ window: [px0, py0, px1, py1] });
     const ww = px1 - px0;
-    console.log(`${name}: окно ${ww}×${py1 - py0} px`);
+    console.log(`${name}: начало ${x0}, ${y1}; окно ${ww}×${py1 - py0} px`);
     for (let r = 0; r < rows; r++) {
-      if (latAt(r) < s || latAt(r) > n) continue;
-      const py = Math.floor((y1 - latAt(r)) / -ry) - py0;
+      const py = iy(latAt(r));
+      if (py < py0 || py >= py1) continue;
       for (let c = 0; c < cols; c++) {
-        if (lonAt(c) < w || lonAt(c) > e) continue;
-        const v = band[py * ww + (Math.floor((lonAt(c) - x0) / rx) - px0)];
+        const px = ix(lonAt(c));
+        if (px < px0 || px >= px1) continue;
+        const v = band[(py - py0) * ww + px - px0];
         out[r * cols + c] = Number.isFinite(v) ? Math.round(v) : NODATA;
       }
     }
