@@ -186,7 +186,7 @@ body[data-mode='normal'] .floor-mode { display: none; }
 .legend-box b { display: block; font-weight: 500; margin-bottom: 6px; }
 .legend-box i { display: block; height: 8px; border-radius: 4px; }
 .legend-box span { display: flex; justify-content: space-between; color: var(--muted); margin-top: 4px; }
-.legend-box .legend-assumed { display: block; margin-top: 6px; color: var(--muted); }
+.legend-box .legend-note, .legend-box .legend-assumed { display: block; margin-top: 6px; color: var(--muted); }
 
 /* --- Узкий десктоп: таймбар в две строки, панель уже --- */
 @media (max-width: 1100px) and (min-width: 721px) {

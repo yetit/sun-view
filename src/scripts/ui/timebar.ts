@@ -1,6 +1,6 @@
 // Таймбар: сезон, время суток, воспроизведение, режимы карты (солнце/море) и легенда.
-import { eye, facing, sunAt, type FloorMode } from '../analysis.ts';
-import { $, $$, ask, city, fmtT, sliderTime, state, syncUrl, world } from '../app.ts';
+import { eye, facing, floorAt, HEIGHTS, STEP_MIN, sunAt } from '../analysis.ts';
+import { $, $$, ask, city, fmtH, fmtT, sliderTime, state, syncUrl, world } from '../app.ts';
 import { blocked } from '../grid.ts';
 import { t } from '../i18n.ts';
 import { applyColors, map, pathPoint, setData } from '../map/layers.ts';
@@ -42,18 +42,18 @@ let modeReq = 0;
 
 async function layerValues(key: string, progress: HTMLElement): Promise<ArrayLike<number> | null> {
   const pre = precomputed?.get(key);
-  if (pre) return key.startsWith('sun') ? Float32Array.from(pre, (v) => v / 100) : pre;
+  if (pre) return key.startsWith('sun') ? Float32Array.from(pre, (v) => (v * STEP_MIN) / 60) : pre;
   if (cache.has(key)) return cache.get(key)!;
   const [type, a, b] = key.split(':');
   const my = modeReq;
-  const res = await ask(type === 'sun' ? { type, season: +a, mode: b } : { type, mode: a }, (p, n) => (progress.textContent = `${p} / ${n}`));
+  const res = await ask(type === 'sun' ? { type, season: +a, h: +b } : { type, h: +a }, (p, n) => (progress.textContent = `${p} / ${n}`));
   progress.textContent = '';
   cache.set(key, res.data);
   return my === modeReq ? res.data : null;
 }
 
 export async function applyMode() {
-  const { mode, floorMode, season } = state;
+  const { mode, height, season } = state;
   document.body.dataset.mode = mode;
   $$('.mode-chip').forEach((c) => c.setAttribute('aria-checked', String(c.dataset.mode === mode)));
   applyColors();
@@ -61,15 +61,23 @@ export async function applyMode() {
   $('.legend-box').hidden = mode === 'normal';
   if (mode === 'normal') { $('.progress').textContent = ''; return; }
   const sun = mode === 'sun';
-  const fl = t.floorModes[floorMode];
-  $('.legend-title').textContent = sun ? t.legendSun(t.seasons[season], fl) : t.legendSea(fl);
+  const low = world.blds.map((b) => b.floors < floorAt(world, height));
+  $('.legend-title').textContent = sun ? t.legendSun(t.seasons[season], height) : t.legendSea(height);
   $('.legend-bar').style.background = `linear-gradient(90deg, ${(sun ? SUN_RAMP : SEA_RAMP).join(',')})`;
-  $('.legend-min').textContent = sun ? t.legendSunMin : t.legendSeaMin;
-  $('.legend-max').textContent = sun ? t.legendSunMax : t.legendSeaMax;
+  $('.legend-note').textContent = [sun ? t.legendQuantiles : '', low.some(Boolean) ? t.legendLow(height) : ''].filter(Boolean).join('. ');
+  if (!sun) ['0', '2', '≥ 4'].forEach((s, i) => ($(['.legend-min', '.legend-mid', '.legend-max'][i]).textContent = s));
   ++modeReq;
-  const arr = await layerValues(sun ? `sun:${season}:${floorMode}` : `sea:${floorMode}`, $('.progress'));
+  const arr = await layerValues(sun ? `sun:${season}:${height}` : `sea:${height}`, $('.progress'));
   if (!arr) return;
-  world.blds.forEach((b, i) => map.setFeatureState({ source: 'buildings', id: b.id }, { v: arr[i] }));
+  world.blds.forEach((b, i) => map.setFeatureState({ source: 'buildings', id: b.id }, { v: arr[i], low: low[i] }));
+  if (!sun) return;
+  // Шкала по распределению слоя: цвета на 10, 50 и 90 % зданий, достающих до высоты окна (если их мало — всех).
+  const all = Array.from(arr), reach = all.filter((_, i) => !low[i]);
+  const vals = (reach.length >= 20 ? reach : all).sort((a, b) => a - b);
+  const scale = [0.1, 0.5, 0.9].map((p) => vals[Math.floor(p * (vals.length - 1))]);
+  scale[1] = Math.max(scale[1], scale[0] + 0.1); scale[2] = Math.max(scale[2], scale[1] + 0.1); // interpolate требует возрастания
+  ['≤ ', '', '≥ '].forEach((pre, i) => ($(['.legend-min', '.legend-mid', '.legend-max'][i]).textContent = `${pre}${fmtH.format(scale[i])} ${t.h}`));
+  applyColors(scale);
 }
 
 export function initTimebar() {
@@ -114,9 +122,9 @@ export function initTimebar() {
     c.addEventListener('click', () => { state.mode = c.dataset.mode as Mode; applyMode(); });
   });
   const floorModeSel = $<HTMLSelectElement>('.floor-mode');
-  floorModeSel.innerHTML = (['1', 'mid', 'top'] as FloorMode[]).map((m) => `<option value="${m}">${t.floorModes[m]}</option>`).join('');
-  floorModeSel.value = state.floorMode;
-  floorModeSel.addEventListener('change', () => { state.floorMode = floorModeSel.value as FloorMode; applyMode(); });
+  floorModeSel.innerHTML = HEIGHTS.map((h) => `<option value="${h}">${t.heightOption(h, floorAt(world, h))}</option>`).join('');
+  floorModeSel.value = String(state.height);
+  floorModeSel.addEventListener('change', () => { state.height = +floorModeSel.value; applyMode(); });
   $('.legend-assumed').textContent = t.legendAssumed;
 }
 

@@ -122,21 +122,22 @@ function treesNear(w: World, b: Bld, d: number): boolean {
 }
 
 // --- Массовые расчёты для карты (все здания) ---------------------------------
-export type FloorMode = '1' | 'mid' | 'top';
-export const floorFor = (b: Bld, mode: FloorMode) => (mode === '1' ? 1 : mode === 'top' ? b.floors : Math.ceil(b.floors / 2));
+// Высота окна над землёй для карт, м. Этаж — тот, чьё окно ближе всего к высоте; дом ниже — верхний этаж.
+export const HEIGHTS = [2, 5, 10];
+export const floorAt = (w: World, h: number) => Math.max(1, Math.round(h / w.city.floorHeight + 0.5));
+const floorFor = (w: World, b: Bld, h: number) => Math.min(b.floors, floorAt(w, h));
 
-// Доля светового дня с солнцем в окнах (здание целиком) для зданий from..to.
-export function massSun(w: World, season: number, mode: FloorMode, from: number, to: number, out: Float32Array) {
+// Часы солнца в окнах (здание целиком) для зданий from..to.
+export function massSun(w: World, season: number, h: number, from: number, to: number, out: Float32Array) {
   for (let i = from; i < to; i++) {
     const b = w.blds[i];
-    const r = seasonCalc(w, b, eye(w, b, floorFor(b, mode), null), season);
-    out[i] = r.daylight ? r.sun / r.daylight : 0;
+    out[i] = seasonCalc(w, b, eye(w, b, floorFor(w, b, h), null), season).sun;
   }
 }
 // Сколько румбов с морем.
-export function massSea(w: World, mode: FloorMode, from: number, to: number, out: Uint8Array) {
+export function massSea(w: World, h: number, from: number, to: number, out: Uint8Array) {
   for (let i = from; i < to; i++) {
     const b = w.blds[i];
-    out[i] = seaRose(w, b, floorFor(b, mode)).filter((s) => s.dist != null).length;
+    out[i] = seaRose(w, b, floorFor(w, b, h)).filter((s) => s.dist != null).length;
   }
 }
