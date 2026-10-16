@@ -106,7 +106,7 @@ npm run test:e2e   # Playwright smoke test against the production build
 
 **Deploy.** `.github/workflows/deploy.yml` runs type check, tests and build, then publishes to GitHub Pages on push to `main`. It only publishes while the repository is public. After each deploy, `.github/workflows/live.yml` checks the published page:
 - **Playwright smoke test** for every city: the map container has height, the map is drawn, and a click on an example fills the panel.
-- **Lighthouse**, 3 runs on the mobile profile. Thresholds are in `lighthouserc.json` and are set from measurements. Locally, the live demo scored 30–36 for performance, 98 for accessibility before a heading fix, and 100 for best practices and SEO.
+- **Lighthouse**, 3 runs on the mobile profile, median. Thresholds are in `lighthouserc.json` and are set from measurements on the GitHub runner. The map page scored 33–40 for performance; its threshold is 30. The method page scored 98–99; its threshold is 90. Accessibility, best practices and SEO scored 100 on both pages; their threshold is 95. Performance on the map page is low because of the WebGL map with terrain and 3D buildings, plus building the rasters on the main thread under the profile's 4× CPU slowdown.
 
 **Moving to Cloudflare Pages.** GitHub Pages serves every file with `max-age=600` and cannot be configured. That means even hashed assets are revalidated every 10 minutes, and a fresh HTML can take up to 10 minutes to appear. Cloudflare Pages lets you set headers. To move:
 1. In Cloudflare, go to Workers & Pages → Create → Pages → Connect to Git and pick this repository.
