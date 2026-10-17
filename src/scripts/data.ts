@@ -17,6 +17,6 @@ export async function loadCityData(id: string): Promise<CityData> {
   if (preMeta && preBuf && preMeta.buildings === geojson.features.length) {
     const n = preMeta.buildings;
     precomputed = new Map(preMeta.layers.map((k: string, i: number) => [k, new Uint8Array(preBuf, i * n, n)]));
-  }
+  } else if (preMeta) console.warn(`${id}: предрасчёт на ${preMeta.buildings} зданий, а в buildings.json ${geojson.features.length} — считаем в воркере`);
   return { geojson, greenery, demMeta, demBuf: demBuf!, precomputed };
 }
