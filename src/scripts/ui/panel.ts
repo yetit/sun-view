@@ -12,7 +12,7 @@ import { drawRibbon, roseSvg } from './charts.ts';
 import { initBetter, resetBetter } from './better.ts';
 import { addPin, initCompare } from './compare.ts';
 import { renderExamples } from './examples.ts';
-import { deg, facadeByDir, fName, fTitle, osmUrl, sideLabel } from './format.ts';
+import { deg, facadeByDir, fName, fTitle, osmUrl } from './format.ts';
 import { breHtml, breNow, loadMatrix, markMatrix } from './matrix.ts';
 import { initSearch } from './search.ts';
 import { setSheet } from './sheet.ts';
@@ -32,7 +32,7 @@ export function select(b: Bld, opts: { floor?: number; side?: number | null; dir
   if (opts.floors && b.assumed) overrideFloors(b, opts.floors);
   map.setFeatureState({ source: 'buildings', id: b.id }, { selected: true });
   state.floor = Math.min(b.floors, Math.max(1, opts.floor ?? Math.ceil(b.floors / 2)));
-  const side = opts.dir != null ? facadeByDir(b, opts.dir) : opts.side;
+  const side = opts.dir != null ? facadeByDir(world, b, opts.dir) : opts.side;
   state.side = side != null && side >= 0 && side < facades(world, b).length ? side : null;
   fillFloors(b);
   fillSides();
@@ -238,7 +238,7 @@ export function initPanel() {
     const name = cityName(city);
     const viewText = currentViewText();
     const view = viewing() && viewText ? { frame: await grabFrame(), text: viewText } : null;
-    const blob = await shareCard({ view, city: name, title: buildingName(b), summary: summary(), subtitle: `${name} · ${t.card.floor(state.floor)} · ${sideLabel()}`, seasons: lastSeasons, sea: lastSea, ribbon: ribbonSmall });
+    const blob = await shareCard({ view, city: name, title: buildingName(b), summary: summary(), subtitle: `${name} · ${t.card.floor(state.floor)} · ${t.sideLabel(facadeOf() ? fName(facadeOf()!) : null)}`, seasons: lastSeasons, sea: lastSea, ribbon: ribbonSmall });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `sun-view-${city.id}-${b.id}-${state.floor}.png`;

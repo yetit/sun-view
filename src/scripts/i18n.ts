@@ -1,7 +1,8 @@
 // Строки интерфейса на двух языках. Язык: ?lang=ru|en, иначе по navigator.language.
-const q = new URL(location.href).searchParams.get('lang');
-export const lang: 'ru' | 'en' = q === 'en' || q === 'ru' ? q : navigator.language?.toLowerCase().startsWith('ru') ? 'ru' : 'en';
-document.documentElement.lang = lang;
+// Без страницы (тесты в Node) — по navigator.language, документ не трогаем.
+const q = typeof location === 'undefined' ? null : new URL(location.href).searchParams.get('lang');
+export const lang: 'ru' | 'en' = q === 'en' || q === 'ru' ? q : globalThis.navigator?.language?.toLowerCase().startsWith('ru') ? 'ru' : 'en';
+if (typeof document !== 'undefined') document.documentElement.lang = lang;
 
 const ru = {
   locale: 'ru',
