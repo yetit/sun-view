@@ -40,15 +40,15 @@ stage(0);
 const data = await loadCityData(city.id);
 mark('data');
 stage(1);
-await new Promise((r) => setTimeout(r)); // дать отрисоваться этапу
-const world = createWorld(city, data.geojson, data.greenery, data.demMeta, data.demBuf);
+// Растр крыш и деревьев строит воркер (ему он нужен для расчётов) и присылает копию сюда.
+const { roofs } = await startWorker({ city, geojson: data.geojson, greenery: data.greenery, demMeta: data.demMeta, demBuf: data.demBuf });
+mark('worker');
+stage(2);
+const world = createWorld(city, data.geojson, data.greenery, data.demMeta, data.demBuf, roofs);
 setWorld(world, data.geojson);
 setPrecomputed(data.precomputed);
 mark('world');
 (data.geojson.features as any[]).forEach((f, i) => { f.properties.h = world.blds[i].h; f.properties.assumed = world.blds[i].assumed; });
-stage(2);
-await startWorker({ city, geojson: data.geojson, greenery: data.greenery, demMeta: data.demMeta, demBuf: data.demBuf });
-mark('worker');
 stage(3);
 // Карта не загрузилась за 10 с (сеть, сервер тайлов) — сообщение с кнопкой; если догрузится — убираем.
 const slow = setTimeout(() => showFallback(t.mapSlow, true), 10000);

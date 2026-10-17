@@ -151,11 +151,12 @@ function roofAt(roofs: Roofs, x: number, y: number): [number, number] {
 
 export type World = { city: City; proj: Proj; dem: Dem; roofs: Roofs; blds: Bld[] };
 
-export function createWorld(city: City, geojson: any, greenery: any | null, demMeta: any, demBuf: ArrayBuffer): World {
+// roofs — готовый растр (страница берёт его у воркера, чтобы не строить второй раз на главном потоке).
+export function createWorld(city: City, geojson: any, greenery: any | null, demMeta: any, demBuf: ArrayBuffer, roofs?: Roofs): World {
   const proj = makeProj(city.camera.center);
   const dem = makeDem(demMeta, demBuf);
   const blds = prepareBuildings(city, geojson, dem, proj);
-  return { city, proj, dem, roofs: rasterizeRoofs(city, proj, dem, blds, greenery), blds };
+  return { city, proj, dem, roofs: roofs ?? rasterizeRoofs(city, proj, dem, blds, greenery), blds };
 }
 
 // Точка на стене здания по азимуту от центра, на 1 м снаружи: отсюда «смотрит окно» этой стороны.
