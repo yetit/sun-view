@@ -20,6 +20,7 @@ const repo = 'https://github.com/yetit/sun-view';
       // Тот же выбор языка, что в приложении: ?lang=, иначе язык браузера.
       const q = new URL(location.href).searchParams.get('lang');
       document.documentElement.lang = q === 'en' || q === 'ru' ? q : navigator.language.toLowerCase().startsWith('ru') ? 'ru' : 'en';
+      if (document.documentElement.lang === 'ru') document.title = 'Как считается — Sun & View';
     </script>
   </head>
   <body class="doc">
