@@ -5,7 +5,8 @@ import { blocked } from '../grid.ts';
 import { t } from '../i18n.ts';
 import { applyColors, map, pathPoint, setData } from '../map/layers.ts';
 import { drawShadows } from '../map/shadows.ts';
-import { SEA_RAMP, SUN_RAMP, type Mode } from '../style.ts';
+import type { Mode } from '../style.ts';
+import { showLegend } from './legend.ts';
 import { refreshSeason } from './panel.ts';
 
 const DEG = 180 / Math.PI;
@@ -54,17 +55,14 @@ async function layerValues(key: string, progress: HTMLElement): Promise<ArrayLik
 
 export async function applyMode() {
   const { mode, height, season } = state;
-  document.body.dataset.mode = mode;
+  showLegend();
   $$('.mode-chip').forEach((c) => c.setAttribute('aria-checked', String(c.dataset.mode === mode)));
   applyColors();
   syncUrl();
-  $('.legend-box').hidden = mode === 'normal';
   if (mode === 'normal') { $('.progress').textContent = ''; return; }
   const sun = mode === 'sun';
   const low = world.blds.map((b) => b.floors < floorAt(world, height));
   const floor = floorAt(world, height);
-  $('.legend-title').textContent = sun ? t.legendSun(t.seasons[season], floor) : t.legendSea(floor);
-  $('.legend-bar').style.background = `linear-gradient(90deg, ${(sun ? SUN_RAMP : SEA_RAMP).join(',')})`;
   // Пояснения — в подсказке за значком «i», на виду только шкала.
   $('.legend-note').textContent = [sun ? t.legendQuantiles : '', low.some(Boolean) ? t.legendLow(floor) : ''].filter(Boolean).join('. ');
   if (!sun) ['0', '2', '≥ 4'].forEach((s, i) => ($(['.legend-min', '.legend-mid', '.legend-max'][i]).textContent = s));

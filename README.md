@@ -63,7 +63,8 @@ Measured on an Apple M2 Pro with the production build (`astro preview`), Tivat, 
 | --- | --- |
 | JavaScript, gzip | 300 KB, mostly MapLibre |
 | City data, gzip | 190 KB of buildings, greenery and precomputed maps, plus a 0.9 MB terrain grid |
-| First load until the coloured map | 1.9 s: data 0.44 s, world 0.17 s, worker 0.23 s, then about 1 s waiting for basemap tiles |
+| First load until the coloured map | 2.0–2.4 s: data 0.15 s, roof raster in the worker 0.22 s, the rest is waiting for basemap and terrain tiles |
+| Main-thread long tasks during load | 60–80 ms in total (before the Lighthouse round below: 200–320 ms) |
 | Repeat load with HTTP cache | 0.55 s |
 | Click a building, 4 seasons + sea rose | 26 ms |
 | Year ribbon, 73 days × 144 samples, Web Worker | 80 ms* |
@@ -71,6 +72,28 @@ Measured on an Apple M2 Pro with the production build (`astro preview`), Tivat, 
 | Switching a city map, precomputed or cached | 25 ms |
 
 \* Rescaled after the switch to bilinear terrain, which made ray tracing about 1.3–1.5× slower in Node on the same machine (ribbon 47 → 62 ms, city map 2.2 → 3.4 s). A click changed by about 1 ms.
+
+### Lighthouse
+
+Measured the way CI does it (`lighthouserc.json`: mobile profile, simulated 4× CPU slowdown, WebGL on SwiftShader, 3 runs, median), Lighthouse 12.6.1, map page `?lang=en` from a local static server with gzip, 2026-10-17.
+
+| Map page | Before | After |
+| --- | --- | --- |
+| Performance, median (range) | 33 (30–33) | 64 (64–65) |
+| First Contentful Paint | 3.4–4.0 s | 1.4 s |
+| Largest Contentful Paint | 16.3–16.8 s | 1.5 s |
+| Total Blocking Time | 8.0–9.1 s | 3.2–5.4 s |
+| Speed Index | 6.0–7.9 s | 6.2–6.4 s |
+
+On the GitHub runner the map page scored 33–40 before. What changed, each step chosen by the profiler:
+
+1. **WebGL warm-up in a worker.** In Chrome on SwiftShader the first WebGL context takes about 2 s, and the old check held the main thread for all of it. Lighthouse multiplies that by 4. Now a throwaway context is created on an `OffscreenCanvas` in a worker. After that the page's own check and the map's context take tens of milliseconds (`fallback.ts`).
+2. **The legend appears at once.** The legend title is the LCP element. Before, it appeared only after the data, the world and the map, with a render delay of 16.8 s. Its title and colours do not depend on the computation, so `main.ts` shows them before the 1 MB MapLibre bundle loads. The hour scale is filled in when the layer is ready.
+3. **Roof raster only in the worker.** `createWorld` rasterised roofs and trees on the main thread (0.84 s under the 4× slowdown) and again in the worker. Now the worker sends a copy of its raster to the page.
+
+Checked and left as is: the example calculations at start take 29 ms under the 4× slowdown, `feature-state` for 3.6–5 thousand buildings takes 51 ms, and `buildings.json` as a JS module parses in milliseconds. A binary format would only save traffic.
+
+What remains in TBT is the first MapLibre frames on SwiftShader. Shader compilation and terrain render-to-texture run on the CPU, and the main thread waits for them in synchronous GL calls. Without terrain the observed blocking drops from 2.7 s to 1.2–1.5 s, but terrain is part of the product. On a device with a GPU the same frames take tens of milliseconds.
 
 ## Data and licences
 
@@ -106,7 +129,7 @@ npm run test:e2e   # Playwright smoke test against the production build
 
 **Deploy.** `.github/workflows/deploy.yml` runs type check, tests and build, then publishes to GitHub Pages on push to `main`. It only publishes while the repository is public. After each deploy, `.github/workflows/live.yml` checks the published page:
 - **Playwright smoke test** for every city: the map container has height, the map is drawn, and a click on an example fills the panel.
-- **Lighthouse**, 3 runs on the mobile profile, median. Thresholds are in `lighthouserc.json` and are set from measurements on the GitHub runner. The map page scored 33–40 for performance; its threshold is 30. The method page scored 98–99; its threshold is 90. Accessibility, best practices and SEO scored 100 on both pages; their threshold is 95. Performance on the map page is low because of the WebGL map with terrain and 3D buildings, plus building the rasters on the main thread under the profile's 4× CPU slowdown.
+- **Lighthouse**, 3 runs on the mobile profile, median. Thresholds are in `lighthouserc.json` and are set from measurements on the GitHub runner. The map page scored 33–40 for performance before the optimisation round described under Performance, and 64–65 after it in the same measurement on an M2 Pro; its threshold is 55, to be refined after the first runs on the runner. The method page scored 98–99; its threshold is 90. Accessibility, best practices and SEO scored 100 on both pages; their threshold is 95. What holds the map page back is Total Blocking Time: the first WebGL frames with terrain are rendered on the CPU by SwiftShader.
 
 **Moving to Cloudflare Pages.** GitHub Pages serves every file with `max-age=600` and cannot be configured. That means even hashed assets are revalidated every 10 minutes, and a fresh HTML can take up to 10 minutes to appear. Cloudflare Pages lets you set headers. To move:
 1. In Cloudflare, go to Workers & Pages → Create → Pages → Connect to Git and pick this repository.

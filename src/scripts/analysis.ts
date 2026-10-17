@@ -1,7 +1,7 @@
 // Расчёт для здания, этажа и стороны: траектория солнца за сутки, часы по сезонам,
 // лента года (день × час), видимость моря по 8 румбам, массовые расчёты для карты.
 import SunCalc from 'suncalc';
-import { BCELL, blocked, demAt, seaVisible, TREE, wallPoint, type Bld, type World } from './grid.ts';
+import { BCELL, blocked, demAt, seaVisible, TREE, wallPoint, type Bld, type City, type World } from './grid.ts';
 
 export const STEP_MIN = 10;
 export const N = (24 * 60) / STEP_MIN; // отсчётов в сутках
@@ -124,7 +124,7 @@ function treesNear(w: World, b: Bld, d: number): boolean {
 // --- Массовые расчёты для карты (все здания) ---------------------------------
 // Высота окна над землёй для карт, м. Этаж — тот, чьё окно ближе всего к высоте; дом ниже — верхний этаж.
 export const HEIGHTS = [2, 5, 10];
-export const floorAt = (w: World, h: number) => Math.max(1, Math.round(h / w.city.floorHeight + 0.5));
+export const floorAt = (w: { city: City }, h: number) => Math.max(1, Math.round(h / w.city.floorHeight + 0.5));
 const floorFor = (w: World, b: Bld, h: number) => Math.min(b.floors, floorAt(w, h));
 
 // Часы солнца в окнах (здание целиком) для зданий from..to.
