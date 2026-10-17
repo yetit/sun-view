@@ -14,6 +14,7 @@
 ## What it does
 
 - **Sun in the windows.** Hours of direct sun for the March equinox, June solstice, September equinox and December solstice, plus a year ribbon (day × hour). Pick the whole building or one facing (N … NW).
+- **Annual sun, BRE-style.** A 0–100 window score: the share of the year's hours with the sun above the horizon when it shines into the window on the chosen floor and facade, with a verdict against the UK [BRE 209](https://bregroup.com/store/bookshop/site-layout-planning-for-daylight-and-sunlight-a-guide-to-good-practice-br-209-2022-edition) guideline: at least 25% over the year and 5% between 21 September and 21 March (meets / borderline / fails). BRE uses “probable” hours that allow for cloud; there is no open hourly sunshine climatology for these cities, so we count clear-sky hours. The same score fills the floors × facades matrix and the comparison. Details on the [method page](https://yetit.github.io/sun-view/method?lang=en).
 - **Sea view.** For each of 8 directions, whether water is visible from the window level and how far away it is.
 - **City maps.** On load the whole city is coloured by winter sun; switch to the sea map, or pick the window height: 2, 5 or 10 m above ground. Colours follow the actual spread of hours in the current layer, and the legend shows them. Buildings lower than the chosen height are faded and shown from their top floor.
 - **Time slider.** Building shading, ground shadows and the sun marker follow the time of day; ▶ plays a whole day.
@@ -41,7 +42,7 @@
 3. **Sea view** uses the same march. It keeps the highest elevation angle of anything in the way, and a sea cell counts as visible if its angle beats every obstacle before it.
 4. **Web Worker and precompute.** City-wide sun and sea maps are 15 layers per city, 54 KB. `scripts/precompute.ts` builds them when the data is fetched, so the map is coloured instantly. Without them, and for the year ribbon, a Web Worker computes in the background. Results are cached per layer.
 
-Code: `src/scripts/grid.ts` (rasters, rays), `analysis.ts` (seasons, sea rose, city maps), `worker.ts`, `map/` (MapLibre layers, shadows), `ui/` (panel, timebar, mobile sheet). More detail with diagrams is on the [How it works](https://yetit.github.io/sun-view/method?lang=en) page.
+Code: `src/scripts/grid.ts` (rasters, rays), `analysis.ts` (seasons, annual BRE score, sea rose, city maps), `worker.ts`, `map/` (MapLibre layers, shadows), `ui/` (panel, timebar, mobile sheet). More detail with diagrams is on the [How it works](https://yetit.github.io/sun-view/method?lang=en) page.
 
 ## Validation
 

@@ -1,6 +1,6 @@
-// Правая панель (на телефоне — лист): выбор здания, этаж и фасад, матрица «этажи × фасады», сезоны,
+// Правая панель (на телефоне — лист): выбор здания, этаж и фасад, матрица «этажи × фасады», солнце за год, сезоны,
 // лента года, роза моря, сравнение, PNG, поиск, примеры.
-import { bestCell, dirBearing, dirIndex, eye, eyeHeight, N, reliability, RIBBON_DAY_STEP, SEASONS, seaRose, seasonCalc, STEP_MIN, YEAR, type SeaDir, type Season } from '../analysis.ts';
+import { bestCell, dirBearing, dirIndex, eye, eyeHeight, N, reliability, RIBBON_DAY_STEP, SEASONS, seaRose, seasonCalc, STEP_MIN, verdict, YEAR, type SeaDir, type Season } from '../analysis.ts';
 import { $, $$, ask, city, currentFacades, facadeOf, fmtH, fmtT, geojson, state, syncUrl, tzOffset, world } from '../app.ts';
 import { facades, nearestFacade, type Bld, type Facade } from '../grid.ts';
 import { buildingName, cityName, lang, summaryText, t } from '../i18n.ts';
@@ -106,36 +106,65 @@ function fillSides() {
 }
 
 // Матрица «этажи × фасады» считается в воркере один раз на здание (и при уточнении этажности).
-let matrixCols = 0;
+// Из неё же — годовая оценка окна в панели, чтобы числа в матрице и в панели совпадали.
+type Matrix = { floors: number; cols: number; score: Uint8Array; winter: Uint8Array; sea: Uint8Array };
+let matrix: Matrix | null = null;
 function loadMatrix(b: Bld) {
   const box = $('.matrix');
   const fs = currentFacades();
-  matrixCols = 0;
+  matrix = null;
   box.innerHTML = `<p class="legend">${fs.length ? t.matrixLoading : t.matrixNone}</p>`;
   if (!fs.length) return;
   const my = ++matrixReq;
   ask({ type: 'matrix', idx: b.idx, floors: b.floors }).then((m) => {
     if (my !== matrixReq) return;
     box.innerHTML = matrixHtml(fs, m);
-    matrixCols = m.cols;
+    matrix = m;
     markMatrix();
+    renderBre();
   });
 }
 
-function matrixHtml(fs: Facade[], m: { floors: number; cols: number; sun: Float32Array; sea: Uint8Array }) {
+function matrixHtml(fs: Facade[], m: Matrix) {
   const best = bestCell(m);
-  const max = Math.max(...m.sun);
+  const max = Math.max(...m.score);
   const head = fs.map((f, c) => `<th data-c="${c}" title="${fTitle(f)}">${t.dirs[dirIndex(f.normal)]}<small>${deg(f)}°</small><small>${Math.round(f.len)} ${t.m}</small></th>`).join('');
   const rows = [];
   for (let fl = m.floors; fl >= 1; fl--) {
     const cells = fs.map((f, c) => {
-      const k = (fl - 1) * m.cols + c, sun = m.sun[k], sea = m.sea[k];
-      const label = t.matrixCell(fl, fName(f), fmtH.format(sun), sea) + (k === best ? ` (${t.best})` : '');
-      return `<td><button type="button" class="cell${k === best ? ' best' : ''}" data-c="${c}" data-f="${fl}" style="--v:${max ? Math.round((100 * sun) / max) : 0}%" aria-label="${label}" title="${label}">${fmtH.format(sun)}${sea ? '<i>∿</i>' : ''}</button></td>`;
+      const k = (fl - 1) * m.cols + c, score = m.score[k], sea = m.sea[k];
+      const label = t.matrixCell(fl, fName(f), score, m.winter[k], sea) + (k === best ? ` (${t.best})` : '');
+      return `<td><button type="button" class="cell${k === best ? ' best' : ''}" data-c="${c}" data-f="${fl}" style="--v:${max ? Math.round((100 * score) / max) : 0}%" aria-label="${label}" title="${label}">${score}${sea ? '<i>∿</i>' : ''}</button></td>`;
     });
     rows.push(`<tr><th>${fl}</th>${cells.join('')}</tr>`);
   }
   return `<table><thead><tr><th>${t.fl}</th>${head}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+
+// Годовая оценка текущего окна из матрицы; для здания целиком — лучший фасад этажа. null — ещё не посчитана.
+function breNow() {
+  if (!matrix || state.floor > matrix.floors) return null;
+  const row = (state.floor - 1) * matrix.cols;
+  let c = state.side ?? -1;
+  if (c < 0) for (let i = 0; i < matrix.cols; i++) if (c < 0 || matrix.score[row + i] > matrix.score[row + c]) c = i;
+  const a = { year: matrix.score[row + c], winter: matrix.winter[row + c] };
+  return { c, a, v: verdict(a) };
+}
+
+function breHtml() {
+  const fs = currentFacades(), r = breNow();
+  if (!fs.length) return `<p class="legend">${t.bre.none}</p>`;
+  if (!r) return `<p class="legend">${t.bre.loading}</p>`;
+  const f = fs[r.c];
+  const notes = [t.bre.detail(r.a.year, r.a.winter)];
+  if (state.side == null) notes.push(t.bre.best(fName(f)));
+  if (Math.cos(f.normal) > 0) notes.push(t.bre.north); // дальше 90° от юга
+  return `<div class="bre" data-v="${r.v}" style="--pct:${r.a.year}%"><strong>${r.a.year}<small>${t.bre.of}</small></strong><b>${t.bre.title}</b><em>${t.bre.verdict[r.v]}</em><small>${notes.join(' · ')}</small><i></i></div><p class="legend">${t.bre.legend}</p>`;
+}
+
+function renderBre() {
+  $('.bre-box').innerHTML = breHtml();
+  $('.summary').textContent = summary();
 }
 
 // Выбранная клетка в матрице.
@@ -146,13 +175,13 @@ function render() {
   const b = state.current;
   if (!b) return;
   $$<HTMLButtonElement>('.side').forEach((btn) => btn.setAttribute('aria-pressed', String(+btn.dataset.c! === (state.side ?? -1))));
-  if (matrixCols) markMatrix();
+  if (matrix) markMatrix();
   drawFloor(b);
   drawFacade(b, facadeOf());
   $('.eye').textContent = t.eye(fmtH.format(eyeHeight(world, b, state.floor)));
   $('.seasons').innerHTML = seasonsHtml();
   lastSea = seaRose(world, b, state.floor);
-  $('.summary').textContent = summary();
+  renderBre();
   $('.rose').innerHTML = roseSvg(lastSea);
   drawSectors(b, lastSea);
   drawSunPath();
@@ -169,7 +198,10 @@ export function refreshSeason() {
   $('.seasons').innerHTML = seasonsHtml();
 }
 
-const summary = () => summaryText(lastSeasons, lastSea.filter((s) => s.dist != null).length, (v) => fmtH.format(v));
+function summary() {
+  const r = breNow();
+  return summaryText(lastSeasons, lastSea.filter((s) => s.dist != null).length, (v) => fmtH.format(v), r && { score: r.a.year, verdict: r.v });
+}
 
 function seasonsHtml() {
   const e = eye(world, state.current!, state.floor, facadeOf());
@@ -242,13 +274,13 @@ function drawRibbon({ cols, rows, data }: { cols: number; rows: number; data: Ui
 }
 
 // --- Сравнение ---------------------------------------------------------------
-type Pin = { b: Bld; floor: number; side: number | null; label: string; seasons: Season[]; sea: number };
+type Pin = { b: Bld; floor: number; side: number | null; label: string; seasons: Season[]; bre: number | null; sea: number };
 const pins: Pin[] = [];
 function renderPins() {
   $('.compare').hidden = !pins.length;
   $('.pin-btn').toggleAttribute('disabled', pins.length >= 4);
   $('.compare-rows').innerHTML = pins.map((p, i) =>
-    `<tr><td><button type="button" class="link" data-i="${i}">${buildingName(p.b)}</button><small>${p.floor} ${t.fl} · ${p.label}</small></td>${p.seasons.map((s) => `<td>${fmtH.format(s.sun)}</td>`).join('')}<td>${p.sea}/8</td><td><button type="button" class="x" data-i="${i}" aria-label="${t.remove}">×</button></td></tr>`,
+    `<tr><td><button type="button" class="link" data-i="${i}">${buildingName(p.b)}</button><small>${p.floor} ${t.fl} · ${p.label}</small></td>${p.seasons.map((s) => `<td>${fmtH.format(s.sun)}</td>`).join('')}<td>${p.bre ?? '—'}</td><td>${p.sea}/8</td><td><button type="button" class="x" data-i="${i}" aria-label="${t.remove}">×</button></td></tr>`,
   ).join('');
   $$('.compare .link').forEach((el) => el.addEventListener('click', () => { const p = pins[+el.dataset.i!]; select(p.b, { floor: p.floor, side: p.side }); }));
   $$('.compare .x').forEach((el) => el.addEventListener('click', () => { pins.splice(+el.dataset.i!, 1); renderPins(); }));
@@ -367,7 +399,7 @@ export function initPanel() {
 
   $('.pin-btn').addEventListener('click', () => {
     if (!state.current || pins.length >= 4) return;
-    pins.push({ b: state.current, floor: state.floor, side: state.side, label: facadeOf() ? fName(facadeOf()!) : t.whole, seasons: lastSeasons, sea: lastSea.filter((s) => s.dist != null).length });
+    pins.push({ b: state.current, floor: state.floor, side: state.side, label: facadeOf() ? fName(facadeOf()!) : t.whole, seasons: lastSeasons, bre: breNow()?.a.year ?? null, sea: lastSea.filter((s) => s.dist != null).length });
     renderPins();
   });
 
