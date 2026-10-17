@@ -117,7 +117,7 @@ Buildings used to ship as GeoJSON inside a JS module. Now each city has `buildin
 
 Load stages from `npm run bench -- <url> 3 4` on the production build. These are 6 runs per city under a 4× CPU slowdown, alternating between the old and new build. The "data loaded" stage got faster: Tivat from 1.66–2.00 s to 0.97–0.99 s, Kotor from 0.99–1.12 s to 0.89–0.96 s, Bergen from 0.91–1.17 s to 0.80–1.00 s. The later stages are dominated by basemap tiles from the network and vary by several seconds between runs.
 
-**Lighthouse did not change.** Locally, 3 runs each: performance median 58 before and 56 after, total blocking time 7.1 s and 6.8 s, within noise. Almost all main-thread time is the MapLibre bundle: 6–7 s of script evaluation under Lighthouse's slowdown, where WebGL runs on SwiftShader on the CPU. Parsing the GeoJSON module was never the bottleneck, as the profile above had already shown. The binary format halves the building data on the wire and takes the GeoJSON copy out of the worker handshake.
+**Lighthouse did not change.** Locally, 3 runs each: performance median 58 before and 56 after, total blocking time 7.1 s and 6.8 s, within noise. Almost all main-thread time is the MapLibre bundle: 6–7 s of script evaluation under Lighthouse's slowdown, where WebGL runs on SwiftShader on the CPU. Parsing the GeoJSON module was never the bottleneck, as the profile above had already shown. The binary format halves the building data on the wire and takes the GeoJSON copy out of the worker handshake. On the GitHub runner, the map page scored 33, 40 and 65 before (median 40) and 43, 63 and 63 after (median 63), with page weight going from 2,550 to 2,468 KB. The ranges overlap, so I don't count it as a gain from the format.
 
 ## Data and licences
 
