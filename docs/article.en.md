@@ -1,17 +1,18 @@
-<!-- DRAFT for dev.to. Not published. Numbers are from the README, docs/horizon-check.md and my own run of the core (main 653f9b7) as of 2026-10-18. Contents: data, rays, horizon validation, facades and the matrix, the BRE annual window score, the window view, Bergen, performance, what didn't work. -->
+<!-- DRAFT for dev.to. Not published. Numbers are from the README, docs/horizon-check.md and my own run of the core on the data in main 63b6d1f, 2026-10-18. Contents: data, rays, horizon validation, facades and the matrix, the BRE annual window score, trees and clouds, the window view, Bergen, performance, what didn't work. -->
 
 # How much sun reaches a window? Ray-marching open terrain data in the browser
 
 When you look at a flat by the sea, everyone asks the same two questions: will it get sun in winter, and can you see the sea? The developer says yes to both. I wanted to check for myself, with no developer and no server: click a building on a 3D map, pick a floor and a side, and within tens of milliseconds see the hours of direct sun per season and in which directions the water is visible.
 
-The result is [Sun & View](https://yetit.github.io/sun-view/): Tivat and Kotor in Montenegro and Bergen in Norway, built on open data and computed entirely in the browser. For a window it gives an annual score against the UK BRE guideline and shows the view from it. Here is how it works, how I checked that it doesn't lie, and what didn't work.
+The result is [Sun & View](https://yetit.github.io/sun-view/): Tivat, Kotor and Herceg Novi in Montenegro and Bergen in Norway, built on open data and computed entirely in the browser. For a window it gives an annual score against the UK BRE guideline and shows the view from it. Here is how it works, how I checked that it doesn't lie, and what didn't work.
 
 ## Data
 
 - **Buildings** come from OpenStreetMap via the Overpass API: footprints, `building:levels`, `height` and addresses. Buildings without an address are labelled with the nearest street.
-- **Terrain** is Copernicus DEM GLO-30. It sits on AWS Open Data as cloud-optimised GeoTIFFs, so you can read just the window you need from a 1°×1° tile with HTTP range requests (the `geotiff` library), with no sign-up and no gigabyte downloads. The terrain extends about 15 km around the city, because mountains block the low winter sun from kilometres away.
+- **Terrain** is Copernicus DEM GLO-30. It sits on AWS Open Data as cloud-optimised GeoTIFFs, so you can read just the window you need from a 1°×1° tile with HTTP range requests (the `geotiff` library), with no sign-up and no gigabyte downloads. The terrain extends about 15 km around the city, because mountains block the low winter sun from kilometres away. In Bergen the ground is Kartverket's 1 m lidar DTM, which its WCS serves straight on our grid.
 - **The sea** is not "elevation ≤ 0". It comes from the OSM coastline (`natural=coastline`, land on the left, water on the right). Otherwise low meadows and vacant lots by the waterfront count as sea.
-- **Trees** are OSM woods and parks, treated as 10 m obstacles.
+- **Trees** come from the Meta and WRI canopy height map (about 1 m per pixel, CC BY 4.0, also COGs on AWS), reduced to a 6 m grid; leaf type comes from Copernicus HRL Dominant Leaf Type.
+- **Cloud** comes from hourly PVGIS-SARAH3 direct irradiance for 2014–2023.
 - **The sun** comes from `suncalc`.
 
 Everything is fetched once by scripts and committed to the repository. At runtime the site calls no APIs except address search.
@@ -21,7 +22,7 @@ Everything is fetched once by scripts and committed to the repository. At runtim
 The city is projected to a local frame: metres east and north of the centre, height above sea level. Then two grids:
 
 1. **Terrain** at about 60 m per cell (2″). Heights between nodes are interpolated bilinearly, which turned out to matter (more below).
-2. **A roof raster** at 6 m per cell. Each cell holds the absolute top of a building or canopy and the building's index. That turns "does the ray hit a neighbour" from a polygon search into a single array read.
+2. **A roof raster** at 6 m per cell. Each cell holds the absolute top of a building or canopy and the building's index (trees get separate codes for conifers and broadleaves). That turns "does the ray hit a neighbour" from a polygon search into a single array read.
 
 ## A ray toward the sun
 
@@ -55,13 +56,14 @@ The sea view uses the same march, but instead of "hit or not" it keeps the highe
 
 ## Validation: is the horizon right?
 
-Synthetic tests (a hill, a wall, the sea) catch sign and index bugs, but they can't tell you whether the result matches reality. The European Commission has an independent source: [PVGIS](https://re.jrc.ec.europa.eu/pvg_tools/en/) returns the horizon profile for any point through a free API. I compared our horizon with it at 16 points in Tivat and Kotor, 48 azimuths each.
+Synthetic tests (a hill, a wall, the sea) catch sign and index bugs, but they can't tell you whether the result matches reality. The European Commission has an independent source: [PVGIS](https://re.jrc.ec.europa.eu/pvg_tools/en/) returns the horizon profile for any point through a free API. I compared our horizon with it at 24 points in Tivat, Kotor and Herceg Novi, 48 azimuths each.
 
 | Where | Mean difference | 21 December sunrise |
 | --- | --- | --- |
 | Flat ground by the sea, Tivat | 0.2° | same minute (±1) |
 | All points, Tivat | 1.5° | — |
 | All points, Kotor | 1.3° | — |
+| All points, Herceg Novi | 1.2° | within 3 min on the shore |
 | Steep slope, Vrmac | 5.6° | 98 min later than PVGIS |
 
 The check found two real bugs:
@@ -87,14 +89,14 @@ Sun hours on four days of the year are hard to compare between flats: is "7 hour
 
 How we compute it:
 
-- the year is sampled every 10 days (the middle of each interval, weighted by its length) and each day every 10 minutes; the sun is above the horizon at the building for about 4,400 hours a year, and that is the denominator;
+- the year is sampled every 10 days (the middle of each interval, weighted by its length) and each day every 10 minutes; each hour is weighted by the chance of direct sun on that day (more on it below), and the sum of these "probable" hours with the sun above the horizon is the denominator;
 - the numerator is the hours when the sun is in front of the facade and the ray from the window clears buildings, trees and terrain;
 - to avoid tracing thousands of rays per window, the horizon including buildings and terrain is traced once per degree of azimuth, and the sun is then compared with it by elevation;
 - the 0–100 score is the year's share in percent, and the verdict uses BRE's two thresholds.
 
 Where we depart from the guideline, and say so in the UI:
 
-- **clear sky instead of "probable" hours.** We found no open hourly sunshine climatology for our cities, so we count direct sun without clouds. Winters are cloudier than summers, so the real winter share is usually lower than ours, especially in Bergen;
+- **a satellite instead of a weather station.** BRE takes probable hours from long-term station records; ours are an estimate from PVGIS satellite data;
 - **"borderline"** is our category, not BRE's: the window misses a threshold, but both shares are at least 80% of it;
 - **"not assessed".** BRE doesn't assess windows facing more than 90° away from south. The first version gave such a window a verdict and at the same time said it "faces north", which for a west wall at 272° was both wrong and contradictory. Now the 0–100 score stays and the verdict says "not assessed by BRE"; for the whole building the verdict comes from the best facade the guideline applies to.
 
@@ -102,17 +104,29 @@ On examples from the demo (my own run of the core):
 
 | Flat | Facade | Year | Winter half | Verdict |
 | --- | --- | --- | --- | --- |
-| Tivat, 10-storey block, floor 10 | south, 182° | 77% | 38% | meets |
-| same | east, 92° | 43% | 19% | meets |
-| same | west, 272° | 47% | 20% | not assessed |
-| same, floor 1 | east, 92° | 21% | 10% | borderline |
-| Bergen, Mowinckelgårdene, floor 13 | south-west, 214° | 69% | 27% | meets |
-| same, floor 2 | south-west, 214° | 14% | 2% | fails |
-| Kotor, "no direct winter sun", floor 2 | east, 99° | 28% | 11% | meets |
+| Tivat, 10-storey block, floor 10 | south, 182° | 76% | 33% | meets |
+| same | east, 92° | 43% | 16% | meets |
+| same | west, 272° | 47% | 17% | not assessed |
+| same, floor 1 | east, 92° | 21% | 8% | borderline |
+| Bergen, Mowinckelgårdene, floor 13 | south-west, 214° | 68% | 21% | meets |
+| same, floor 2 | south-west, 214° | 18% | 2% | fails |
+| Kotor, "no direct winter sun", floor 2 | east, 99° | 28% | 9% | meets |
 
-The last row shows why the guideline needs a careful read: on 21 December this window gets no sun at all, but BRE's "winter half" also covers September, October, February and March, and that is where the 11% comes from.
+The last row shows why the guideline needs a careful read: on 21 December this window gets no sun at all, but BRE's "winter half" also covers September, October, February and March, and that is where the 9% comes from.
 
 The facade matrix now shows the same score in each cell, and the best cell is the highest score. For the 10-storey block in Tivat the whole matrix (10 floors × 4 facades) takes about 140 ms in the worker.
+
+Cloud moves the winter shares noticeably: with probable hours, floor 13 in Bergen gets 21% in the winter half, against 27% under a clear sky. Winters there are greyer, so a probable winter hour weighs less than a summer one.
+
+## Trees and clouds
+
+The first version treated OSM woods and parks as 10 m trees. But in Tivat and Kotor the trees are gardens around every house, olives and cypresses that OSM doesn't have. Crown heights now come from the open Meta and WRI map (Tolan et al., 2024): a model trained on satellite imagery, about 1 m per pixel, about 3 m error. The tiles are COGs on AWS but awkward ones: one row per strip, so `geotiff` sends a request per row and runs into timeouts. What worked was reading the needed rows as one range in 8 MB chunks and inflating them with the predictor myself. A 6 m cell gets the median of its pixels, and anything under 3 m counts as nothing.
+
+That changes answers a lot: in Tivat winter sun on low floors changed for 26% of buildings, and the sea view for 19%. The "trees nearby" reliability reason had to be narrowed to trees taller than the roof; otherwise it fired for two thirds of buildings and told you nothing.
+
+In winter broadleaved trees are bare, but open data can't tell a deciduous oak from an evergreen olive. The Copernicus Dominant Leaf Type map only says broadleaved or coniferous, and in Montenegro broadleaved means olives and holm oaks too. So the computation always keeps leaves on, and for spring and winter the panel shows an upper bound: "🍂 up to N h with bare trees".
+
+Cloud is the share of daytime hours when PVGIS-SARAH3 direct normal irradiance reaches 120 W/m², the WMO sunshine threshold. I first tried ERA5 via Open-Meteo, and it overstated the sun badly: 31% in January in Bergen. The satellite gives about 1,500 sunshine hours a year in Bergen and 2,900 in Tivat. The season cards show "☁ ≈ N h on average" next to the clear-sky hours.
 
 ## The view from the window
 
@@ -124,13 +138,13 @@ Numbers for the same buildings:
 
 | Window | Sea in frame | Sky |
 | --- | --- | --- |
-| Tivat, floor 10, south | 9% | 47% |
+| Tivat, floor 10, south | 8% | 47% |
 | Tivat, floor 10, west | 7% | 42% |
 | Tivat, floor 1, south | 0% | 0% |
-| Bergen, floor 13, north-east (over the fjord) | 24% | 30% |
+| Bergen, floor 13, north-east (over the fjord) | 25% | 30% |
 | Bergen, floor 13, south-west | 0% | 39% |
 
-This is what the whole thing was for: on floor 13 in Bergen, the sunniest facade (south-west, 69 out of 100) has no sea in frame, while the facade over the fjord (north-east, sea a quarter of the frame) gets only 17% of the annual sun and isn't assessed by BRE. Choosing a flat here means choosing between sun and view, and the UI shows that on one screen.
+This is what the whole thing was for: on floor 13 in Bergen, the sunniest facade (south-west, 68 out of 100) has no sea in frame, while the facade over the fjord (north-east, sea a quarter of the frame) gets only 18% of the annual sun and isn't assessed by BRE. Choosing a flat here means choosing between sun and view, and the UI shows that on one screen.
 
 Limitations: Earth curvature is ignored. The camera sits at window height above the drawn terrain (Terrain Tiles), while the computation uses Copernicus; they differ by metres, so the frame and the percentages can disagree slightly. The view frame also goes into the PNG card. The WebGL buffer isn't preserved in production, so we grab it from a one-off redraw in the `render` event.
 
@@ -138,11 +152,11 @@ Limitations: Earth curvature is ignored. The camera sits at window height above 
 
 The third city is Bergen: 60° N, a fjord, the "seven mountains", and floor counts in OSM for 58% of buildings. In December the sun rises only about 6° at noon, so any horizon error decides whether a window gets sun at all.
 
-Checking against PVGIS didn't work here, and the fault was the reference, not our core: north of 60° PVGIS elevations are constant over 30″ squares. It puts Fløyen at 140 m instead of 320, and the Bryggen waterfront at 180 m instead of 7. Norway has a better reference: Kartverket's 1 m lidar ground model, open and keyless. Against it the mean difference is 0.82°, 0.3–0.4° on flat points, and the 21 December sunrise and sunset match within 1–2 minutes. Løvstakken, the mountain Bergen's winter sun hides behind, matches within 0.1–0.2°.
+Checking against PVGIS didn't work here, and the fault was the reference, not our core: north of 60° PVGIS elevations are constant over 30″ squares. It puts Fløyen at 140 m instead of 320, and the Bryggen waterfront at 180 m instead of 7. Norway has a better reference: Kartverket's 1 m lidar ground model, open and keyless. Against it, on Copernicus terrain, the mean difference is 0.82°, 0.3–0.4° on flat points, and the 21 December sunrise and sunset match within 1–2 minutes. Løvstakken, the mountain Bergen's winter sun hides behind, matches within 0.1–0.2°.
 
 It also exposed another Copernicus subtlety: north of 50° the tile's longitude step is coarser (1.5–2″), and our cell centres fell exactly between pixels. Rounding picked the pixel 15 m to the east, and the city sits on a slope that rises to the east. Bilinear sampling of the tile fixed it.
 
-What remains: on the Fløyen slope Copernicus, a radar surface model, sits 20 m above the ground under the forest, so the eye ends up too high. And at Nordnes a knoll 100 m away decides everything: by the DTM the 21 December sun stays behind it all day, while we have it shining from 10:28 to 12:45. For buildings on knolls and slopes the winter result in Bergen is an estimate, and the reliability label in the panel says so.
+What remained was the eye height: on the Fløyen slope Copernicus, a surface model, sits 20 m above the ground under the forest. Since the reference was Kartverket's DTM anyway, I made it Bergen's terrain too: 0.82° → 0.59°, and at Nordnes, where a knoll 100 m away decides everything, there is now no sun on 21 December all day, as in the reference. It got worse at the foot of Fløyen: sunrise 30 minutes before the reference instead of 12. For buildings on slopes the winter result in Bergen is still an estimate.
 
 ## Performance: what helped and what didn't
 
@@ -152,22 +166,22 @@ Lighthouse's mobile profile first scored 33 for performance. The profiler found 
 2. **LCP was the legend title.** It appeared only after the data, the world and the map, at 16.8 s. Its text doesn't depend on the computation, so it is now drawn before the MapLibre bundle loads.
 3. **The roof raster was built twice**, on the main thread and in the worker. Now it's built only in the worker, and the page gets a copy.
 
-Locally that took performance from 33 to 64 and LCP from 16.5 to 1.5 s.
+Locally that took performance from 33 to 64 and LCP from 16.5 to 1.5 s. Later another 3.4 s task turned up: the first frames with 3D terrain. Terrain now switches on after the map first goes idle; the city shows at once and the mountains rise a moment later, 60–62 → 62–66 locally.
 
 What didn't help was **the binary building format.** GeoJSON inside a JS module weighed 1.1–2.1 MB per city; the binary file (Int16 with per-ring delta coding, ring offsets, string indexes) is 160–330 KB. Over gzip it halves the data on the wire: 157 → 78 KB in Tivat, 342 → 184 KB in Bergen. The "data loaded" stage under a 4× CPU slowdown got faster (in Tivat, 1.7–2.0 → about 1.0 s), but Lighthouse didn't move: 58 and 56 are within noise. The profile had already said that parsing the GeoJSON took milliseconds and the time went to software WebGL. I kept the format anyway: it's half the size on the wire and removes the GeoJSON copy into the worker.
 
 ## What didn't work
 
 - **Floor counts.** OSM has them for 14% of buildings in Tivat and 3% in Kotor. The rest are estimated from building type and footprint; they are drawn semi-transparent on the map and flagged in the panel. Bergen has floor counts for 58% of buildings, which is why it became the third city.
-- **A surface model instead of ground.** Copernicus is a DSM, so its cells include roofs and canopies. It is flattened under buildings, but exact ground needs a DTM, and the open one with a suitable licence (FABDEM) is non-commercial.
+- **A surface model instead of ground in Montenegro.** Copernicus is a DSM, so its cells include roofs and canopies. It is flattened under buildings, but exact ground needs a DTM, and the open one with a suitable licence (FABDEM) is non-commercial. In Bergen, Kartverket's DTM solved it.
 - **Slopes.** For buildings on steep slopes, the uphill result is an estimate good to tens of minutes, and the UI says so.
 - **An empty map in production.** Everything worked in dev, but on GitHub Pages the map was blank. In the production build `maplibre-gl.css` loaded after my styles, and `.maplibregl-map { position: relative }` overrode my `.map { position: fixed }`, leaving the container zero pixels tall. After that, CI got a Playwright smoke test against the published page: it checks the container's height, that the map screenshot is colourful, and that clicking an example produces a result.
 - **Mobile performance hits the ceiling of software WebGL.** After the fixes it scores 64 locally, while runs on the GitHub runner range from 33 to 65. Almost all the remaining time is MapLibre's first frames with terrain on SwiftShader; on a device with a GPU those frames take tens of milliseconds. Accessibility, best practices and SEO score 100.
-- **Clouds.** The annual score assumes a clear sky. It compares flats with each other and with the BRE thresholds under the same weather; it is not a formal sunlight assessment.
+- **Leaves in winter.** The data can't tell deciduous trees from evergreen ones, so winter only gets a bare-tree bound, not a forecast.
 - **Overpass** regularly returns 502 under load. The fetch script retries across mirrors.
 
 ## Takeaway
 
-Cloud-optimised GeoTIFF plus OSM plus computing in the browser turned out to be a workable combination: no backend, no keys, and an honest check against an independent source. What matters most to a buyer turned out not to be sun hours but the comparison: which facade and floor is better, whether a window meets the guideline, and what you give up for the view. Adding a city is one object in a config and one command.
+Cloud-optimised GeoTIFF plus OSM plus computing in the browser turned out to be a workable combination: no backend, no keys, and an honest check against an independent source. What matters most to a buyer turned out not to be sun hours but the comparison: which facade and floor is better, whether a window meets the guideline, and what you give up for the view. Adding a city is one object in a config and one command; that is how Herceg Novi arrived.
 
 Code: [github.com/yetit/sun-view](https://github.com/yetit/sun-view). Demo: [yetit.github.io/sun-view](https://yetit.github.io/sun-view/).
