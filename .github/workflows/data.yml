@@ -1,0 +1,62 @@
+# Раз в месяц заново выгружает данные всех городов (OSM, рельеф, предрасчёт) и открывает PR,
+# если поменялось что-то кроме дат выгрузки. В описании PR — сводка scripts/data-report.mjs.
+# Overpass часто отвечает 5xx: scripts/overpass.mjs перебирает зеркала, здесь — ещё до трёх попыток
+# на город с паузой. PR от GITHUB_TOKEN не запускает другие workflow, поэтому тесты гоняем здесь же.
+# Нужно включить Settings → Actions → General → «Allow GitHub Actions to create and approve pull requests».
+name: Update data
+on:
+  schedule:
+    - cron: '0 4 3 * *' # 3-го числа, 04:00 UTC
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: data
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Fetch
+        run: |
+          ids=$(node -e "import('./cities.config.mjs').then((m) => console.log(m.cities.map((c) => c.id).join(' ')))")
+          echo "IDS=$ids" >> "$GITHUB_ENV"
+          for id in $ids; do
+            for try in 1 2 3; do
+              npm run fetch -- "$id" && break
+              if [ "$try" = 3 ]; then echo "$id" >> "$RUNNER_TEMP/failed"; git checkout HEAD -- "data/$id"; else sleep $((try * 120)); fi
+            done
+          done
+      - name: Report
+        run: |
+          {
+            echo "Ежемесячная выгрузка: OSM (Overpass), рельеф Copernicus GLO-30, предрасчёт карт. Сравнение с \`$GITHUB_REF_NAME\`."
+            echo
+            node scripts/data-report.mjs $IDS
+            if [ -s "$RUNNER_TEMP/failed" ]; then echo; echo "Не выгрузились за 3 попытки, оставлены как были: $(xargs < "$RUNNER_TEMP/failed")."; fi
+          } > "$RUNNER_TEMP/report.md"
+          cat "$RUNNER_TEMP/report.md" >> "$GITHUB_STEP_SUMMARY"
+      - run: npm test
+      - name: Pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$(git status --porcelain data)" ]; then echo "Данные не изменились"; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -C data/update
+          git add data
+          git commit -m "Данные: выгрузка $(date -u +%F)"
+          git push -f origin data/update
+          title="Данные: выгрузка $(date -u +%F)"
+          gh pr create --base "$GITHUB_REF_NAME" --head data/update --title "$title" --body-file "$RUNNER_TEMP/report.md" \
+            || gh pr edit data/update --title "$title" --body-file "$RUNNER_TEMP/report.md"
+      - name: Failed cities
+        run: test ! -s "$RUNNER_TEMP/failed"
