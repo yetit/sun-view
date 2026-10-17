@@ -17,7 +17,10 @@ export default defineConfig({
     launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] },
   },
   webServer: url ? undefined : {
-    command: 'BASE_PATH=/sun-view/ npm run build && BASE_PATH=/sun-view/ npx astro preview --port 4326',
+    // --ignore-lock: Astro 7 под ИИ-агентом сам уводит preview в фон (демон с --json), и Playwright
+    // считал бы, что сервер «вышел раньше времени», а демон оставался висеть. С флагом — обычный процесс,
+    // который Playwright запускает и гасит сам.
+    command: 'BASE_PATH=/sun-view/ npm run build && BASE_PATH=/sun-view/ npx astro preview --port 4326 --ignore-lock',
     url: local,
     reuseExistingServer: true,
     timeout: 240_000,
