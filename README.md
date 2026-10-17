@@ -19,6 +19,8 @@
 - **Time slider.** Building shading, ground shadows and the sun marker follow the time of day; ▶ plays a whole day.
 - **Reliability label.** Each building gets high, medium or low reliability with the reasons: floor count estimated, steep slope, woods next to it.
 - **Compare and share.** Pin up to four flats side by side, download a PNG card, or share the URL. The URL keeps the city, building, floor, side, season and time.
+- **Keyboard.** Tab to the map. Enter selects the building in the centre, arrow keys move to the nearest building in that direction on screen, Esc clears the selection. The selection and its summary are announced to screen readers.
+- **Embed.** Add `embed=1` to any link to get only the map, the building and a compact panel for an `<iframe>`. The iframe can size itself through `postMessage`. Ready-made code is on the [embed page](https://yetit.github.io/sun-view/embed/?lang=en) and below.
 
 ## Cities
 
@@ -65,7 +67,7 @@ Measured on an Apple M2 Pro with the production build (`astro preview`), Tivat, 
 | | |
 | --- | --- |
 | JavaScript, gzip | 300 KB, mostly MapLibre |
-| City data, gzip | 190 KB of buildings, greenery and precomputed maps, plus a 0.9 MB terrain grid |
+| City data, gzip | 111 KB in Tivat, 112 KB in Kotor and 229 KB in Bergen for buildings, greenery and precomputed maps, plus a terrain grid of 420–490 KB |
 | First load until the coloured map | 2.0–2.4 s: data 0.15 s, roof raster in the worker 0.22 s, the rest is waiting for basemap and terrain tiles |
 | Main-thread long tasks during load | 60–80 ms in total (before the Lighthouse round below: 200–320 ms) |
 | Repeat load with HTTP cache | 0.55 s |
@@ -94,9 +96,28 @@ On the GitHub runner the map page scored 33–40 before. What changed, each step
 2. **The legend appears at once.** The legend title is the LCP element. Before, it appeared only after the data, the world and the map, with a render delay of 16.8 s. Its title and colours do not depend on the computation, so `main.ts` shows them before the 1 MB MapLibre bundle loads. The hour scale is filled in when the layer is ready.
 3. **Roof raster only in the worker.** `createWorld` rasterised roofs and trees on the main thread (0.84 s under the 4× slowdown) and again in the worker. Now the worker sends a copy of its raster to the page.
 
-Checked and left as is: the example calculations at start take 29 ms under the 4× slowdown, `feature-state` for 3.6–5 thousand buildings takes 51 ms, and `buildings.json` as a JS module parses in milliseconds. A binary format would only save traffic.
+Checked and left as is: the example calculations at start take 29 ms under the 4× slowdown, `feature-state` for 3.6–5 thousand buildings takes 51 ms, and `buildings.json` as a JS module parsed in milliseconds. The binary format below confirmed that it mostly saves traffic.
 
 What remains in TBT is the first MapLibre frames on SwiftShader. Shader compilation and terrain render-to-texture run on the CPU, and the main thread waits for them in synchronous GL calls. Without terrain the observed blocking drops from 2.7 s to 1.2–1.5 s, but terrain is part of the product. On a device with a GPU the same frames take tens of milliseconds.
+
+### Binary building format
+
+Buildings used to ship as GeoJSON inside a JS module. Now each city has `buildings.bin` with `buildings.meta.json`, loaded with `fetch` (`src/scripts/buildings-bin.ts`).
+- **Coordinates.** Int16 in metres from the city's origin, in steps of 5–15 cm. Each ring stores its first point absolute and the rest as deltas, which gzip compresses well.
+- **Attributes.** Ring and building offsets, floors, heights, and indexes into tables of names, addresses, streets and types.
+- **Worker.** It gets the ArrayBuffer instead of a copy of the GeoJSON objects.
+
+`buildings.json` stays in the repository as the source for the scripts. A test checks that `buildings.bin` matches it to within one step.
+
+| Per city, GitHub Pages serves gzip | GeoJSON in JS before | `buildings.bin` + meta after |
+| --- | --- | --- |
+| Tivat | 1,121 KB, 157 KB gzip | 160 KB, 78 KB gzip |
+| Kotor | 1,139 KB, 153 KB gzip | 159 KB, 76 KB gzip |
+| Bergen | 2,116 KB, 342 KB gzip | 327 KB, 184 KB gzip |
+
+Load stages from `npm run bench -- <url> 3 4` on the production build. These are 6 runs per city under a 4× CPU slowdown, alternating between the old and new build. The "data loaded" stage got faster: Tivat from 1.66–2.00 s to 0.97–0.99 s, Kotor from 0.99–1.12 s to 0.89–0.96 s, Bergen from 0.91–1.17 s to 0.80–1.00 s. The later stages are dominated by basemap tiles from the network and vary by several seconds between runs.
+
+**Lighthouse did not change.** Locally, 3 runs each: performance median 58 before and 56 after, total blocking time 7.1 s and 6.8 s, within noise. Almost all main-thread time is the MapLibre bundle: 6–7 s of script evaluation under Lighthouse's slowdown, where WebGL runs on SwiftShader on the CPU. Parsing the GeoJSON module was never the bottleneck, as the profile above had already shown. The binary format halves the building data on the wire and takes the GeoJSON copy out of the worker handshake.
 
 ## Data and licences
 
@@ -117,6 +138,23 @@ The data lives in `data/<city>/` and is committed. The site calls no APIs at run
 - **"Sun in the window" means a direct line of sight** from the window point. Glazing, balconies and reflections are not modelled.
 - **Ground shadows on the map are an illustration** on flat ground. Sun hours come from the rays.
 
+## Embed
+
+```html
+<iframe id="sun-view" title="Sun & View"
+  src="https://yetit.github.io/sun-view/?embed=1&c=tivat&b=193467133&f=10&s=3&t=11&m=sun&lang=en"
+  style="width:100%;height:720px;border:0" loading="lazy"></iframe>
+<script>
+  // Sun & View reports its page height; the iframe grows to fit.
+  addEventListener('message', (e) => {
+    if (e.origin !== 'https://yetit.github.io' || e.data?.type !== 'sun-view:height') return;
+    document.getElementById('sun-view').style.height = e.data.height + 'px';
+  });
+</script>
+```
+
+The link takes the same parameters as the app's address bar: `c` city, `b` building (OSM id), `f` floor, `s` season, `t` hour, `lang`. Without the script, set the height yourself.
+
 ## Run locally
 
 ```bash
@@ -125,10 +163,10 @@ npm install
 npm run dev        # http://localhost:4325
 npm test           # ray-core tests
 npm run check      # types
-npm run test:e2e   # Playwright smoke test against the production build
+npm run test:e2e   # Playwright against the production build: smoke for every city, matrix, compare, PNG, URL state, language, embed, keyboard
 ```
 
-**Adding a city.** Describe it in `cities.config.mjs` and run `npm run fetch -- <id>`. That runs buildings, terrain with coastline, and the precompute. The city then appears in the switcher as `?c=<id>`.
+**Adding a city.** Describe it in `cities.config.mjs` and run `npm run fetch -- <id>`. That runs buildings, packs them into `buildings.bin`, then terrain with coastline, and the precompute. The city then appears in the switcher as `?c=<id>`.
 
 **Deploy.** `.github/workflows/deploy.yml` runs type check, tests and build, then publishes to GitHub Pages on push to `main`. It only publishes while the repository is public. Once a month, `.github/workflows/data.yml` re-fetches every city and opens a pull request if anything besides the fetch date changed. Overpass often answers 5xx, so each city gets up to three attempts. The PR description lists buildings before and after, the share with floor counts, and whether the example buildings are still there. For the bot to open PRs, enable Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests". After each deploy, `.github/workflows/live.yml` checks the published page:
 - **Playwright smoke test** for every city: the map container has height, the map is drawn, and a click on an example fills the panel.

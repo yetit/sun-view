@@ -1,4 +1,4 @@
-<!-- DRAFT for dev.to. Not published. Numbers are from the README and docs/horizon-check.md as of 2026-10-17. -->
+<!-- DRAFT for dev.to. Not published. Numbers are from the README and docs/horizon-check.md as of 2026-10-17 (third round: facades, Bergen, performance, binary format). -->
 
 # How much sun reaches a window? Ray-marching open terrain data in the browser
 
@@ -71,13 +71,45 @@ The check found two real bugs:
 
 It also exposed one unpleasant property: on slopes, everything depends on the observer's own elevation. A 60 m cell on a 30–50% slope spans 20–30 m of height, and terrain sources disagree by tens of metres. Without interpolation the eye sat below the surface the ray sees, and the nearby slope looked 10–30° steeper. Bilinear interpolation cut the slope error from 8.3° to 5.6°, and to 0.4° against the source Copernicus 1″ tile. The rest is mostly PVGIS's own ground elevation.
 
+## Facades and "the best flat in the building"
+
+The first version put the window on a compass-direction wall: "windows facing SE". But buildings are rotated any which way, and a house may simply not have a south-east wall. Now facades come from the OSM footprint:
+
+- neighbouring edges that nearly lie on one line (up to 15° off the chord) merge into one wall, because OSM splits walls with extra points and rounded corners;
+- wall segments whose point one metre outside falls inside a neighbouring building are treated as shared blind walls and dropped;
+- parallel pieces of one plane offset by up to 3 m (balconies, steps) count as one facade, and walls shorter than 4 m are ignored.
+
+Facades and floors make a matrix: a row per floor, a column per facade, each cell showing winter sun hours and a mark if the sea is visible. The best cell has the most winter sun; ties go to more sea directions, then the higher floor. The matrix runs in the worker: for a 10-storey building with four facades that's 40 calculations of 4 seasons each.
+
+## Bergen: a different latitude and a different reference
+
+The third city is Bergen: 60° N, a fjord, the "seven mountains", and floor counts in OSM for 58% of buildings. In December the sun rises only about 6° at noon, so any horizon error decides whether a window gets sun at all.
+
+Checking against PVGIS didn't work here, and the fault was the reference, not our core: north of 60° PVGIS elevations are constant over 30″ squares. It puts Fløyen at 140 m instead of 320, and the Bryggen waterfront at 180 m instead of 7. Norway has a better reference: Kartverket's 1 m lidar ground model, open and keyless. Against it the mean difference is 0.82°, 0.3–0.4° on flat points, and the 21 December sunrise and sunset match within 1–2 minutes. Løvstakken, the mountain Bergen's winter sun hides behind, matches within 0.1–0.2°.
+
+It also exposed another Copernicus subtlety: north of 50° the tile's longitude step is coarser (1.5–2″), and our cell centres fell exactly between pixels. Rounding picked the pixel 15 m to the east, and the city sits on a slope that rises to the east. Bilinear sampling of the tile fixed it.
+
+What remains: on the Fløyen slope Copernicus, a radar surface model, sits 20 m above the ground under the forest, so the eye ends up too high. And at Nordnes a knoll 100 m away decides everything: by the DTM the 21 December sun stays behind it all day, while we have it shining from 10:28 to 12:45. For buildings on knolls and slopes the winter result in Bergen is an estimate, and the reliability label in the panel says so.
+
+## Performance: what helped and what didn't
+
+Lighthouse's mobile profile first scored 33 for performance. The profiler found three real causes:
+
+1. **The first WebGL context.** On SwiftShader (how Lighthouse renders WebGL without a GPU) it takes about 2 s to create, and the WebGL support check held the main thread for all of it. The warm-up now happens in a worker on an `OffscreenCanvas`.
+2. **LCP was the legend title.** It appeared only after the data, the world and the map, at 16.8 s. Its text doesn't depend on the computation, so it is now drawn before the MapLibre bundle loads.
+3. **The roof raster was built twice**, on the main thread and in the worker. Now it's built only in the worker, and the page gets a copy.
+
+Locally that took performance from 33 to 64 and LCP from 16.5 to 1.5 s.
+
+What didn't help was **the binary building format.** GeoJSON inside a JS module weighed 1.1–2.1 MB per city; the binary file (Int16 with per-ring delta coding, ring offsets, string indexes) is 160–330 KB. Over gzip it halves the data on the wire: 157 → 78 KB in Tivat, 342 → 184 KB in Bergen. The "data loaded" stage under a 4× CPU slowdown got faster (in Tivat, 1.7–2.0 → about 1.0 s), but Lighthouse didn't move: 58 and 56 are within noise. The profile had already said that parsing the GeoJSON took milliseconds and the time went to software WebGL. I kept the format anyway: it's half the size on the wire and removes the GeoJSON copy into the worker.
+
 ## What didn't work
 
 - **Floor counts.** OSM has them for 14% of buildings in Tivat and 3% in Kotor. The rest are estimated from building type and footprint; they are drawn semi-transparent on the map and flagged in the panel. Bergen has floor counts for 58% of buildings, which is why it became the third city.
 - **A surface model instead of ground.** Copernicus is a DSM, so its cells include roofs and canopies. It is flattened under buildings, but exact ground needs a DTM, and the open one with a suitable licence (FABDEM) is non-commercial.
 - **Slopes.** For buildings on steep slopes, the uphill result is an estimate good to tens of minutes, and the UI says so.
 - **An empty map in production.** Everything worked in dev, but on GitHub Pages the map was blank. In the production build `maplibre-gl.css` loaded after my styles, and `.maplibregl-map { position: relative }` overrode my `.map { position: fixed }`, leaving the container zero pixels tall. After that, CI got a Playwright smoke test against the published page: it checks the container's height, that the map screenshot is colourful, and that clicking an example produces a result.
-- **Mobile performance.** Lighthouse's mobile profile scores 30–36 for performance: a WebGL map with terrain and 3D buildings, plus raster building on the main thread under a 4× CPU slowdown. Accessibility, best practices and SEO score 98–100.
+- **Mobile performance hits the ceiling of software WebGL.** After the fixes it scores 64 locally, while runs on the GitHub runner range from 33 to 65. Almost all the remaining time is MapLibre's first frames with terrain on SwiftShader; on a device with a GPU those frames take tens of milliseconds. Accessibility, best practices and SEO score 100.
 - **Overpass** regularly returns 502 under load. The fetch script retries across mirrors.
 
 ## Takeaway
