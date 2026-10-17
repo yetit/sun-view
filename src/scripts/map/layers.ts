@@ -15,6 +15,9 @@ export const map = new Map({ container: 'map', style, ...city.camera, maxPitch: 
 map.addControl(new NavigationControl({ visualizePitch: true }), 'top-left');
 // Событие load может прийти раньше, чем загрузятся данные, — ловим его сразу.
 export const mapReady = new Promise<void>((r) => map.once('load', () => r()));
+// 3D-рельеф — после первого простоя карты: первые кадры с ним на слабом GPU (и на SwiftShader в Lighthouse)
+// держат главный поток секундами, а город виден и без него.
+map.once('idle', () => (globalThis.requestIdleCallback ?? setTimeout)(() => map.setTerrain({ source: 'dem', exaggeration: 1 })));
 const BUILDING_LAYERS = ['buildings', 'buildings-assumed'];
 
 // Точка на расстоянии dist (м) по азимуту bearing (рад) от lngLat.

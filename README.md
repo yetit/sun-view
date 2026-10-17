@@ -100,7 +100,7 @@ On the GitHub runner the map page scored 33–40 before. What changed, each step
 
 Checked and left as is: the example calculations at start take 29 ms under the 4× slowdown, `feature-state` for 3.6–5 thousand buildings takes 51 ms, and `buildings.json` as a JS module parsed in milliseconds. The binary format below confirmed that it mostly saves traffic.
 
-What remains in TBT is the first MapLibre frames on SwiftShader. Shader compilation and terrain render-to-texture run on the CPU, and the main thread waits for them in synchronous GL calls. Without terrain the observed blocking drops from 2.7 s to 1.2–1.5 s, but terrain is part of the product. On a device with a GPU the same frames take tens of milliseconds.
+What remains in TBT is the first MapLibre frames on SwiftShader: shader compilation and the page's first WebGL context run on the CPU, and the main thread waits for them in synchronous GL calls. Terrain is the most expensive part, so 3D terrain is switched on after the map first goes idle (`map/layers.ts`): the longest task (3.4 s) is gone, and evaluating the map chunk dropped from 6.1 to 1.8 s. Locally, same Lighthouse 12.6.1, two runs each: Performance 60–62 → 62–66, TBT 2.4–5.4 → 1.3–2.5 s, Speed Index 9.0–9.6 → 8.2–8.4 s. The city shows at once and the mountains rise a moment later. On a device with a GPU the same frames take tens of milliseconds.
 
 ### Binary building format
 

@@ -59,7 +59,6 @@ export const style: StyleSpecification = {
     sunnow: empty(), // солнце в момент ползунка
     shadows: empty(), // тени выбранного здания и соседей на земле
   },
-  terrain: { source: 'dem', exaggeration: 1 },
   light: { anchor: 'map', position: [1.5, 180, 40], intensity: 0.45 },
   sky: { 'sky-color': '#a7c8e8', 'horizon-color': '#f3e9d8', 'fog-color': '#f1ece2', 'sky-horizon-blend': 0.7, 'horizon-fog-blend': 0.7, 'fog-ground-blend': 0.7, 'atmosphere-blend': 0 },
   layers: [
