@@ -1,6 +1,6 @@
 // Запуск приложения (после проверки WebGL в main.ts): подписи, город, данные → мир → воркер → карта.
 import { cities } from '../../cities.config.mjs';
-import { $, $$, ask, BASE, city, num, params, setWorld, startWorker, state } from './app.ts';
+import { $, $$, ask, BASE, city, num, params, setWorld, startWorker, state, urlDir } from './app.ts';
 import { hasData, loadCityData } from './data.ts';
 import { hideFallback, showFallback } from './fallback.ts';
 import { createWorld } from './grid.ts';
@@ -71,4 +71,4 @@ await applyMode();
 mark('painted');
 map.on('moveend', () => !state.current && updateLight()); // тени вокруг центра карты
 const b = world.blds.find((x) => x.id === num(params.get('b'), -1));
-if (b) select(b, { floor: num(params.get('f'), 0) || undefined, side: state.side, floors: state.floorsOverride });
+if (b) select(b, { floor: num(params.get('f'), 0) || undefined, side: state.side, dir: urlDir, floors: state.floorsOverride });

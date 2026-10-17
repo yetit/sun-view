@@ -159,6 +159,63 @@ export function createWorld(city: City, geojson: any, greenery: any | null, demM
   return { city, proj, dem, roofs: roofs ?? rasterizeRoofs(city, proj, dem, blds, greenery), blds };
 }
 
+// Фасады — реальные стены контура. Соседние рёбра, почти лежащие на одной прямой (OSM дробит стену
+// точками, скругления), склеиваются в одну стену, пока отклонение от её хорды не больше BEND.
+// Куски стены, у которых точка в 1 м снаружи попадает в соседнее здание, — глухие общие, не фасад
+// (проверка через каждый метр, остаются открытые участки).
+// Параллельные стены одной плоскости (ступеньки, лоджии — сдвиг до STEP) — один фасад: для покупателя
+// это одна сторона дома. Фасад короче MIN_WALL отбрасывается. Нормаль — наружу (азимут, рад), окно —
+// у середины самой длинной стены, на 1 м снаружи. Порядок — по азимуту нормали от севера по часовой,
+// номер фасада идёт в ссылку.
+export const MIN_WALL = 4; // м
+const BEND = (15 * Math.PI) / 180, STEP = 3; // м
+type XY = [number, number];
+export type Facade = { segs: [XY, XY][]; len: number; normal: number; x: number; y: number };
+
+const angDiff = (a: number, b: number) => Math.abs((((b - a) % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI) - Math.PI);
+
+export function facades(w: World, b: Bld): Facade[] {
+  const near = w.blds.filter((o) => o !== b && Math.hypot(o.xy[0] - b.xy[0], o.xy[1] - b.xy[1]) < o.radius + b.radius + 2);
+  const walls: (Facade & { nx: number; ny: number })[] = [];
+  for (const raw of b.rings) {
+    const ring = raw.filter((p, i) => Math.hypot(p[0] - raw.at(i - 1)![0], p[1] - raw.at(i - 1)![1]) > 0.05); // без повторов и замыкающей точки
+    const n = ring.length;
+    if (n < 3) continue;
+    const ccw = ring.reduce((s, [x, y], i) => s + x * ring[(i + 1) % n][1] - ring[(i + 1) % n][0] * y, 0) > 0;
+    const dir = (i: number, j: number) => Math.atan2(ring[j % n][1] - ring[i % n][1], ring[j % n][0] - ring[i % n][0]);
+    // Начинаем с угла, чтобы стена не разрезалась на стыке начала и конца кольца.
+    const s = Math.max(0, ring.findIndex((_, i) => angDiff(dir(i + n - 1, i + n), dir(i, i + 1)) > BEND));
+    let i0 = s;
+    for (let k = 1; k <= n; k++) {
+      const i = s + k;
+      if (k < n && angDiff(dir(i0, i), dir(i, i + 1)) <= BEND) continue;
+      const a = ring[i0 % n], e = ring[i % n];
+      const len = Math.hypot(e[0] - a[0], e[1] - a[1]), m = Math.ceil(len);
+      const nx = ((ccw ? 1 : -1) * (e[1] - a[1])) / len, ny = ((ccw ? -1 : 1) * (e[0] - a[0])) / len;
+      const at = (t: number): XY => [a[0] + (e[0] - a[0]) * t, a[1] + (e[1] - a[1]) * t];
+      const open = (j: number) => { const [x, y] = at((j + 0.5) / m); return !near.some((o) => o.rings.some((r) => inRing(x + nx, y + ny, r))); };
+      for (let j = 0, j0 = -1; j <= m; j++) {
+        if (j < m && open(j)) { if (j0 < 0) j0 = j; continue; }
+        if (j0 < 0) continue;
+        const p = at(j0 / m), q = at(j / m), [x, y] = at((j0 + j) / 2 / m);
+        walls.push({ segs: [[p, q]], len: (len * (j - j0)) / m, normal: (Math.atan2(nx, ny) + 2 * Math.PI) % (2 * Math.PI), x: x + nx, y: y + ny, nx, ny });
+        j0 = -1;
+      }
+      i0 = i;
+    }
+  }
+  const out: typeof walls = [];
+  for (const wl of walls.sort((p, q) => q.len - p.len)) {
+    const f = out.find((f) => angDiff(f.normal, wl.normal) <= BEND && Math.abs((wl.x - f.x) * f.nx + (wl.y - f.y) * f.ny) <= STEP);
+    if (f) { f.segs.push(...wl.segs); f.len += wl.len; } else out.push(wl);
+  }
+  return out.filter((f) => f.len >= MIN_WALL).sort((p, q) => p.normal - q.normal).map(({ segs, len, normal, x, y }) => ({ segs, len, normal, x, y }));
+}
+
+// Фасад, нормаль которого ближе всего к азимуту (старые ссылки d=0..7, клик по розе).
+export const nearestFacade = (fs: Facade[], bearing: number) =>
+  fs.reduce((best, f, i) => (best < 0 || angDiff(f.normal, bearing) < angDiff(fs[best].normal, bearing) ? i : best), -1);
+
 // Точка на стене здания по азимуту от центра, на 1 м снаружи: отсюда «смотрит окно» этой стороны.
 export function wallPoint(b: Bld, bearing: number): [number, number] {
   const dx = Math.sin(bearing), dy = Math.cos(bearing);

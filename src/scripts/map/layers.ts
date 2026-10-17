@@ -1,9 +1,9 @@
-// Карта MapLibre и всё, что рисуется на ней: здания, этаж, секторы моря, солнечная диаграмма.
+// Карта MapLibre и всё, что рисуется на ней: здания, этаж, фасад, секторы моря, солнечная диаграмма.
 import { Map, NavigationControl, setWorkerUrl, type FilterSpecification } from 'maplibre-gl';
-import { dayPath, eye, SEASONS, STEP_MIN, type SeaDir } from '../analysis.ts';
-import { BASE, city, fmtH, geojson, state, world } from '../app.ts';
+import { dayPath, dirIndex, eye, SEASONS, STEP_MIN, type SeaDir } from '../analysis.ts';
+import { BASE, city, facadeOf, fmtH, geojson, state, world } from '../app.ts';
 import { t } from '../i18n.ts';
-import type { Bld } from '../grid.ts';
+import type { Bld, Facade } from '../grid.ts';
 import { buildingColor, style } from '../style.ts';
 
 const DEG = 180 / Math.PI;
@@ -54,6 +54,16 @@ export function drawFloor(b: Bld) {
   setData('floor', [{ type: 'Feature', properties: { base: (state.floor - 1) * city.floorHeight, top: state.floor * city.floorHeight }, geometry: geojson.features[b.idx].geometry }]);
 }
 
+// Фасад: по полоске на каждую стену фасада, от 0,3 до 1,3 м снаружи; null — убрать.
+export function drawFacade(b: Bld, f: Facade | null) {
+  const n: [number, number] = [Math.sin(f?.normal ?? 0), Math.cos(f?.normal ?? 0)];
+  const out = (p: [number, number], d: number) => world.proj.toLonLat(p[0] + n[0] * d, p[1] + n[1] * d);
+  setData('facade', (f?.segs ?? []).map(([a, e]) => ({
+    type: 'Feature', properties: { top: b.h + 0.5 },
+    geometry: { type: 'Polygon', coordinates: [[out(a, 0.3), out(e, 0.3), out(e, 1.3), out(a, 1.3), out(a, 0.3)]] },
+  })));
+}
+
 // Секторы на карте: зелёный тянется до воды (не дальше 1,2 км), красный — короткий.
 export function drawSectors(b: Bld, sea: SeaDir[]) {
   const features: any[] = [];
@@ -72,12 +82,12 @@ export function drawSectors(b: Bld, sea: SeaDir[]) {
 }
 
 // Подписи направлений в 3D налезают на дома: при наклоне камеры больше 45° оставляем только
-// подпись выбранной стороны (а если выбрано всё здание — ни одной; сектора и роза в панели остаются).
+// подпись румба, ближайшего к выбранному фасаду (а если выбрано всё здание — ни одной; сектора и роза в панели остаются).
 const LABEL_PITCH = 45;
 export function updateSectorLabels() {
   const point = ['==', ['geometry-type'], 'Point'];
   const flat = map.getPitch() <= LABEL_PITCH;
-  map.setFilter('sector-labels', (flat ? point : ['all', point, ['==', ['get', 'i'], state.side ?? -1]]) as FilterSpecification);
+  map.setFilter('sector-labels', (flat ? point : ['all', point, ['==', ['get', 'i'], facadeOf() ? dirIndex(facadeOf()!.normal) : -1]]) as FilterSpecification);
 }
 map.on('pitchend', () => map.getLayer('sector-labels') && updateSectorLabels());
 
@@ -88,7 +98,7 @@ export function drawSunPath() {
   const ring: [number, number][] = [];
   for (let i = 0; i <= 72; i++) ring.push(offset(b.center, (i * Math.PI) / 36, R_PATH));
   const features: any[] = [{ type: 'Feature', properties: { kind: 'ring' }, geometry: { type: 'LineString', coordinates: ring } }];
-  const path = dayPath(world, b, eye(world, b, state.floor, state.side), SEASONS[state.season].date);
+  const path = dayPath(world, b, eye(world, b, state.floor, facadeOf()), SEASONS[state.season].date);
   for (let i = 0; i + 1 < path.length; i++) {
     if (path[i + 1].t.getTime() - path[i].t.getTime() > STEP_MIN * 60000 * 1.5) continue;
     const s = path[i].lit ? 'lit' : path[i].facing ? 'shade' : 'back';

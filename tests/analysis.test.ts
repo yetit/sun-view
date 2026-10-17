@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { eye, seaRose, seasonCalc, floorAt, reliability, yearRibbon } from '../src/scripts/analysis.ts';
+import { bestCell, eye, facadeMatrix, seaRose, seasonCalc, floorAt, reliability, yearRibbon } from '../src/scripts/analysis.ts';
+import { facades } from '../src/scripts/grid.ts';
 import { makeWorld, rect } from './world.ts';
 
 test('здание целиком: летом на плоской суше солнце весь день, кроме утра за горой', () => {
@@ -14,8 +15,8 @@ test('здание целиком: летом на плоской суше со�
 test('северный фасад летом видит солнце только утром и вечером, зимой — никогда', () => {
   const w = makeWorld();
   const b = w.blds[0];
-  const summer = seasonCalc(w, b, eye(w, b, 3, 0), 1);
-  const winter = seasonCalc(w, b, eye(w, b, 3, 0), 3);
+  const summer = seasonCalc(w, b, eye(w, b, 3, facades(w, b)[0]), 1);
+  const winter = seasonCalc(w, b, eye(w, b, 3, facades(w, b)[0]), 3);
   assert.ok(summer.sun > 1 && summer.sun < 6, `лето ${summer.sun}`);
   assert.equal(winter.daylight, 0);
   assert.equal(winter.sun, 0);
@@ -24,7 +25,7 @@ test('северный фасад летом видит солнце тольк�
 test('южный фасад зимой: весь день перед фасадом, утро съедает гора на востоке', () => {
   const w = makeWorld();
   const b = w.blds[0];
-  const s = seasonCalc(w, b, eye(w, b, 3, 4), 3);
+  const s = seasonCalc(w, b, eye(w, b, 3, facades(w, b)[2]), 3);
   assert.ok(Math.abs(s.daylight - 9) < 1, `день ${s.daylight}`);
   assert.ok(s.sun > s.daylight - 2 && s.sun < s.daylight, `солнце ${s.sun} из ${s.daylight}`);
 });
@@ -66,4 +67,25 @@ test('надёжность: ровное место с этажностью — 
   assert.deepEqual(reliability(w, w.blds[1], false).reasons, []); // этажность уточнил пользователь
   const wood = makeWorld([], [rect(0, 30, 60, 30)]); // лес в 15 м к северу от стены
   assert.deepEqual(reliability(wood, wood.blds[0]).reasons, ['trees']);
+});
+
+test('матрица «этажи × фасады»: море с запада и косыми лучами с севера и юга, лучшая клетка — юг наверху', () => {
+  const w = makeWorld();
+  const m = facadeMatrix(w, w.blds[0]); // 5 этажей × фасады С, В, Ю, З
+  assert.equal(m.cols, 4);
+  assert.equal(m.sun.length, 20);
+  const at = (fl: number, c: number) => (fl - 1) * m.cols + c;
+  assert.equal(m.sun[at(3, 0)], 0); // север зимой
+  assert.ok(m.sun[at(3, 2)] > m.sun[at(3, 1)] && m.sun[at(3, 2)] > m.sun[at(3, 3)], 'юг солнечнее востока и запада');
+  // море на западе: С и Ю видят его лучом в ±45° (на СЗ и ЮЗ), В — нет, З — больше всех
+  assert.deepEqual([0, 1, 2].map((c) => m.sea[at(5, c)]), [1, 0, 1]);
+  assert.ok(m.sea[at(5, 3)] > 1, `запад ${m.sea[at(5, 3)]}`);
+  assert.equal(bestCell(m), at(5, 2));
+});
+
+test('лучшая клетка: солнце, затем море, затем выше этаж; пустая матрица — нет лучшей', () => {
+  const sea = Uint8Array.from([0, 2, 1, 0]);
+  assert.equal(bestCell({ cols: 2, sun: [1, 3, 3, 2], sea }), 1); // 3 ч и море 2 > 3 ч и море 1
+  assert.equal(bestCell({ cols: 2, sun: [3, 3, 3, 3], sea: [1, 1, 1, 1] }), 2); // всё равно — верхний этаж
+  assert.equal(bestCell({ cols: 2, sun: [0, 0, 0, 0], sea: [0, 0, 0, 0] }), -1);
 });

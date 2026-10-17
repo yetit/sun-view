@@ -1,6 +1,6 @@
-// Тяжёлые расчёты вне главного потока: карта солнца/моря для всех зданий и лента года.
-import { createWorld, type World } from './grid.ts';
-import { eye, massSea, massSun, yearRibbon } from './analysis.ts';
+// Тяжёлые расчёты вне главного потока: карта солнца/моря для всех зданий, лента года и матрица «этажи × фасады».
+import { createWorld, facades, type World } from './grid.ts';
+import { eye, facadeMatrix, massSea, massSun, yearRibbon } from './analysis.ts';
 
 let w: World;
 const CHUNK = 150;
@@ -9,13 +9,20 @@ export type Req =
   | { type: 'init'; id: number; city: any; geojson: any; greenery: any; demMeta: any; demBuf: ArrayBuffer }
   | { type: 'sun'; id: number; season: number; h: number }
   | { type: 'sea'; id: number; h: number }
-  | { type: 'ribbon'; id: number; idx: number; floor: number; side: number | null };
+  | { type: 'ribbon'; id: number; idx: number; floor: number; side: number | null } // side — номер фасада
+  | { type: 'matrix'; id: number; idx: number; floors: number }; // floors — с учётом уточнения пользователем
 
 self.onmessage = async ({ data: m }: MessageEvent<Req>) => {
   if (m.type === 'init') { w = createWorld(m.city, m.geojson, m.greenery, m.demMeta, m.demBuf); self.postMessage({ id: m.id, done: true, roofs: w.roofs }); return; } // копия растра — странице
   if (m.type === 'ribbon') {
-    const r = yearRibbon(w, w.blds[m.idx], eye(w, w.blds[m.idx], m.floor, m.side));
+    const b = w.blds[m.idx];
+    const r = yearRibbon(w, b, eye(w, b, m.floor, m.side == null ? null : facades(w, b)[m.side] ?? null));
     self.postMessage({ id: m.id, done: true, ...r }, { transfer: [r.data.buffer] });
+    return;
+  }
+  if (m.type === 'matrix') {
+    const r = facadeMatrix(w, w.blds[m.idx], m.floors);
+    self.postMessage({ id: m.id, done: true, ...r }, { transfer: [r.sun.buffer, r.sea.buffer] });
     return;
   }
   const n = w.blds.length;

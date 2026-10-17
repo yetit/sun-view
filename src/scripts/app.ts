@@ -1,7 +1,7 @@
 // Общее состояние приложения: город и параметры из URL, мир, воркер, форматтеры.
 import { getCity } from '../../cities.config.mjs';
 import { HEIGHTS, SEASONS } from './analysis.ts';
-import type { Bld, City, World } from './grid.ts';
+import { facades, type Bld, type City, type Facade, type World } from './grid.ts';
 import type { Mode } from './style.ts';
 import { t } from './i18n.ts';
 
@@ -19,11 +19,14 @@ export const fmtT = new Intl.DateTimeFormat(t.locale, { hour: '2-digit', minute:
 // fm — высота окна на картах, м; старые ссылки с этажами 1/mid/top — на ближайшую высоту.
 const legacyFm: Record<string, number> = { '1': 2, mid: 2, top: 5 };
 const fm = params.get('fm') ?? '';
+// d — фасад: f<номер>; старые ссылки d=0..7 — румб, select() переводит его в ближайший фасад.
+const d = params.get('d');
+export const urlDir = d != null && /^[0-7]$/.test(d) ? +d : null;
 const pick = <T extends string>(v: string | null, ok: readonly T[], d: T) => (ok.includes(v as T) ? (v as T) : d);
 export const state = {
   current: null as Bld | null,
   floor: 1,
-  side: (params.get('d') != null ? num(params.get('d'), 0) : null) as number | null, // румб фасада или всё здание
+  side: (d?.[0] === 'f' ? num(d.slice(1), 0) : null) as number | null, // номер фасада или всё здание
   season: Math.min(3, Math.max(0, num(params.get('s'), 3))),
   hour: Math.min(22, Math.max(4, num(params.get('t'), 11))), // местное время, ч
   mode: pick<Mode>(params.get('m'), ['normal', 'sea'], 'sun'), // на входе город сразу окрашен
@@ -35,10 +38,14 @@ export function syncUrl() {
   const { current, floor, side, season, hour, mode, height, floorsOverride } = state;
   const p = new URLSearchParams({ c: city.id, s: String(season), t: hour.toFixed(2), m: mode });
   if (mode !== 'normal') p.set('fm', String(height));
-  if (current) { p.set('b', String(current.id)); p.set('f', String(floor)); if (side != null) p.set('d', String(side)); if (floorsOverride) p.set('n', String(floorsOverride)); }
+  if (current) { p.set('b', String(current.id)); p.set('f', String(floor)); if (side != null) p.set('d', `f${side}`); if (floorsOverride) p.set('n', String(floorsOverride)); }
   if (params.get('lang')) p.set('lang', params.get('lang')!);
   history.replaceState(null, '', `?${p}`);
 }
+
+// Фасады текущего здания и выбранный фасад (null — здание целиком).
+export const currentFacades = (): Facade[] => (state.current ? facades(world, state.current) : []);
+export const facadeOf = () => (state.side == null ? null : currentFacades()[state.side] ?? null);
 
 // Смещение часового пояса города от UTC на дату, ч.
 export function tzOffset(d: Date) {

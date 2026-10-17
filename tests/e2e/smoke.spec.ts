@@ -27,6 +27,7 @@ for (const city of cities) {
       await expect(page.locator('.b-name')).not.toBeEmpty();
       await expect(page.locator('.seasons .card')).toHaveCount(4);
       await expect(page.locator('.summary')).not.toBeEmpty();
+      await expect(page.locator('.matrix .cell.best')).toHaveCount(1); // матрица «этажи × фасады» посчиталась
     }
     expect(errors).toEqual([]);
   });

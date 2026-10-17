@@ -13,6 +13,8 @@ export const city: City = {
 const mLat = 111320, mLon = 111320 * Math.cos((42 * Math.PI) / 180);
 export const rect = (cx: number, cy: number, w: number, h: number) =>
   [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2], [-w / 2, -h / 2]].map(([dx, dy]) => [18 + (cx + dx) / mLon, 42 + (cy + dy) / mLat]);
+// Произвольный контур в метрах → lon/lat, замкнутый.
+export const poly = (pts: number[][]) => [...pts, pts[0]].map(([x, y]) => [18 + x / mLon, 42 + y / mLat]);
 
 export function makeWorld(extra: { ring: number[][]; levels: number | null; height?: number | null; building?: string }[] = [], woods: number[][][] = []) {
   const { bbox, step } = city.dem;

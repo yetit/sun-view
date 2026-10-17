@@ -12,7 +12,7 @@ const terrarium = {
 };
 const empty = () => ({ type: 'geojson' as const, data: { type: 'FeatureCollection' as const, features: [] } });
 
-export const COLORS = { known: '#b7ab97', assumed: '#d3cbbd', hover: '#9c8f78', selected: '#efe2cd', floor: '#ff7a1a', sea: '#1a9c6b', noSea: '#d9534f', lit: '#ffb703', shade: '#8c8c8c' };
+export const COLORS = { known: '#b7ab97', assumed: '#d3cbbd', hover: '#9c8f78', selected: '#efe2cd', floor: '#ff7a1a', facade: '#2b59c3', sea: '#1a9c6b', noSea: '#d9534f', lit: '#ffb703', shade: '#8c8c8c' };
 
 export type Mode = 'normal' | 'sun' | 'sea';
 export const SUN_RAMP = ['#3b4a6b', '#d9775b', '#ffd23f'];
@@ -48,6 +48,7 @@ export const style: StyleSpecification = {
     hillshade: terrarium, // отдельный источник: делить raster-dem между terrain и hillshade не рекомендуется
     buildings: empty(),
     floor: empty(), // подсветка выбранного этажа
+    facade: empty(), // подсветка выбранного фасада
     sectors: empty(), // секторы видимости моря
     sunpath: empty(), // солнечная диаграмма вокруг здания
     sunnow: empty(), // солнце в момент ползунка
@@ -91,6 +92,11 @@ export const style: StyleSpecification = {
     {
       id: 'floor', type: 'fill-extrusion', source: 'floor',
       paint: { 'fill-extrusion-color': COLORS.floor, 'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-opacity': 1 },
+    },
+    // Фасад — тонкая стенка на всю высоту дома вплотную снаружи: видно, какая именно это стена.
+    {
+      id: 'facade', type: 'fill-extrusion', source: 'facade',
+      paint: { 'fill-extrusion-color': COLORS.facade, 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-opacity': 0.9 },
     },
     { id: 'sunnow', type: 'circle', source: 'sunnow', paint: { 'circle-radius': 7, 'circle-color': COLORS.lit, 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } },
     {

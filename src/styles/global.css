@@ -101,6 +101,20 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .sides { display: flex; gap: 3px; flex-wrap: wrap; }
 .side { padding: 4px 8px; border-radius: 999px; border: 1px solid #d9d2c5; background: #fff; font-size: 12px; font-weight: 500; }
 .side[aria-pressed='true'] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.side small { opacity: 0.6; font-weight: 400; }
+/* Матрица «этажи × фасады»: цвет клетки — доля от лучшего зимнего солнца в доме. */
+.matrix { overflow: auto; max-height: 420px; margin-top: 4px; }
+.matrix table { border-collapse: separate; border-spacing: 2px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.matrix th { position: sticky; background: var(--bg); color: var(--muted); font-weight: 500; padding: 2px 4px; z-index: 1; }
+.matrix thead th { top: 0; line-height: 1.15; }
+.matrix th small { display: block; font-size: 10px; font-weight: 400; }
+.matrix tbody th { left: 0; text-align: right; }
+.matrix .cell { position: relative; min-width: 44px; padding: 5px 4px; border: 0; border-radius: 6px; font: inherit; font-weight: 600; color: var(--ink); background: color-mix(in srgb, var(--sun) var(--v), #f3efe6); }
+.matrix .cell i { font-style: normal; color: var(--yes); margin-left: 3px; }
+.matrix .cell.best::after { content: '★'; position: absolute; top: -5px; right: -3px; font-size: 11px; color: var(--accent); text-shadow: 0 0 2px #fff; }
+.matrix .cell.best { box-shadow: inset 0 0 0 2px var(--accent); }
+.matrix .cell[aria-pressed='true'] { outline: 2px solid var(--ink); outline-offset: 1px; }
+.matrix .cell:hover { filter: brightness(0.95); }
 .now { margin-top: 8px; padding: 6px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; width: fit-content; transition: background 0.3s, color 0.3s; }
 .now.lit { background: #fff1c2; color: #7a4f00; }
 .now.shade { background: #ebe8e1; color: #4f4a42; }

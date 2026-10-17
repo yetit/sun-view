@@ -43,14 +43,14 @@ const [lo, , hi] = HEIGHTS;
 const sea = (i: number) => out[layers.indexOf(`sea:${hi}`)][i];
 const sunW = (i: number, h: number) => out[layers.indexOf(`sun:3:${h}`)][i];
 const top = (list: typeof known, key: (b: (typeof known)[0]) => number) => [...list].sort((a, b) => key(b) - key(a)).slice(0, 4);
-const describe = (b: (typeof known)[0], floor: number, side: number | null, season: number) => {
-  const r = seasonCalc(w, b, eye(w, b, floor, side), season);
+const describe = (b: (typeof known)[0], floor: number, season: number) => {
+  const r = seasonCalc(w, b, eye(w, b, floor, null), season);
   const rose = seaRose(w, b, floor).filter((d) => d.dist != null).map((d) => d.dir).join(' ');
-  return `${b.id} «${b.name ?? ''}» ${b.floors} эт., земля ${Math.round(b.ground)} м · этаж ${floor} сторона ${side ?? 'все'} сезон ${season}: ${r.sun.toFixed(1)} ч из ${r.daylight.toFixed(1)}; море: ${rose || '—'}`;
+  return `${b.id} «${b.name ?? ''}» ${b.floors} эт., земля ${Math.round(b.ground)} м · этаж ${floor} сезон ${season}: ${r.sun.toFixed(1)} ч из ${r.daylight.toFixed(1)}; море: ${rose || '—'}`;
 };
 console.log('\nВид на море с верхнего этажа:');
-for (const b of top(known, (b) => sea(b.idx) * 100 + b.floors)) console.log(' ', describe(b, b.floors, null, 1));
+for (const b of top(known, (b) => sea(b.idx) * 100 + b.floors)) console.log(' ', describe(b, b.floors, 1));
 console.log('Зимой в тени (нижний этаж):');
-for (const b of top(known, (b) => -sunW(b.idx, lo))) console.log(' ', describe(b, 1, null, 3));
+for (const b of top(known, (b) => -sunW(b.idx, lo))) console.log(' ', describe(b, 1, 3));
 console.log('Солнце весь зимний день (верхний этаж):');
-for (const b of top(known, (b) => sunW(b.idx, hi) * 100 + b.floors)) console.log(' ', describe(b, b.floors, null, 3));
+for (const b of top(known, (b) => sunW(b.idx, hi) * 100 + b.floors)) console.log(' ', describe(b, b.floors, 3));
