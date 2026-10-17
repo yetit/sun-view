@@ -1,10 +1,10 @@
-<!-- DRAFT for dev.to. Not published. Numbers are from the README and docs/horizon-check.md as of 2026-10-17 (third round: facades, Bergen, performance, binary format). -->
+<!-- DRAFT for dev.to. Not published. Numbers are from the README, docs/horizon-check.md and my own run of the core (main 653f9b7) as of 2026-10-18. Contents: data, rays, horizon validation, facades and the matrix, the BRE annual window score, the window view, Bergen, performance, what didn't work. -->
 
 # How much sun reaches a window? Ray-marching open terrain data in the browser
 
 When you look at a flat by the sea, everyone asks the same two questions: will it get sun in winter, and can you see the sea? The developer says yes to both. I wanted to check for myself, with no developer and no server: click a building on a 3D map, pick a floor and a side, and within tens of milliseconds see the hours of direct sun per season and in which directions the water is visible.
 
-The result is [Sun & View](https://yetit.github.io/sun-view/): Tivat and Kotor in Montenegro and Bergen in Norway, built on open data and computed entirely in the browser. Here is how it works, how I checked that it doesn't lie, and what didn't work.
+The result is [Sun & View](https://yetit.github.io/sun-view/): Tivat and Kotor in Montenegro and Bergen in Norway, built on open data and computed entirely in the browser. For a window it gives an annual score against the UK BRE guideline and shows the view from it. Here is how it works, how I checked that it doesn't lie, and what didn't work.
 
 ## Data
 
@@ -79,7 +79,60 @@ The first version put the window on a compass-direction wall: "windows facing SE
 - wall segments whose point one metre outside falls inside a neighbouring building are treated as shared blind walls and dropped;
 - parallel pieces of one plane offset by up to 3 m (balconies, steps) count as one facade, and walls shorter than 4 m are ignored.
 
-Facades and floors make a matrix: a row per floor, a column per facade, each cell showing winter sun hours and a mark if the sea is visible. The best cell has the most winter sun; ties go to more sea directions, then the higher floor. The matrix runs in the worker: for a 10-storey building with four facades that's 40 calculations of 4 seasons each.
+Facades and floors make a matrix: a row per floor, a column per facade, each cell showing the window's annual score (more on it below) and a mark if the sea is visible. The best cell has the highest score; ties go to more sea directions, then the higher floor. The matrix runs in the worker.
+
+## An annual window score against BRE
+
+Sun hours on four days of the year are hard to compare between flats: is "7 hours in summer and 4 in winter" good or bad? You need one number and a threshold to compare it with. The UK BRE guide "Site layout planning for daylight and sunlight" (BR 209, 2022) has one: the main window of a living room facing within 90° of due south should get at least 25% of annual probable sunlight hours (APSH), including at least 5% between 21 September and 21 March.
+
+How we compute it:
+
+- the year is sampled every 10 days (the middle of each interval, weighted by its length) and each day every 10 minutes; the sun is above the horizon at the building for about 4,400 hours a year, and that is the denominator;
+- the numerator is the hours when the sun is in front of the facade and the ray from the window clears buildings, trees and terrain;
+- to avoid tracing thousands of rays per window, the horizon including buildings and terrain is traced once per degree of azimuth, and the sun is then compared with it by elevation;
+- the 0–100 score is the year's share in percent, and the verdict uses BRE's two thresholds.
+
+Where we depart from the guideline, and say so in the UI:
+
+- **clear sky instead of "probable" hours.** We found no open hourly sunshine climatology for our cities, so we count direct sun without clouds. Winters are cloudier than summers, so the real winter share is usually lower than ours, especially in Bergen;
+- **"borderline"** is our category, not BRE's: the window misses a threshold, but both shares are at least 80% of it;
+- **"not assessed".** BRE doesn't assess windows facing more than 90° away from south. The first version gave such a window a verdict and at the same time said it "faces north", which for a west wall at 272° was both wrong and contradictory. Now the 0–100 score stays and the verdict says "not assessed by BRE"; for the whole building the verdict comes from the best facade the guideline applies to.
+
+On examples from the demo (my own run of the core):
+
+| Flat | Facade | Year | Winter half | Verdict |
+| --- | --- | --- | --- | --- |
+| Tivat, 10-storey block, floor 10 | south, 182° | 77% | 38% | meets |
+| same | east, 92° | 43% | 19% | meets |
+| same | west, 272° | 47% | 20% | not assessed |
+| same, floor 1 | east, 92° | 21% | 10% | borderline |
+| Bergen, Mowinckelgårdene, floor 13 | south-west, 214° | 69% | 27% | meets |
+| same, floor 2 | south-west, 214° | 14% | 2% | fails |
+| Kotor, "no direct winter sun", floor 2 | east, 99° | 28% | 11% | meets |
+
+The last row shows why the guideline needs a careful read: on 21 December this window gets no sun at all, but BRE's "winter half" also covers September, October, February and March, and that is where the 11% comes from.
+
+The facade matrix now shows the same score in each cell, and the best cell is the highest score. For the 10-storey block in Tivat the whole matrix (10 floors × 4 facades) takes about 140 ms in the worker.
+
+## The view from the window
+
+"Sea visible in 4 directions" is an abstraction. I wanted to show what you'd actually see standing at the window. The "View from the window" button places the MapLibre camera at the window on the chosen facade, at floor height, and points it along the facade normal: a 64° horizontal field of view, looking at a point 400 m ahead at the same height, so the pitch is exactly 90° and the horizon sits mid-frame. While in the view, the floor and facade highlights, sectors, sun path and flat shadows are hidden, and buildings turn neutral, because the sun-map colours read as dark blocks in first person.
+
+Next to it are the sea and sky shares. The worker computes them with the same ray march as the sea view: a frame 64° wide in 2° steps and ±20° around the horizon in 1° steps (the band of sea near the horizon is thin), and every ray ends on an obstacle, the sea or the sky. A ray counts as sea when it drops below sea level over a water cell. The view for one facade takes about 15 ms.
+
+Numbers for the same buildings:
+
+| Window | Sea in frame | Sky |
+| --- | --- | --- |
+| Tivat, floor 10, south | 9% | 47% |
+| Tivat, floor 10, west | 7% | 42% |
+| Tivat, floor 1, south | 0% | 0% |
+| Bergen, floor 13, north-east (over the fjord) | 24% | 30% |
+| Bergen, floor 13, south-west | 0% | 39% |
+
+This is what the whole thing was for: on floor 13 in Bergen, the sunniest facade (south-west, 69 out of 100) has no sea in frame, while the facade over the fjord (north-east, sea a quarter of the frame) gets only 17% of the annual sun and isn't assessed by BRE. Choosing a flat here means choosing between sun and view, and the UI shows that on one screen.
+
+Limitations: Earth curvature is ignored. The camera sits at window height above the drawn terrain (Terrain Tiles), while the computation uses Copernicus; they differ by metres, so the frame and the percentages can disagree slightly. The view frame also goes into the PNG card. The WebGL buffer isn't preserved in production, so we grab it from a one-off redraw in the `render` event.
 
 ## Bergen: a different latitude and a different reference
 
@@ -110,10 +163,11 @@ What didn't help was **the binary building format.** GeoJSON inside a JS module 
 - **Slopes.** For buildings on steep slopes, the uphill result is an estimate good to tens of minutes, and the UI says so.
 - **An empty map in production.** Everything worked in dev, but on GitHub Pages the map was blank. In the production build `maplibre-gl.css` loaded after my styles, and `.maplibregl-map { position: relative }` overrode my `.map { position: fixed }`, leaving the container zero pixels tall. After that, CI got a Playwright smoke test against the published page: it checks the container's height, that the map screenshot is colourful, and that clicking an example produces a result.
 - **Mobile performance hits the ceiling of software WebGL.** After the fixes it scores 64 locally, while runs on the GitHub runner range from 33 to 65. Almost all the remaining time is MapLibre's first frames with terrain on SwiftShader; on a device with a GPU those frames take tens of milliseconds. Accessibility, best practices and SEO score 100.
+- **Clouds.** The annual score assumes a clear sky. It compares flats with each other and with the BRE thresholds under the same weather; it is not a formal sunlight assessment.
 - **Overpass** regularly returns 502 under load. The fetch script retries across mirrors.
 
 ## Takeaway
 
-Cloud-optimised GeoTIFF plus OSM plus computing in the browser turned out to be a workable combination: no backend, no keys, and an honest check against an independent source. Adding a city is one object in a config and one command.
+Cloud-optimised GeoTIFF plus OSM plus computing in the browser turned out to be a workable combination: no backend, no keys, and an honest check against an independent source. What matters most to a buyer turned out not to be sun hours but the comparison: which facade and floor is better, whether a window meets the guideline, and what you give up for the view. Adding a city is one object in a config and one command.
 
 Code: [github.com/yetit/sun-view](https://github.com/yetit/sun-view). Demo: [yetit.github.io/sun-view](https://yetit.github.io/sun-view/).
