@@ -131,7 +131,7 @@ Load stages from `npm run bench -- <url> 3 4` on the production build. These are
 | Worker ready | 1.11–1.78 s | 0.83–1.30 s |
 | Map painted | 4.3–5.4 s | 4.1–5.2 s |
 
-Local Lighthouse, 5 runs each: performance median 62 before and 62 after. Total blocking time median went from 9.0 s to 5.6 s, but with a wide spread (2.8–11.2 s before, 2.9–6.0 s after). LCP went from 1.52 s to 1.67 s. The early stages gain beyond noise, while the time to a painted map is set by basemap tiles from the network. I kept the change because data and the worker are ready half a second sooner, even though the Lighthouse score did not move.
+Local Lighthouse, 5 runs each: performance median 62 before and 62 after. Total blocking time median went from 9.0 s to 5.6 s, but with a wide spread (2.8–11.2 s before, 2.9–6.0 s after). LCP went from 1.52 s to 1.67 s. The early stages gain beyond noise, while the time to a painted map is set by basemap tiles from the network. On the GitHub runner the map page scored 40, 62 and 66 before (median 62) and 39, 62 and 65 after (median 62). I kept the change because data and the worker are ready half a second sooner, even though the Lighthouse score did not move.
 
 ## Data and licences
 
