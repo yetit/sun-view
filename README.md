@@ -55,6 +55,7 @@ The terrain horizon was checked against [PVGIS](https://re.jrc.ec.europa.eu/pvg_
 | Flat ground by the sea, Tivat | 0.2° | same minute as PVGIS (±1) |
 | All 8 points, Tivat | 1.5° (was 2.1°) | — |
 | All 8 points, Kotor | 1.3° (was 1.7°) | — |
+| All 8 points, Herceg Novi | 1.2° | within 3 min on the shore; 32–47 min earlier than PVGIS on the slope, from the ground elevation |
 | Steep slope, Vrmac | 5.5° (was 8.3°) | 99 min later than PVGIS; sunset now matches (was 39 min early) |
 | 7 hillside points vs the source Copernicus 1″ | 0.4° (was 2.2°) | — |
 | All 8 points, Bergen, vs Kartverket DTM | 0.6° (was 0.8° on Copernicus) | — |
