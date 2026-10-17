@@ -296,3 +296,27 @@ export function seaVisible(w: World, b: Bld, x: number, y: number, z: number, be
   }
   return null;
 }
+
+// Что видно по лучу с азимутом bearing и углом места elev: препятствие (рельеф, дерево, чужое здание),
+// море (луч ушёл под воду над ячейкой моря) или небо. Шаг и пропуск своего здания — как в blocked().
+// За краем сетки не знаем: вверх — небо, вниз — не море (как seaVisible()).
+export const HIT = { obstacle: 0, sea: 1, sky: 2 } as const;
+export function rayHit(w: World, b: Bld, x: number, y: number, z: number, bearing: number, elev: number): number {
+  const sx = Math.sin(bearing), sy = Math.cos(bearing), tz = Math.tan(elev);
+  const skipDem = b.radius + w.dem.cell * w.proj.mLat;
+  for (let d = 2; d < FAR; d += d < NEAR ? 3 : 30) {
+    const zr = z + d * tz;
+    if (tz >= 0 && zr > w.dem.max) return HIT.sky;
+    const px = x + d * sx, py = y + d * sy;
+    if (d < NEAR) {
+      const [roof, i] = roofAt(w.roofs, px, py);
+      if (i !== b.idx && i >= 0 && roof > zr) return HIT.obstacle;
+    }
+    if (d < skipDem) continue;
+    const t = demAt(w.dem, ...w.proj.toLonLat(px, py));
+    if (t == null) break;
+    if (t <= 0 && zr <= 0) return HIT.sea;
+    if (t > zr) return HIT.obstacle;
+  }
+  return tz >= 0 ? HIT.sky : HIT.obstacle;
+}

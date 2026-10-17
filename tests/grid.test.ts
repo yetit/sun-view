@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { blocked, defaultFloors, demAt, facades, groundAt, horizonAngle, makeDem, nearestFacade, seaVisible, wallPoint } from '../src/scripts/grid.ts';
+import { blocked, defaultFloors, demAt, facades, groundAt, HIT, horizonAngle, makeDem, nearestFacade, rayHit, seaVisible, wallPoint } from '../src/scripts/grid.ts';
 import { bilinear } from '../scripts/resample.mjs';
 import { makeWorld, poly, rect } from './world.ts';
 
@@ -138,6 +138,19 @@ test('дальняя вода видна поверх низкого берег�
   const b = w.blds[0];
   assert.equal(seaVisible(w, b, -11, 0, b.ground + 1.5, DIR.W), null); // с 1-го этажа — нет
   assert.ok(seaVisible(w, b, -11, 0, b.ground + 25, DIR.W) != null); // с высоты 25 м — да
+});
+
+test('луч из окна: небо, море за берегом, суша под окном, гора и стена', () => {
+  const open = makeWorld();
+  const b = open.blds[0];
+  const z = b.ground + 25;
+  assert.equal(rayHit(open, b, -11, 0, z, DIR.W, deg(5)), HIT.sky);
+  assert.equal(rayHit(open, b, -11, 0, z, DIR.W, deg(-0.5)), HIT.sea); // уходит под воду в ~4 км, берег в 300 м
+  assert.equal(rayHit(open, b, -11, 0, z, DIR.W, deg(-10)), HIT.obstacle); // суша 10 м в ~140 м
+  assert.equal(rayHit(open, b, 11, 0, z, DIR.E, 0), HIT.obstacle); // гора 400 м
+  assert.equal(rayHit(open, b, 11, 0, z, DIR.E, deg(20)), HIT.sky);
+  const w = makeWorld([{ ring: rect(-100, 0, 20, 200), levels: 20 }]);
+  assert.equal(rayHit(w, w.blds[0], -11, 0, z, DIR.W, deg(-0.5)), HIT.obstacle); // стена 60 м
 });
 
 test('горизонт рельефа: гора на востоке ≈ 14,4°, на западе — чуть ниже нуля, сходится с blocked()', () => {

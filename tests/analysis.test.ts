@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { bestCell, eye, facadeMatrix, seaRose, seasonCalc, floorAt, reliability, yearRibbon } from '../src/scripts/analysis.ts';
+import { bestCell, eye, facadeMatrix, seaRose, seasonCalc, floorAt, reliability, windowView, yearRibbon } from '../src/scripts/analysis.ts';
 import { facades } from '../src/scripts/grid.ts';
 import { makeWorld, rect } from './world.ts';
 
@@ -35,6 +35,21 @@ test('роза моря: только западные румбы', () => {
   const rose = seaRose(w, w.blds[0], 2);
   const yes = rose.filter((d) => d.dist != null).map((d) => d.dir);
   assert.deepEqual(yes, ['ЮЗ', 'З', 'СЗ']);
+});
+
+test('вид из окна: на запад — небо над горизонтом и полоса моря, на восток — гора и никакого моря', () => {
+  const w = makeWorld();
+  const b = w.blds[0];
+  const fs = facades(w, b);
+  const west = fs.find((f) => Math.abs(f.normal - (3 * Math.PI) / 2) < 0.1)!, east = fs.find((f) => Math.abs(f.normal - Math.PI / 2) < 0.1)!;
+  const v = windowView(w, b, eye(w, b, 5, west));
+  assert.equal(v.cols, 33);
+  assert.equal(v.rows, 41);
+  assert.ok(Math.abs(v.sky - 21 / 41) < 0.01, `небо ${v.sky}`); // всё, что не ниже горизонта
+  assert.ok(v.sea > 0.01 && v.sea < 0.1, `море ${v.sea}`); // узкая полоса под горизонтом, ниже — суша
+  const e = windowView(w, b, eye(w, b, 5, east));
+  assert.equal(e.sea, 0);
+  assert.ok(e.sky < v.sky, `небо на восток ${e.sky}`); // гора 400 м закрывает низ неба
 });
 
 test('лента года: 73 столбца × 144 строки, ночь сверху и снизу', () => {

@@ -1,4 +1,4 @@
-// Сценарии интерфейса: матрица «этажи × фасады», сравнение, PNG, состояние в ссылке, язык,
+// Сценарии интерфейса: матрица «этажи × фасады», вид из окна, сравнение, PNG, состояние в ссылке, язык,
 // встраивание и клавиатура. Локально — против astro preview, в CI — против опубликованного демо.
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
@@ -18,6 +18,31 @@ test('матрица этажи × фасады: клик по клетке вы
   await expect(page.locator(`.side[data-c="${c}"]`)).toHaveAttribute('aria-pressed', 'true');
   await expect(cell).toHaveAttribute('aria-pressed', 'true');
   expect(page.url()).toContain(`f=${f}`);
+});
+
+test('вид из окна: камера у окна по нормали фасада, доли моря и неба, выход возвращает камеру', async ({ page }) => {
+  await open(page, `?c=tivat&b=${B}&f=10&d=f3&lang=en`); // западный фасад, 272°: залив
+  const stat = page.locator('.view-stat');
+  await expect(stat).toContainText(/Sea \d+% .* sky \d+%/, { timeout: 30_000 });
+  const camera = () => page.evaluate(() => (performance.getEntriesByName('sv:view').at(-1) as PerformanceMark | undefined)?.detail);
+  expect(await camera()).toBeUndefined();
+  await page.locator('.view-btn').click();
+  await expect(page.locator('.view-btn')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.view-badge')).toBeVisible();
+  const view = await camera();
+  expect(view.on).toBe(true);
+  expect(view.pitch).toBeCloseTo(90, 0);
+  expect(((view.bearing + 360) % 360)).toBeCloseTo(272, -1);
+  expect(Number(/Sea (\d+)%/.exec((await stat.textContent())!)![1])).toBeGreaterThan(0);
+  // PNG-карточка с кадром вида: буфер карты в проде не сохраняется, кадр снимается разовой перерисовкой
+  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.share-btn').click()]);
+  expect(readFileSync((await download.path())!).length).toBeGreaterThan(20_000);
+  if (process.env.VIEW_PNG) await download.saveAs(process.env.VIEW_PNG);
+  await page.locator('.view-exit').click();
+  await expect(page.locator('.view-badge')).toBeHidden();
+  const back = await camera();
+  expect(back.on).toBe(false);
+  expect(back.pitch).toBeLessThan(76);
 });
 
 test('сравнение двух квартир', async ({ page }) => {
