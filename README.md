@@ -9,7 +9,7 @@
 
 **Click any building, pick a floor, and see how many hours of direct sun reach its windows in each season, and in which directions the sea is visible. Everything is computed in your browser from open data.**
 
-**Demo: [yetit.github.io/sun-view](https://yetit.github.io/sun-view/)** · Tivat and Kotor (Montenegro), Bergen (Norway) · English and Russian (`?lang=en|ru`)
+**Demo: [yetit.github.io/sun-view](https://yetit.github.io/sun-view/)** · Tivat, Kotor and Herceg Novi (Montenegro), Bergen (Norway) · English and Russian (`?lang=en|ru`)
 
 ## What it does
 
@@ -30,6 +30,7 @@
 | --- | --- | --- | --- |
 | Tivat | Bay town on the Adriatic, terrain to the north-east | 3,625 | 14% |
 | Kotor | Old town at the foot of a steep mountain, a narrow fjord-like bay | 3,654 | 3% |
+| Herceg Novi | South-facing slope at the mouth of the Bay of Kotor, from the waterfront up to Topla and Savina | 4,916 | 3% |
 | Bergen | 60° N: in December the sun rises only about 6° at noon; the centre sits between a fjord and the "seven mountains" | 5,030 | 58% |
 
 **Why Bergen.** I wanted a third city that differs in latitude and terrain and has decent floor data. Among Tromsø, Bergen, Trondheim, Ålesund, Bodø, Innsbruck and Lugano, Bergen has the best floor coverage at 54–58% of central buildings. It also has the sea, so the sea view still means something. Innsbruck has similar coverage but no sea. Tromsø is further north, but only 34% of its buildings have floor counts. Buildings in Bergen carry no addresses in OSM, because Norway maps them as separate points. They are labelled with the nearest street instead.
@@ -56,7 +57,7 @@ The terrain horizon was checked against [PVGIS](https://re.jrc.ec.europa.eu/pvg_
 | All 8 points, Kotor | 1.3° (was 1.7°) | — |
 | Steep slope, Vrmac | 5.5° (was 8.3°) | 99 min later than PVGIS; sunset now matches (was 39 min early) |
 | 7 hillside points vs the source Copernicus 1″ | 0.4° (was 2.2°) | — |
-| All 8 points, Bergen, vs Kartverket DTM | 0.8° (was 1.0°) | — |
+| All 8 points, Bergen, vs Kartverket DTM | 0.6° (was 0.8° on Copernicus) | — |
 | Flat ground, Bergen: Bryggen, Festplassen, foot of Ulriken | 0.3–0.4° | within 1 min at Bryggen and Festplassen, 8 min early at Ulriken |
 | Bergen against PVGIS, for reference | 5.0° | off by one to two hours: PVGIS's coarse terrain |
 

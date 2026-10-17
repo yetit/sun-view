@@ -1,0 +1,101 @@
+rank,osm,label,building,neighbours_affected,winter_sun_hours,sea_directions,neighbours,lon,lat
+1,https://www.openstreetmap.org/way/224153858,Njegoševa 1,yes,11,11.8,7,131,18.536197,42.451711
+2,https://www.openstreetmap.org/way/146037942,Koffein Specialty coffee shop,yes,9,13.2,6,127,18.536738,42.451511
+3,https://www.openstreetmap.org/way/160048772,Stara željeznička stanica Herceg Novi,train_station,9,9.5,7,42,18.534666,42.450575
+4,https://www.openstreetmap.org/way/162566730,Njegoševa 13,yes,9,8.5,2,98,18.535672,42.451750
+5,https://www.openstreetmap.org/way/162966293,building near ulica Sveta Bubala,yes,9,3.7,8,74,18.526881,42.454752
+6,https://www.openstreetmap.org/way/162566761,building near Trg Mića Pavlovića,yes,8,26,3,78,18.536889,42.450337
+7,https://www.openstreetmap.org/way/194531766,building near Obala Nikole Kovačevića,yes,8,18,2,55,18.516342,42.459265
+8,https://www.openstreetmap.org/way/921071440,apartments near Braće Pedišića,apartments,8,17.5,4,79,18.559770,42.454661
+9,https://www.openstreetmap.org/way/194531716,Obala Nikole Kovačevića 4,yes,8,10.8,4,53,18.516567,42.459296
+10,https://www.openstreetmap.org/way/162566732,Trg Nikole Đurkovića 32,retail,8,9.2,5,156,18.536339,42.451955
+11,https://www.openstreetmap.org/way/162450726,85347 Igalo,yes,8,7.5,1,60,18.516088,42.459330
+12,https://www.openstreetmap.org/way/162848745,building near Zemunska,yes,8,6.2,0,33,18.545442,42.453828
+13,https://www.openstreetmap.org/way/147150677,building near Njegoševa,yes,8,5.5,6,62,18.522040,42.457805
+14,https://www.openstreetmap.org/way/146037944,Trg Nikole Đurkovića,yes,8,4.8,5,131,18.536463,42.451645
+15,https://www.openstreetmap.org/way/145949253,building near Šetalište 5 Danica,yes,8,4.3,6,38,18.525190,42.456225
+16,https://www.openstreetmap.org/way/165251791,Obala Nikole Kovačevića 64,yes,7,14.8,0,40,18.510963,42.456911
+17,https://www.openstreetmap.org/way/162776366,building near Stepenište kralja Tvrtka I,yes,7,12,2,103,18.537379,42.451817
+18,https://www.openstreetmap.org/way/162566788,Stepenište 28. oktobar 1,yes,7,11.7,3,121,18.537017,42.451513
+19,https://www.openstreetmap.org/way/162776354,building near Stepenište kralja Tvrtka I,yes,7,11.7,1,111,18.537104,42.451800
+20,https://www.openstreetmap.org/way/286246983,building near Prva Susćepanska,yes,7,10.3,2,35,18.512557,42.466775
+21,https://www.openstreetmap.org/way/165090361,building near Sava Ilića,yes,7,9.5,0,75,18.515443,42.459343
+22,https://www.openstreetmap.org/way/176648488,building near Obala Nikole Kovačevića,yes,7,9.3,4,33,18.512764,42.457469
+23,https://www.openstreetmap.org/way/145949445,Trg Nikole Đurkovića 28,apartments,7,9.2,7,136,18.536769,42.451860
+24,https://www.openstreetmap.org/way/147150925,Njegoševa 178,yes,7,8.5,7,54,18.522311,42.457623
+25,https://www.openstreetmap.org/way/164698447,RR Hotel,yes,7,8.5,3,27,18.562729,42.454250
+26,https://www.openstreetmap.org/way/162566778,building near Stepenište kralja Tvrtka I,yes,7,8.5,0,115,18.537169,42.451557
+27,https://www.openstreetmap.org/way/162566783,Trg Herceg Stjepana,yes,7,8.3,2,109,18.537360,42.451581
+28,https://www.openstreetmap.org/way/162094724,Njegoševa 5,yes,7,8.2,4,100,18.535839,42.451752
+29,https://www.openstreetmap.org/way/162165250,Hotel Perla,yes,7,8.2,4,39,18.552678,42.449945
+30,https://www.openstreetmap.org/way/188148118,building near Trg Nikole Đurkovića,yes,7,7.7,3,108,18.536788,42.452042
+31,https://www.openstreetmap.org/way/162848717,building near Spasica i Mareske,yes,7,7.3,0,63,18.539290,42.453854
+32,https://www.openstreetmap.org/way/162848812,building near Zemunska,yes,7,7.3,0,28,18.545287,42.453729
+33,https://www.openstreetmap.org/way/145949506,Kanli Kula,yes,7,6.3,3,134,18.538036,42.452373
+34,https://www.openstreetmap.org/way/164698411,building near Narodnog fronta,yes,7,6.3,4,63,18.561342,42.455622
+35,https://www.openstreetmap.org/way/162165291,Šetalište 5 Danica 99,yes,7,5.8,5,38,18.552820,42.450031
+36,https://www.openstreetmap.org/way/162165303,sea view apartment 86,yes,7,5.7,2,40,18.551068,42.449800
+37,https://www.openstreetmap.org/way/162127433,Njegoševa 121;123;125,yes,7,4.3,5,47,18.522007,42.457451
+38,https://www.openstreetmap.org/way/146037943,Njegoševa 138,yes,7,4.2,4,72,18.527921,42.455049
+39,https://www.openstreetmap.org/way/165090354,Apartmani Centar Igalo,yes,7,4.2,4,60,18.515608,42.459008
+40,https://www.openstreetmap.org/way/162276876,building near Sarajevska,yes,7,1.5,7,60,18.516727,42.460388
+41,https://www.openstreetmap.org/way/162566731,building near Stepenište kralja Tvrtka I,yes,6,17.3,0,107,18.537258,42.451573
+42,https://www.openstreetmap.org/way/162566774,building near Njegoševa,yes,6,14.3,3,89,18.535043,42.452021
+43,https://www.openstreetmap.org/way/177395950,building near Ustanička,yes,6,11.8,1,34,18.534036,42.460476
+44,https://www.openstreetmap.org/way/162094678,Mihaila Mustura 3,yes,6,10.3,3,112,18.535963,42.451628
+45,https://www.openstreetmap.org/way/162566789,Trg Herceg Stjepana 6,yes,6,9.7,0,113,18.537259,42.451479
+46,https://www.openstreetmap.org/way/145949192,building near Stepenište 28. oktobar,yes,6,9.5,3,117,18.536790,42.451123
+47,https://www.openstreetmap.org/way/146037904,building near X hercegovačke brigade,yes,6,9.2,4,110,18.536688,42.452080
+48,https://www.openstreetmap.org/way/175556546,stepenište 28 Oktobar 10,yes,6,8.7,1,102,18.536507,42.451060
+49,https://www.openstreetmap.org/way/145925761,Opština Herceg Novi,yes,6,8.5,3,61,18.530704,42.453650
+50,https://www.openstreetmap.org/way/188148119,building near Njegoševa,yes,6,8.5,1,93,18.535516,42.451976
+51,https://www.openstreetmap.org/way/162848533,building near X hercegovačke brigade,yes,6,8.3,3,65,18.538732,42.453380
+52,https://www.openstreetmap.org/way/166647482,building near Save Kovačevića,yes,6,8.2,5,56,18.543325,42.450864
+53,https://www.openstreetmap.org/way/194531730,terrace near Sava Ilića,terrace,6,8,4,72,18.515900,42.459634
+54,https://www.openstreetmap.org/way/247367405,building near Topovi,yes,6,7.8,0,51,18.544569,42.458042
+55,https://www.openstreetmap.org/way/162094731,building near Stepenište kralja Tvrtka I,yes,6,7.7,0,109,18.537192,42.451761
+56,https://www.openstreetmap.org/way/194531748,terrace near Šetalište 5 Danica,terrace,6,7.2,2,48,18.520298,42.458059
+57,https://www.openstreetmap.org/way/187905430,building near Zemunska,yes,6,7.2,0,35,18.545524,42.454175
+58,https://www.openstreetmap.org/way/162450596,building near Bratstva i jedinstva,yes,6,6.7,5,64,18.511928,42.462864
+59,https://www.openstreetmap.org/way/147150883,stepenište Danica Tomaševiča 9,yes,6,6.3,6,52,18.529697,42.453289
+60,https://www.openstreetmap.org/way/272126501,building near Drenovik,yes,6,6,0,44,18.503770,42.465356
+61,https://www.openstreetmap.org/way/162566775,building near X hercegovačke brigade,yes,6,5.7,4,89,18.535641,42.452420
+62,https://www.openstreetmap.org/way/162165286,building near Braće Grakalić,yes,6,5.5,4,45,18.551225,42.450009
+63,https://www.openstreetmap.org/way/1234093543,building near Njegoševa,yes,6,5.5,3,59,18.521856,42.457912
+64,https://www.openstreetmap.org/way/162094766,building near Save Kovačevića,yes,6,5.2,4,52,18.542003,42.451704
+65,https://www.openstreetmap.org/way/147150699,stepenište Danica Tomaševiča 7,yes,6,4.7,4,41,18.529480,42.453171
+66,https://www.openstreetmap.org/way/162456379,building near Braće Grbića,yes,6,4.7,3,60,18.523687,42.458911
+67,https://www.openstreetmap.org/way/284597979,building near Tara,yes,6,4.5,3,60,18.509808,42.466046
+68,https://www.openstreetmap.org/way/162848899,Šetalište 5 Danica 78,yes,6,4.3,5,43,18.548358,42.449832
+69,https://www.openstreetmap.org/way/162165237,building near Šetalište 5 Danica,yes,6,4,1,31,18.551055,42.449548
+70,https://www.openstreetmap.org/way/145690634,building near Sava Ilića,yes,6,3.7,4,80,18.515886,42.459732
+71,https://www.openstreetmap.org/way/147150994,building near Šetalište 5 Danica,yes,6,2.8,4,48,18.529644,42.453022
+72,https://www.openstreetmap.org/way/176648489,building near Bratstva i jedinstva,yes,6,2.3,3,48,18.507342,42.463537
+73,https://www.openstreetmap.org/way/162848908,Šetalište 5 Danica 76,yes,6,1.8,5,43,18.547944,42.449871
+74,https://www.openstreetmap.org/way/162776348,building near Partizanski put,yes,6,1.3,4,95,18.536263,42.451071
+75,https://www.openstreetmap.org/way/162129434,school near Braće Grakalić,school,6,1.2,11,103,18.548167,42.451420
+76,https://www.openstreetmap.org/way/162776331,building near Partizanski put,yes,6,1.2,6,93,18.535771,42.451305
+77,https://www.openstreetmap.org/way/165087268,building near Šetalište 5 Danica,yes,6,0.8,7,27,18.533434,42.450920
+78,https://www.openstreetmap.org/way/146037941,building near Njegoševa,yes,6,0.7,7,34,18.532542,42.452570
+79,https://www.openstreetmap.org/way/188148129,building near Trg Nikole Đurkovića,yes,5,12.7,4,108,18.536955,42.452001
+80,https://www.openstreetmap.org/way/166647514,building near Šetalište 5 Danica,yes,5,12.3,5,52,18.543215,42.450342
+81,https://www.openstreetmap.org/way/147151023,Njegoševa 212,yes,5,10.3,1,49,18.519559,42.458786
+82,https://www.openstreetmap.org/way/371152051,Prizrenska 2,yes,5,9.8,0,46,18.512504,42.460253
+83,https://www.openstreetmap.org/way/164700507,Ulica 13 jula,yes,5,9.5,1,48,18.534873,42.454722
+84,https://www.openstreetmap.org/way/162848782,building near Srbina,yes,5,9.5,0,52,18.538286,42.453593
+85,https://www.openstreetmap.org/way/147150657,building near 29 Decembra,yes,5,9.5,1,69,18.519825,42.459320
+86,https://www.openstreetmap.org/way/164108800,building near X hercegovačke brigade,yes,5,9.3,3,73,18.534547,42.452427
+87,https://www.openstreetmap.org/way/146585934,29 Decembra 24,yes,5,9.3,1,71,18.520370,42.460280
+88,https://www.openstreetmap.org/way/162848848,building near Sima Matavulja,yes,5,9.2,2,55,18.537831,42.453239
+89,https://www.openstreetmap.org/way/162450747,building near Sava Ilića,yes,5,9.2,2,63,18.516418,42.459490
+90,https://www.openstreetmap.org/way/286234103,building near Tara,yes,5,9.2,2,31,18.510023,42.465219
+91,https://www.openstreetmap.org/way/162456366,building near Braće Grbića,yes,5,9,5,57,18.524465,42.458961
+92,https://www.openstreetmap.org/way/160813279,building near Bratstva i jedinstva,yes,5,9,3,48,18.512502,42.462956
+93,https://www.openstreetmap.org/way/200929556,building near Obala Nikole Kovačevića,yes,5,9,0,19,18.514480,42.458542
+94,https://www.openstreetmap.org/way/272126614,building near Ribinska,yes,5,9,0,63,18.504885,42.464935
+95,https://www.openstreetmap.org/way/226972339,building near Obala Nikole Kovačevića,yes,5,8.5,1,19,18.514567,42.458570
+96,https://www.openstreetmap.org/way/236632070,Šetalište 5 Danica 59,house,5,8.5,3,38,18.544282,42.450048
+97,https://www.openstreetmap.org/way/272126608,building near Višegradska,yes,5,8.3,0,37,18.503443,42.464918
+98,https://www.openstreetmap.org/way/147151026,building near 29 Decembra,yes,5,8.3,1,62,18.520560,42.459300
+99,https://www.openstreetmap.org/way/146506589,building near Sima Matavulja,yes,5,8,4,95,18.537155,42.452204
+100,https://www.openstreetmap.org/way/1234092136,building near Vojvode Luke Vukalovića,yes,5,8,0,25,18.500724,42.450665

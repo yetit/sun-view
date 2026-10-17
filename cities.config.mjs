@@ -37,6 +37,21 @@ export const cities = [
     ],
   },
   {
+    ...common,
+    id: 'herceg-novi',
+    name: 'Херцег-Нови',
+    nameEn: 'Herceg Novi',
+    // Город на южном склоне у входа в Боко-Которский залив: от набережной до Савины и Топлы.
+    bbox: { south: 42.44, west: 18.5, north: 42.47, east: 18.57 },
+    dem: { bbox: { south: 42.32, west: 18.352, north: 42.59, east: 18.718 }, step: 2 },
+    camera: { center: [18.535, 42.452], zoom: 14.5, pitch: 60, bearing: -10 },
+    examples: [
+      { b: 162863748, f: 7, d: null, s: 1, ru: 'Верхний этаж с видом на залив', en: 'Top floor over the bay' },
+      { b: 145925777, f: 1, d: null, s: 3, ru: 'Зимой внизу — без солнца', en: 'No winter sun downstairs' },
+      { b: 146037934, f: 5, d: null, s: 3, ru: 'Солнце весь зимний день', en: 'Sun all winter day' },
+    ],
+  },
+  {
     // Берген: 60° с. ш. — зимой солнце в полдень поднимается всего на ~6°, город зажат между фьордом
     // и «семью горами» (Флёйен, Ульрикен), этажность в OSM есть у ~половины зданий центра.
     ...common,

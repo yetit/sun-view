@@ -150,3 +150,18 @@ test('режим «Этажность»: дома без этажности ок
   await expect(page.locator('.levels-impact')).toContainText(/of \d+ neighbours depend/);
   await expect(page.locator('.levels-help')).toHaveAttribute('href', /help-fill-in-floor-counts/);
 });
+
+test('сезоны: среднее с облаками на каждой карточке, зимой — граница без листвы; «Солнечнее рядом»', async ({ page }) => {
+  await open(page, '?c=tivat&b=193467074&f=1&lang=en'); // лиственные деревья рядом: зимой 0,7 ч, без листвы 2,8
+  await expect(page.locator('.seasons .card .cloud')).toHaveCount(4);
+  await expect(page.locator('.seasons .card[data-s="3"] .bare')).toContainText('with bare trees');
+  await expect(page.locator('.seasons .card[data-s="1"] .bare')).toHaveCount(0); // летом листва
+  await expect(page.locator('.seasons-note')).toBeVisible();
+  await page.locator('.better-btn').click();
+  await expect(page.locator('.better-out')).toHaveText(/floor 1|No building/, { timeout: 30_000 });
+  const link = page.locator('.better-out .link');
+  if (await link.count()) {
+    await link.click();
+    await expect(page).not.toHaveURL(/b=193467074/);
+  }
+});
