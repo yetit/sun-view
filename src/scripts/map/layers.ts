@@ -29,6 +29,8 @@ let sunScale = [0, 1, 2];
 export function applyColors(scale = sunScale) {
   sunScale = scale;
   BUILDING_LAYERS.forEach((id) => map.setPaintProperty(id, 'fill-extrusion-color', buildingColor(state.mode, !!state.current, scale) as any));
+  // В режиме «Этажность» главные — как раз дома без неё: рисуем их плотными, а не полупрозрачными.
+  map.setPaintProperty('buildings-assumed', 'fill-extrusion-opacity', state.mode === 'levels' ? 0.95 : 0.55);
 }
 
 // На телефоне карта под листом: центрируем выбранное в видимой части.

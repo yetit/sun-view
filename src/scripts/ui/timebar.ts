@@ -1,6 +1,7 @@
 // Таймбар: сезон, время суток, воспроизведение, режимы карты (солнце/море) и легенда.
 import { eye, facing, floorAt, HEIGHTS, STEP_MIN, sunAt } from '../analysis.ts';
 import { $, $$, ask, city, facadeOf, fmtH, fmtT, sliderTime, state, syncUrl, world } from '../app.ts';
+import { loadLevels } from '../data.ts';
 import { blocked } from '../grid.ts';
 import { t } from '../i18n.ts';
 import { applyColors, map, pathPoint, setData } from '../map/layers.ts';
@@ -64,6 +65,15 @@ export async function applyMode() {
   updateLight(); // свет зависит от режима (см. updateLight)
   syncUrl();
   if (mode === 'normal') { $('.progress').textContent = ''; return; }
+  if (mode === 'levels') {
+    $('.legend-note').textContent = t.legendLevelsNote;
+    ['0', '3', '≥ 6'].forEach((v, i) => ($(['.legend-min', '.legend-mid', '.legend-max'][i]).textContent = v));
+    const my = ++modeReq;
+    const lv = await loadLevels(city.id);
+    if (my !== modeReq) return;
+    world.blds.forEach((b) => map.setFeatureState({ source: 'buildings', id: b.id }, { v: lv.get(b.id)?.[0] ?? 0, low: false }));
+    return;
+  }
   const sun = mode === 'sun';
   const low = world.blds.map((b) => b.floors < floorAt(world, height));
   const floor = floorAt(world, height);

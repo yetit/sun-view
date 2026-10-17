@@ -138,3 +138,15 @@ test('клавиатура: Enter, стрелки, Esc', async ({ page }) => {
   await expect(page.locator('.empty')).toBeVisible();
   expect(page.url()).not.toContain('b=');
 });
+
+test('режим «Этажность»: дома без этажности окрашены по влиянию, в карточке — сколько соседей зависят', async ({ page }) => {
+  await open(page, '?c=tivat&m=levels&lang=en');
+  await expect(page.locator('.mode-chip[data-mode="levels"]')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('.legend-title')).toContainText('floor counts are missing');
+  await expect(page.locator('.legend-ticks')).toContainText('≥ 6');
+  await page.goto(`?c=tivat&m=levels&b=193683085&lang=en&v=${Date.now()}`); // первый в списке для обхода по Тивату
+  await painted(page);
+  await expect(page.locator('.assumed')).toBeVisible();
+  await expect(page.locator('.levels-impact')).toContainText(/of \d+ neighbours depend/);
+  await expect(page.locator('.levels-help')).toHaveAttribute('href', /help-fill-in-floor-counts/);
+});

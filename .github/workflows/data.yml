@@ -52,7 +52,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git switch -C data/update
-          git add data
+          git add data docs/levels-todo
           git commit -m "Данные: выгрузка $(date -u +%F)"
           git push -f origin data/update
           title="Данные: выгрузка $(date -u +%F)"

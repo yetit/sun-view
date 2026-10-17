@@ -6,6 +6,7 @@ import { facades, nearestFacade, type Bld, type Facade } from '../grid.ts';
 import { buildingName, cityName, lang, summaryText, t } from '../i18n.ts';
 import { applyColors, drawFacade, drawFloor, drawSectors, drawSunPath, map, setData, sheetPadding } from '../map/layers.ts';
 import { enterView, exitView, grabFrame, viewing } from '../map/window.ts';
+import { loadLevels } from '../data.ts';
 import { shareCard } from '../share.ts';
 import { setSheet } from './sheet.ts';
 import { setSeason, updateLight } from './timebar.ts';
@@ -90,6 +91,10 @@ function fillFloors(b: Bld) {
   const box = $('.assumed');
   box.hidden = !b.assumed;
   $<HTMLInputElement>('.assumed-input').value = String(b.floors);
+  // Насколько эта неизвестная этажность важна соседям — из того же слоя, что режим «Этажность».
+  const impact = $('.levels-impact');
+  impact.hidden = true;
+  if (b.assumed) loadLevels(city.id).then((lv) => { const n = lv.get(b.id)?.[0] ?? 0; if (state.current === b && n) { impact.textContent = t.levelsImpact(n); impact.hidden = false; } });
 }
 
 // Уточнённая пользователем этажность: меняет только это здание (его высоту на карте и список этажей);

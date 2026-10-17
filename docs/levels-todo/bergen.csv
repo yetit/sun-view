@@ -1,0 +1,101 @@
+rank,osm,label,building,neighbours_affected,winter_sun_hours,sea_directions,neighbours,lon,lat
+1,https://www.openstreetmap.org/way/579246940,kindergarten near Skansemyrsveien,kindergarten,27,21.3,12,125,5.337855,60.393675
+2,https://www.openstreetmap.org/way/151779258,industrial near Georgernes verft,industrial,14,3.3,13,113,5.311054,60.394929
+3,https://www.openstreetmap.org/way/230636721,warehouse near Georgernes verft,warehouse,11,0.7,11,101,5.310345,60.395387
+4,https://www.openstreetmap.org/way/579072455,semidetached_house near Skansemyrsveien,semidetached_house,10,7.2,5,101,5.338302,60.394313
+5,https://www.openstreetmap.org/way/376535379,civic near Krybbesmauet,civic,9,8,5,142,5.328212,60.397295
+6,https://www.openstreetmap.org/way/985627160,semidetached_house near Skansemyrsveien,semidetached_house,9,7.5,4,95,5.338132,60.393966
+7,https://www.openstreetmap.org/way/230636691,school near Nordnesparken,school,9,5.5,6,69,5.307443,60.397461
+8,https://www.openstreetmap.org/way/520907944,commercial near Damsgårdsveien,commercial,9,0,9,39,5.309202,60.384898
+9,https://www.openstreetmap.org/way/579085367,house near Nordre Skansemyren,house,8,10.3,3,95,5.338788,60.394361
+10,https://www.openstreetmap.org/way/376535389,civic near Langeveien,civic,8,8.8,5,149,5.327948,60.397369
+11,https://www.openstreetmap.org/way/985627091,semidetached_house near Skansemyrsveien,semidetached_house,8,6.3,2,98,5.338568,60.394139
+12,https://www.openstreetmap.org/way/579058666,house near Verftsgaten,house,8,6.2,3,116,5.311782,60.395093
+13,https://www.openstreetmap.org/way/985626986,garage near Nordre Skansemyren,garage,8,4.8,4,91,5.338515,60.394468
+14,https://www.openstreetmap.org/way/985626914,semidetached_house near Skansemyrsveien,semidetached_house,8,4.5,4,102,5.338770,60.394022
+15,https://www.openstreetmap.org/way/579246959,semidetached_house near Skansemyrsveien,semidetached_house,8,3.2,5,82,5.337138,60.393917
+16,https://www.openstreetmap.org/way/985627088,garage near Skansemyrsveien,garage,8,2.7,4,93,5.338013,60.394129
+17,https://www.openstreetmap.org/way/151779241,office near Nøstegaten,office,8,0.7,7,93,5.311139,60.394432
+18,https://www.openstreetmap.org/way/520907941,office near Damsgårdsveien,office,8,0,8,38,5.310166,60.384814
+19,https://www.openstreetmap.org/way/985627225,semidetached_house near Skansemyrsveien,semidetached_house,7,8.5,1,103,5.337778,60.394140
+20,https://www.openstreetmap.org/way/579072457,semidetached_house near Skansemyrsveien,semidetached_house,7,6.8,2,103,5.338504,60.394216
+21,https://www.openstreetmap.org/way/331274529,hotel near Nikolaikirkeallmenningen,hotel,7,6.3,2,163,5.325784,60.397182
+22,https://www.openstreetmap.org/way/579072531,semidetached_house near Skansemyrsveien,semidetached_house,7,5.7,2,97,5.338045,60.394034
+23,https://www.openstreetmap.org/way/577795906,house near Professor Dahls gate,house,7,4.7,3,193,5.328740,60.399255
+24,https://www.openstreetmap.org/way/415128257,school near Arbeidergaten,school,7,4.7,4,118,5.328227,60.400534
+25,https://www.openstreetmap.org/way/375934860,house near Kalfarlien,house,7,4.2,4,59,5.343598,60.388483
+26,https://www.openstreetmap.org/way/579072458,semidetached_house near Skansemyrsveien,semidetached_house,7,3.8,3,101,5.338863,60.393946
+27,https://www.openstreetmap.org/way/579072452,semidetached_house near Skansemyrsveien,semidetached_house,7,3,3,94,5.337509,60.394353
+28,https://www.openstreetmap.org/way/492520380,dormitory near Jekteviksbakken,dormitory,7,0,9,96,5.315093,60.389137
+29,https://www.openstreetmap.org/way/985356206,parking near Nordnesgaten,parking,7,0,8,33,5.305195,60.399772
+30,https://www.openstreetmap.org/way/395667205,commercial near Strandgaten,commercial,7,0,7,103,5.313433,60.396644
+31,https://www.openstreetmap.org/way/375913004,office near Seiersbjerget,office,6,7.2,1,34,5.344698,60.386414
+32,https://www.openstreetmap.org/way/985627068,semidetached_house near Skansemyrsveien,semidetached_house,6,6.7,2,96,5.337966,60.394477
+33,https://www.openstreetmap.org/way/579072532,semidetached_house near Skansemyrsveien,semidetached_house,6,6.2,1,97,5.337770,60.394220
+34,https://www.openstreetmap.org/way/985627018,garage near Nordre Skansemyren,garage,6,5.8,3,87,5.338592,60.394511
+35,https://www.openstreetmap.org/way/159480527,Bergen rådhus,office,6,5.7,0,58,5.328222,60.392113
+36,https://www.openstreetmap.org/way/376535456,house near Telthussmauet,house,6,5.3,1,183,5.328481,60.397837
+37,https://www.openstreetmap.org/way/985626951,garage near Nordre Skansemyren,garage,6,4.8,2,89,5.338685,60.394468
+38,https://www.openstreetmap.org/way/578908005,house near Strangehagesmauet,house,6,4.8,2,131,5.312024,60.395000
+39,https://www.openstreetmap.org/way/985627085,semidetached_house near Ole Irgens' vei,semidetached_house,6,4.2,2,68,5.338800,60.393202
+40,https://www.openstreetmap.org/way/376535371,house near Fjellgaten,house,6,3.7,4,148,5.328528,60.397512
+41,https://www.openstreetmap.org/way/578260925,house near Søndre Kleivesmauet,house,6,3.5,2,182,5.324956,60.399601
+42,https://www.openstreetmap.org/way/831303165,garage near Skansemyrsveien,garage,6,3.3,3,62,5.339784,60.393408
+43,https://www.openstreetmap.org/way/579072454,semidetached_house near Skansemyrsveien,semidetached_house,6,3,2,94,5.337895,60.394559
+44,https://www.openstreetmap.org/way/1553430989,Zachariasbryggen,retail,6,2.3,4,66,5.325006,60.395272
+45,https://www.openstreetmap.org/way/985626923,shed near Skansemyrsveien,shed,6,2.3,3,88,5.338223,60.393925
+46,https://www.openstreetmap.org/way/985626958,garage near Skansemyrsveien,garage,6,2.3,3,95,5.338101,60.394443
+47,https://www.openstreetmap.org/way/985626981,semidetached_house near Skansemyrsveien,semidetached_house,6,2.2,3,71,5.336787,60.394454
+48,https://www.openstreetmap.org/way/393025481,school near O.J. Brochs gate,school,6,1.8,4,48,5.322630,60.383201
+49,https://www.openstreetmap.org/way/831303167,garage near Nordre Skansemyren,garage,6,1.8,4,62,5.340048,60.393564
+50,https://www.openstreetmap.org/way/577617802,house near Nedre Blekeveien,house,6,1.3,4,222,5.327592,60.398492
+51,https://www.openstreetmap.org/way/194309044,Juridiske fakultet,university,6,0.7,5,104,5.313924,60.390159
+52,https://www.openstreetmap.org/way/579072456,semidetached_house near Skansemyrsveien,semidetached_house,5,7,2,92,5.339134,60.393842
+53,https://www.openstreetmap.org/way/577613128,house near Nordre Steinkjellersmauet,house,5,6,1,245,5.327184,60.398687
+54,https://www.openstreetmap.org/way/984917918,parking near Skansegaten,parking,5,5.8,2,111,5.330292,60.397899
+55,https://www.openstreetmap.org/way/492672232,Nordnes bydelshus,kindergarten,5,5.5,0,218,5.315662,60.394653
+56,https://www.openstreetmap.org/way/577612198,apartments near Steinkjellerkroken,apartments,5,4.5,1,234,5.326792,60.398495
+57,https://www.openstreetmap.org/way/985627023,garage near Skansemyrsveien,garage,5,4.5,2,53,5.340100,60.393327
+58,https://www.openstreetmap.org/way/331274542,commercial near Bredsgården,commercial,5,4.3,0,126,5.324100,60.397787
+59,https://www.openstreetmap.org/way/985627180,garage near Skansemyrsveien,garage,5,3.8,1,84,5.337294,60.394280
+60,https://www.openstreetmap.org/way/579072734,semidetached_house near Skansemyrsveien,semidetached_house,5,3.5,2,96,5.338735,60.393681
+61,https://www.openstreetmap.org/way/985627239,semidetached_house near Skansemyrsveien,semidetached_house,5,3.5,2,89,5.339159,60.393789
+62,https://www.openstreetmap.org/way/579072867,house near Endregårdsveien,house,5,3.3,5,54,5.338220,60.392495
+63,https://www.openstreetmap.org/way/579286475,house near Brattlien,house,5,3.3,1,75,5.332511,60.394768
+64,https://www.openstreetmap.org/way/331274547,warehouse near Bredsgården,warehouse,5,3.3,0,116,5.324037,60.397830
+65,https://www.openstreetmap.org/way/579085372,semidetached_house near Ole Irgens' vei,semidetached_house,5,3.2,2,65,5.338890,60.393097
+66,https://www.openstreetmap.org/way/985627162,garage near Nordre Skansemyren,garage,5,3.2,2,53,5.340460,60.393604
+67,https://www.openstreetmap.org/way/577605404,building near Stølegaten,yes,5,3,3,212,5.325560,60.399873
+68,https://www.openstreetmap.org/way/577612195,apartments near Steinkjellerkroken,apartments,5,3,2,240,5.326985,60.398648
+69,https://www.openstreetmap.org/way/375934952,house near Kalfarlien,house,5,2.8,3,47,5.344035,60.388219
+70,https://www.openstreetmap.org/way/831303166,building near Skansemyrsveien,yes,5,2.8,2,72,5.339404,60.393552
+71,https://www.openstreetmap.org/way/985626846,semidetached_house near Skansemyrsveien,semidetached_house,5,2.8,2,96,5.338227,60.394367
+72,https://www.openstreetmap.org/way/579249316,house near Fjellveien,house,5,2.8,1,48,5.334192,60.394749
+73,https://www.openstreetmap.org/way/577614652,house near Nedre Blekeveien,house,5,2.7,2,236,5.327903,60.398377
+74,https://www.openstreetmap.org/way/579085374,semidetached_house near Ole Irgens' vei,semidetached_house,5,2.3,3,78,5.338766,60.393373
+75,https://www.openstreetmap.org/way/985627193,garage near Skansemyrsveien,garage,5,2.3,1,89,5.338048,60.393835
+76,https://www.openstreetmap.org/way/985627130,garage near Skansemyrsveien,garage,5,2.2,3,79,5.339520,60.393743
+77,https://www.openstreetmap.org/way/578904669,house near Strangeplassen,house,5,2.2,2,134,5.312108,60.394806
+78,https://www.openstreetmap.org/way/985627248,garage near Fjellveien,garage,5,2,3,33,5.340582,60.390966
+79,https://www.openstreetmap.org/way/606074458,house near Fjellien,house,5,1.3,4,67,5.332936,60.394684
+80,https://www.openstreetmap.org/way/985626973,garage near Skansemyrsveien,garage,5,1.2,4,95,5.338578,60.393752
+81,https://www.openstreetmap.org/way/375912968,house near Seiersbjerget,house,5,1,4,35,5.344040,60.386468
+82,https://www.openstreetmap.org/way/984917957,garages near Breistølsveien,garages,5,0.8,5,79,5.329545,60.401446
+83,https://www.openstreetmap.org/way/230636724,commercial near Nordnesbodene,commercial,5,0,7,21,5.305769,60.400458
+84,https://www.openstreetmap.org/way/230535196,warehouse near O.J. Brochs gate,warehouse,5,0,6,33,5.320601,60.383256
+85,https://www.openstreetmap.org/way/371945183,USF Verfet,civic,5,0,6,46,5.308607,60.395593
+86,https://www.openstreetmap.org/way/720130014,Norcem,yes,5,0,6,27,5.306332,60.385741
+87,https://www.openstreetmap.org/way/391264671,transportation near Dokkeboder,transportation,5,0,5,48,5.313782,60.389005
+88,https://www.openstreetmap.org/way/439261269,warehouse near Sjøgaten,warehouse,5,0,5,79,5.320252,60.402584
+89,https://www.openstreetmap.org/way/559891411,kindergarten near Magnus Lagabøtes plass,kindergarten,5,0,5,83,5.315014,60.389443
+90,https://www.openstreetmap.org/way/638863924,office near Damsgårdsveien,office,5,0,5,32,5.311306,60.384620
+91,https://www.openstreetmap.org/way/417401906,kindergarten near Fløyfjellet,kindergarten,4,6.8,1,9,5.337924,60.398105
+92,https://www.openstreetmap.org/way/446708441,Mariakirken,church,4,6.5,1,129,5.323322,60.398911
+93,https://www.openstreetmap.org/way/579041460,religious near Mitzellsmauet,religious,4,5.5,0,275,5.316352,60.393396
+94,https://www.openstreetmap.org/way/578118536,terrace near Breistølsveien,terrace,4,4.8,0,124,5.328580,60.401785
+95,https://www.openstreetmap.org/way/375912958,garage near Seiersbjerget,garage,4,4.7,0,35,5.344591,60.386639
+96,https://www.openstreetmap.org/way/375934892,apartments near Forskjønnelsen,apartments,4,4.2,2,67,5.342606,60.389113
+97,https://www.openstreetmap.org/way/579382166,house near Øvre Kalfarlien,house,4,4,3,37,5.341863,60.389648
+98,https://www.openstreetmap.org/way/577613124,house near Søndre Steinkjellersmauet,house,4,4,1,231,5.327492,60.398416
+99,https://www.openstreetmap.org/way/985627149,garage near Skansemyrsveien,garage,4,4,1,76,5.337382,60.394760
+100,https://www.openstreetmap.org/way/375913000,house near Kalfarveien,house,4,4,0,39,5.344506,60.386817

@@ -31,7 +31,7 @@ export const state = {
   side: (d?.[0] === 'f' ? num(d.slice(1), 0) : null) as number | null, // номер фасада или всё здание
   season: Math.min(3, Math.max(0, num(params.get('s'), 3))),
   hour: Math.min(22, Math.max(4, num(params.get('t'), 11))), // местное время, ч
-  mode: pick<Mode>(params.get('m'), ['normal', 'sea'], 'sun'), // на входе город сразу окрашен
+  mode: pick<Mode>(params.get('m'), ['normal', 'sea', 'levels'], 'sun'), // на входе город сразу окрашен
   height: legacyFm[fm] ?? (HEIGHTS.includes(+fm) ? +fm : 5),
   floorsOverride: params.get('n') != null ? num(params.get('n'), 0) || null : null, // этажность, уточнённая пользователем
 };

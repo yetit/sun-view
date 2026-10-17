@@ -39,6 +39,12 @@ for (const city of cities) {
       }
     });
 
+    // levels.json — по OSM id; после обновления данных часть id может пропасть, но почти все должны быть.
+    const lv = json(city.id, 'levels');
+    const known = new Set(src.features.map((f: any) => f.properties.id));
+    assert.ok(lv.items.every((r: number[]) => r[1] >= 1), 'levels.json: в списке только дома, влияющие на соседей');
+    assert.ok(lv.items.filter((r: number[]) => known.has(r[0])).length >= 0.9 * lv.items.length, 'levels.json устарел — запустите npm run levels -- <id>');
+
     const dem = json(city.id, 'dem');
     assert.equal(size(city.id, 'dem'), dem.cols * dem.rows * 2, 'dem.bin: размер не равен cols × rows × 2 (Int16)');
   });

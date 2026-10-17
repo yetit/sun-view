@@ -209,9 +209,10 @@ body.viewing .legend-box { display: none; }
 .mode-chip { border: 1px solid transparent; }
 .mode-chip[aria-checked='true'] { opacity: 1; border-color: currentColor; }
 .mode-chip[data-mode='sun'][aria-checked='true'] { background: linear-gradient(90deg, #3b4a6b, #ffd23f); color: #fff; border-color: transparent; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
+.mode-chip[data-mode='levels'][aria-checked='true'] { background: linear-gradient(90deg, #f2c48f, #b8331f); color: #fff; border-color: transparent; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
 .mode-chip[data-mode='sea'][aria-checked='true'] { background: linear-gradient(90deg, #bfe4d4, #0b6b47); color: #fff; border-color: transparent; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
 .floor-mode { font: inherit; font-size: 12.5px; padding: 4px 6px; border-radius: 999px; border: 1px solid #cfc8bb; background: #fff; color: var(--ink); }
-body[data-mode='normal'] .floor-mode { display: none; }
+body[data-mode='normal'] .floor-mode, body[data-mode='levels'] .floor-mode { display: none; }
 .time { display: flex; align-items: center; gap: 8px; }
 .time input { width: 150px; accent-color: var(--accent); }
 .clock { font-weight: 600; min-width: 42px; }
@@ -328,3 +329,7 @@ body.embed .seasons { grid-template-columns: repeat(4, 1fr); }
 .more { margin-top: 6px; font-size: 12.5px; color: var(--muted); }
 .more summary { cursor: pointer; font-weight: 500; width: fit-content; }
 .more .legend { margin-top: 4px; }
+
+/* --- Дом без этажности: влияние на соседей и ссылка «как помочь» --- */
+.assumed .levels-impact { font-weight: 600; }
+.assumed .levels-help { font-size: 12.5px; color: inherit; }

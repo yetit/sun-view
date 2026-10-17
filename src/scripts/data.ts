@@ -2,7 +2,7 @@
 // buildings.bin + .meta.json (src/scripts/buildings-bin.ts), greenery.json, dem.bin + .json, precomputed.bin + .json.
 import { unpackBuildings, type BuildingsMeta } from './buildings-bin.ts';
 
-const urls = import.meta.glob<string>('../../data/*/{buildings.bin,buildings.meta.json,greenery.json,dem.bin,dem.json,precomputed.bin,precomputed.json}', { query: '?url', import: 'default' });
+const urls = import.meta.glob<string>('../../data/*/{buildings.bin,buildings.meta.json,greenery.json,dem.bin,dem.json,precomputed.bin,precomputed.json,levels.json}', { query: '?url', import: 'default' });
 
 // precomputed — карты солнца/моря для всех зданий из scripts/precompute.ts (если есть).
 export type CityData = {
@@ -25,4 +25,17 @@ export async function loadCityData(id: string): Promise<CityData> {
     precomputed = new Map(preMeta.layers.map((k: string, i: number) => [k, new Uint8Array(preBuf, i * n, n)]));
   } else if (preMeta) console.warn(`${id}: предрасчёт на ${preMeta.buildings} зданий, а в данных ${bldMeta.n} — считаем в воркере`);
   return { geojson, bldMeta, bldBuf: bldBuf!, greenery, demMeta, demBuf: demBuf!, precomputed };
+}
+
+// Где не хватает этажности (scripts/levels-todo.mjs): OSM id → [соседей с изменившимся ответом,
+// часы зимнего солнца × 10, направлений с морем]. По id, а не по номеру — переживает обновление данных.
+let levels: Promise<Map<number, number[]>> | null = null;
+export function loadLevels(id: string) {
+  levels ??= (async () => {
+    const u = urls[`../../data/${id}/levels.json`];
+    if (!u) return new Map();
+    const j = await (await fetch(await u())).json();
+    return new Map(j.items.map(([osm, ...rest]: number[]) => [osm, rest]));
+  })();
+  return levels;
 }

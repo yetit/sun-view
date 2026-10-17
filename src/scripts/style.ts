@@ -14,14 +14,18 @@ const empty = () => ({ type: 'geojson' as const, data: { type: 'FeatureCollectio
 
 export const COLORS = { known: '#b7ab97', assumed: '#d3cbbd', hover: '#9c8f78', selected: '#efe2cd', floor: '#ff7a1a', facade: '#2b59c3', sea: '#1a9c6b', noSea: '#d9534f', lit: '#ffb703', shade: '#8c8c8c' };
 
-export type Mode = 'normal' | 'sun' | 'sea';
+export type Mode = 'normal' | 'sun' | 'sea' | 'levels';
 export const SUN_RAMP = ['#3b4a6b', '#d9775b', '#ffd23f'];
 export const SEA_RAMP = ['#e2ddd2', '#bfe4d4', '#6cc4a1', '#2aa377', '#0b6b47'];
+// «Этажность»: дома без неё — по числу соседей, чьи ответы от неё зависят (0, 1–2, 3–5, 6+).
+export const LEVELS_RAMP = ['#efe6d8', '#f2c48f', '#e8833f', '#b8331f'];
+const LEVELS_KNOWN = '#d6d1c7';
 // Блёклый цвет для домов ниже выбранной высоты окна: 35 % цвета + 65 % светлой подложки.
 const fade = (c: string) => '#' + [1, 3, 5].map((i) => Math.round(0.35 * parseInt(c.slice(i, i + 2), 16) + 0.65 * parseInt('e4dfd5'.slice(i - 1, i + 1), 16)).toString(16).padStart(2, '0')).join('');
 
-// Цвет зданий: обычный режим, «карта солнца» (часы солнца в окнах; scale — часы для трёх цветов шкалы)
-// или «карта моря» (сколько румбов с водой). Значение — feature-state v, low — дом ниже высоты окна.
+// Цвет зданий: обычный режим, «карта солнца» (часы солнца в окнах; scale — часы для трёх цветов шкалы),
+// «карта моря» (сколько румбов с водой) или «этажность» (сколько соседей зависят от неизвестной этажности).
+// Значение — feature-state v, low — дом ниже высоты окна.
 export function buildingColor(mode: Mode, dim: boolean, scale: number[]) {
   const sel = ['boolean', ['feature-state', 'selected'], false];
   const hov = ['boolean', ['feature-state', 'hover'], false];
@@ -30,7 +34,8 @@ export function buildingColor(mode: Mode, dim: boolean, scale: number[]) {
     mode === 'sun' ? ['interpolate', ['linear'], v, ...scale.flatMap((h, i) => [h, r[i]])]
     : ['step', v, r[0], 1, r[1], 2, r[2], 3, r[3], 4, r[4]]; // море дальше 4 румбов видно у ~1 % зданий
   const base =
-    mode !== 'normal' ? ['case', ['boolean', ['feature-state', 'low'], false], ramp((mode === 'sun' ? SUN_RAMP : SEA_RAMP).map(fade)), ramp(mode === 'sun' ? SUN_RAMP : SEA_RAMP)]
+    mode === 'levels' ? ['case', ['get', 'assumed'], ['step', v, LEVELS_RAMP[0], 1, LEVELS_RAMP[1], 3, LEVELS_RAMP[2], 6, LEVELS_RAMP[3]], LEVELS_KNOWN]
+    : mode !== 'normal' ? ['case', ['boolean', ['feature-state', 'low'], false], ramp((mode === 'sun' ? SUN_RAMP : SEA_RAMP).map(fade)), ramp(mode === 'sun' ? SUN_RAMP : SEA_RAMP)]
     : dim ? ['case', ['get', 'assumed'], '#e4dfd5', '#d9d2c5']
     : ['case', ['get', 'assumed'], COLORS.assumed, COLORS.known];
   return ['case', sel, COLORS.selected, hov, COLORS.hover, base];
