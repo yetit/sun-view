@@ -5,13 +5,15 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { getCity } from '../cities.config.mjs';
 import { eye, HEIGHTS, massSea, massSun, seaRose, seasonCalc, STEP_MIN } from '../src/scripts/analysis.ts';
+import { unpackBuildings } from '../src/scripts/buildings-bin.ts';
 import { createWorld, type City } from '../src/scripts/grid.ts';
 
 const city = getCity(process.argv[2]) as City;
 const dir = `data/${city.id}`;
 const json = (name: string) => JSON.parse(readFileSync(`${dir}/${name}.json`, 'utf8'));
-const bin = readFileSync(`${dir}/dem.bin`);
-const w = createWorld(city, json('buildings'), json('greenery'), json('dem'), bin.buffer.slice(bin.byteOffset, bin.byteOffset + bin.byteLength));
+const ab = (name: string) => { const b = readFileSync(`${dir}/${name}.bin`); return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength); };
+// Здания — из buildings.bin, как в браузере: координаты округлены одинаково, предрасчёт совпадает с расчётом на странице.
+const w = createWorld(city, unpackBuildings(json('buildings.meta'), ab('buildings')), json('greenery'), json('dem'), ab('dem'));
 const n = w.blds.length;
 
 // Слои: sun:<сезон>:<высота окна, м> — солнце в окнах в шагах по STEP_MIN минут (0..144),
