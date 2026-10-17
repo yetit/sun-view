@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { annualSun, bestCell, breCell, eye, sunshineAt, facadeMatrix, seaRose, seasonCalc, floorAt, reliability, sunYear, verdict, windowView, yearRibbon } from '../src/scripts/analysis.ts';
-import { blocked, facades } from '../src/scripts/grid.ts';
+import { bareWorld, blocked, facades } from '../src/scripts/grid.ts';
 import { makeWorld, rect } from './world.ts';
 
 test('здание целиком: летом на плоской суше солнце весь день, кроме утра за горой', () => {
@@ -161,4 +161,23 @@ test('sunshineAt: середина месяца — значение месяц�
   assert.ok(Math.abs(sunshineAt(months, new Date(Date.UTC(2026, 1, 1))) - 0.3) < 0.02);
   assert.ok(Math.abs(sunshineAt(months, new Date(Date.UTC(2026, 11, 31))) - 0.1) < 0.02);
   assert.ok(Math.abs(sunshineAt(months, new Date(Date.UTC(2026, 0, 1))) - 0.1) < 0.02);
+});
+
+test('bareWorld: лиственный лес к югу зимой закрывает солнце, без листвы — нет; хвойный остаётся', () => {
+  const wood = [rect(0, -40, 80, 30)]; // в 15 м к югу от стены, 20 м высотой
+  for (const broad of [true, false]) {
+    const w = makeWorld([], wood, broad);
+    const b = w.blds[0], e = eye(w, b, 1, facades(w, b)[2]);
+    const leafy = seasonCalc(w, b, e, 3).sun, bare = seasonCalc(bareWorld(w), b, e, 3).sun;
+    assert.ok(leafy < bare === broad, `${broad ? 'лиственный' : 'хвойный'}: ${leafy} / ${bare}`);
+  }
+});
+
+test('BRE с облаками: пасмурная зима снижает зимнюю долю, ясный год — как без климата', () => {
+  const w = makeWorld();
+  const b = w.blds[0], e = eye(w, b, 3, facades(w, b)[2]);
+  const clear = annualSun(w, b, e);
+  assert.deepEqual(annualSun({ ...w, sunshine: new Array(12).fill(1) }, b, e), clear);
+  const grey = annualSun({ ...w, sunshine: [0.2, 0.2, 0.5, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.5, 0.2, 0.2] }, b, e);
+  assert.ok(grey.winter < clear.winter, `зима ${grey.winter} < ${clear.winter}`);
 });

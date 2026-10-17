@@ -59,11 +59,10 @@ export function tzOffset(d: Date) {
 }
 export const sliderTime = () => new Date(SEASONS[state.season].date.getTime() + (state.hour - tzOffset(SEASONS[state.season].date)) * 36e5);
 
-// Мир, исходный GeoJSON зданий и вероятность прямого солнца по месяцам — после загрузки данных.
+// Мир и исходный GeoJSON зданий — после загрузки данных.
 export let world: World;
 export let geojson: any;
-export let sunshine: number[] | null = null;
-export function setWorld(w: World, g: any, s: number[] | null) { world = w; geojson = g; sunshine = s; }
+export function setWorld(w: World, g: any) { world = w; geojson = g; }
 
 // Тяжёлые расчёты — в воркере со своей копией мира.
 let worker: Worker;

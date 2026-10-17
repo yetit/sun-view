@@ -1,7 +1,7 @@
 // Матрица «этажи × фасады» и годовая оценка окна по BRE. Матрица считается в воркере один раз на здание
 // (и при уточнении этажности); из неё же — оценка в панели, чтобы числа в матрице и в панели совпадали.
 import { bestCell, breCell, dirIndex } from '../analysis.ts';
-import { $, $$, ask, currentFacades, state } from '../app.ts';
+import { $, $$, ask, currentFacades, state, world } from '../app.ts';
 import type { Bld, Facade } from '../grid.ts';
 import { t } from '../i18n.ts';
 import { deg, fName, fTitle } from './format.ts';
@@ -54,7 +54,7 @@ export function breHtml() {
   if (!fs.length) return `<p class="legend">${t.bre.none}</p>`;
   if (!r) return `<p class="legend">${t.bre.loading}</p>`;
   const f = fs[r.c];
-  const notes = [t.bre.detail(r.a.year, r.a.winter)];
+  const notes = [t.bre.detail(r.a.year, r.a.winter, !!world.sunshine)];
   if (state.side == null) notes.push(t.bre.best(fName(f)));
   return `<div class="bre" data-v="${r.v}" style="--pct:${r.a.year}%"><strong>${r.a.year}<small>${t.bre.of}</small></strong><b>${t.bre.title}</b><em>${t.bre.verdict[r.v]}</em><small>${notes.join(' · ')}</small><i></i></div><details class="more"><summary>${t.bre.how}</summary><p class="legend">${t.bre.legend}</p></details>`;
 }

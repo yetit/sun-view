@@ -1,8 +1,8 @@
 // Правая панель (на телефоне — лист): выбор здания, этаж и фасад, сезоны, сводка и связка частей панели.
 // Матрица и BRE — matrix.ts, рисунки — charts.ts, вид из окна — view.ts, сравнение, поиск, примеры — отдельные модули.
 import { dirBearing, dirIndex, eye, eyeHeight, reliability, SEASONS, seaRose, seasonCalc, sunshineAt, type SeaDir, type Season } from '../analysis.ts';
-import { $, $$, ask, city, currentFacades, facadeOf, fmtH, fmtT, geojson, state, sunshine, syncUrl, world } from '../app.ts';
-import { facades, nearestFacade, type Bld } from '../grid.ts';
+import { $, $$, ask, city, currentFacades, facadeOf, fmtH, fmtT, geojson, state, syncUrl, world } from '../app.ts';
+import { bareWorld, facades, nearestFacade, type Bld, type World } from '../grid.ts';
 import { buildingName, cityName, summaryText, t } from '../i18n.ts';
 import { applyColors, drawFacade, drawFloor, drawSectors, drawSunPath, map, setData, sheetPadding } from '../map/layers.ts';
 import { grabFrame, viewing } from '../map/window.ts';
@@ -20,6 +20,8 @@ import { currentViewText, initView, loadView, setView } from './view.ts';
 
 let lastSeasons: Season[] = [], lastSea: SeaDir[] = [], ribbonSmall: HTMLCanvasElement | null = null;
 let ribbonReq = 0;
+// Мир без листвы на лиственных деревьях — строится один раз, при первом выбранном здании.
+let bare: World | null = null;
 
 export function select(b: Bld, opts: { floor?: number; side?: number | null; dir?: number | null; floors?: number | null } = {}) {
   if (state.current) map.setFeatureState({ source: 'buildings', id: state.current.id }, { selected: false });
@@ -154,8 +156,11 @@ function seasonsHtml() {
     const times = s.sunrise && s.sunset ? `${fmtT.format(s.sunrise)}–${fmtT.format(s.sunset)}` : t.polarNight;
     const pct = s.daylight ? Math.round((100 * s.sun) / s.daylight) : 0;
     // С облаками — часы при ясном небе × вероятность прямого солнца в этот день года.
-    const cloud = sunshine && s.sun ? `<small class="cloud">${t.cloudy(fmtH.format(s.sun * sunshineAt(sunshine, SEASONS[i].date)))}</small>` : '';
-    return `<button type="button" class="card${i === state.season ? ' current' : ''}" data-s="${i}" style="--pct:${pct}%" title="${t.seasonsFull[i]}"><b>${t.seasons[i]}</b><strong>${fmtH.format(s.sun)} ${t.h}</strong><small>${t.of} ${fmtH.format(s.daylight)} · ${times}</small>${cloud}<i></i></button>`;
+    const cloud = world.sunshine && s.sun ? `<small class="cloud">${t.cloudy(fmtH.format(s.sun * sunshineAt(world.sunshine, SEASONS[i].date)))}</small>` : '';
+    // Весной и зимой лиственные деревья могут стоять голыми — верхняя граница, если она другая.
+    const nb = i === 0 || i === 3 ? fmtH.format(seasonCalc((bare ??= bareWorld(world)), state.current!, e, i).sun) : null;
+    const leafless = nb && nb !== fmtH.format(s.sun) ? `<small class="bare">${t.bare(nb)}</small>` : '';
+    return `<button type="button" class="card${i === state.season ? ' current' : ''}" data-s="${i}" style="--pct:${pct}%" title="${t.seasonsFull[i]}"><b>${t.seasons[i]}</b><strong>${fmtH.format(s.sun)} ${t.h}</strong><small>${t.of} ${fmtH.format(s.daylight)} · ${times}</small>${cloud}${leafless}<i></i></button>`;
   }).join('');
 }
 
@@ -166,7 +171,7 @@ function renderBre() {
 }
 
 export function initPanel() {
-  $('.seasons-note').hidden = !sunshine;
+  $('.seasons-note').hidden = !world.sunshine;
   initSearch(select);
   renderExamples((ex, b) => {
     if (state.season !== ex.s) setSeason(ex.s);

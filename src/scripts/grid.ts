@@ -102,7 +102,7 @@ export function prepareBuildings(city: City, geojson: any, dem: Dem, proj: Proj)
 }
 
 // Высота крон (scripts/fetch-canopy.mjs): сетка ~6 м в градусах от северо-западного угла, метры над землёй, 0 — нет дерева.
-// В файле — RLE: пары (нулей перед значением, значение).
+// Старший бит — лиственная крона (Copernicus Dominant Leaf Type). В файле — RLE: пары (нулей перед значением, значение).
 export type Canopy = { west: number; north: number; cols: number; rows: number; dlon: number; dlat: number; h: Uint8Array };
 export function makeCanopy(meta: any, buf: ArrayBuffer): Canopy {
   const rle = new Uint8Array(buf), h = new Uint8Array(meta.cols * meta.rows);
@@ -114,9 +114,9 @@ const canopyAt = (t: Canopy, lon: number, lat: number) => {
   return c < 0 || r < 0 || c >= t.cols || r >= t.rows ? 0 : t.h[r * t.cols + c];
 };
 
-// Растр препятствий: абсолютная отметка верха и индекс здания (+1) в каждой ячейке; деревья — TREE.
+// Растр препятствий: абсолютная отметка верха и индекс здания (+1) в каждой ячейке; деревья — TREE, лиственные — BROAD.
 export const BCELL = 6; // м
-export const TREE = 0xffff;
+export const TREE = 0xffff, BROAD = 0xfffe;
 export type Roofs = { x0: number; y0: number; cols: number; rows: number; z: Float32Array; idx: Uint16Array };
 
 export function inRing(x: number, y: number, ring: [number, number][]): boolean {
@@ -149,8 +149,8 @@ export function rasterizeRoofs(city: City, proj: Proj, dem: Dem, blds: Bld[], ca
   // Деревья первыми: здание перекроет их своей ячейкой.
   if (canopy) for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
     const [lon, lat] = proj.toLonLat(x0 + (c + 0.5) * BCELL, y0 + (r + 0.5) * BCELL);
-    const h = canopyAt(canopy, lon, lat);
-    if (h) { z[r * cols + c] = (demAt(dem, lon, lat) ?? 0) + h; idx[r * cols + c] = TREE; }
+    const v = canopyAt(canopy, lon, lat);
+    if (v) { z[r * cols + c] = (demAt(dem, lon, lat) ?? 0) + (v & 127); idx[r * cols + c] = v & 128 ? BROAD : TREE; }
   }
   for (const b of blds) for (const ring of b.rings) paint(ring, () => b.ground + b.h, b.idx + 1);
   return { x0, y0, cols, rows, z, idx };
@@ -163,7 +163,16 @@ function roofAt(roofs: Roofs, x: number, y: number): [number, number] {
   return [roofs.z[k], roofs.idx[k] - 1];
 }
 
-export type World = { city: City; proj: Proj; dem: Dem; roofs: Roofs; blds: Bld[] };
+// sunshine — вероятность прямого солнца по месяцам (data/<id>/climate.json), если есть: с ней годовая оценка — по вероятным часам.
+export type World = { city: City; proj: Proj; dem: Dem; roofs: Roofs; blds: Bld[]; sunshine?: number[] | null };
+
+// Тот же мир, но лиственные деревья без листвы — для верхней оценки солнца весной и зимой.
+// Голые ветви тоже дают тень, поэтому это граница сверху, а не прогноз. Пустая ячейка — z = 0.
+export function bareWorld(w: World): World {
+  const z = w.roofs.z.slice(), idx = w.roofs.idx.slice();
+  for (let k = 0; k < idx.length; k++) if (idx[k] === BROAD) { z[k] = 0; idx[k] = 0; }
+  return { ...w, roofs: { ...w.roofs, z, idx } };
+}
 
 // roofs — готовый растр (страница берёт его у воркера, чтобы не строить второй раз на главном потоке).
 export function createWorld(city: City, geojson: any, canopy: Canopy | null, demMeta: any, demBuf: ArrayBuffer, roofs?: Roofs): World {

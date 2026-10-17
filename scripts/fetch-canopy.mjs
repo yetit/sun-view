@@ -1,17 +1,27 @@
 // Высота крон: Meta & WRI High Resolution Canopy Height (Tolan et al. 2024, CC BY 4.0, AWS Open Data) →
 // data/<id>/canopy.bin + canopy.json. Тайлы — COG по квадкею z9 в Web Mercator, пиксель ~1,2 м, Uint8 в метрах.
 // Читаем только окно bbox города и сводим в сетку ~6 м (как растр крыш): высота ячейки — медиана пикселей,
-// ниже 3 м — 0 (кусты, шум). Запись — RLE: пары (нулей перед значением 0..255, значение).
+// ниже 3 м — 0 (кусты, шум). Старший бит — лиственная крона по Copernicus HRL Dominant Leaf Type 2018 (10 м):
+// зимой такие деревья могут стоять голыми. Запись — RLE: пары (нулей перед значением 0..255, значение).
 // Запуск: node scripts/fetch-canopy.mjs <id>.
 import { writeFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
-import { fromUrl } from 'geotiff';
+import { fromArrayBuffer, fromUrl } from 'geotiff';
 import { getCity } from '../cities.config.mjs';
 
 const city = getCity(process.argv[2]);
 const { south, west, north, east } = city.bbox;
 const CELL = 6, MIN = 3, Z = 9, R = 6378137;
 const BASE = 'https://dataforgood-fb-data.s3.amazonaws.com/forests/v1/alsgedi_global_v6_float/chm';
+
+// Сети рвутся на десятках мегабайт — повторяем запрос до 4 раз.
+async function get(url, init) {
+  for (let i = 1; ; i++) {
+    try { const r = await fetch(url, init); if (r.ok) return r; if (i === 4) throw new Error(`${url}: ${r.status}`); }
+    catch (e) { if (i === 4) throw e; }
+    await new Promise((r) => setTimeout(r, 3000 * i));
+  }
+}
 
 const lat0 = (south + north) / 2;
 const dlat = CELL / 111320, dlon = CELL / (111320 * Math.cos((lat0 * Math.PI) / 180));
@@ -44,7 +54,7 @@ for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
   for (let y = y0; y < y1;) {
     let e = y + 1;
     while (e < y1 && offs[e] + lens[e] - offs[y] < 8 << 20) e++;
-    const res = await fetch(`${BASE}/${name}.tif`, { headers: { Range: `bytes=${offs[y]}-${offs[e - 1] + lens[e - 1] - 1}` } });
+    const res = await get(`${BASE}/${name}.tif`, { headers: { Range: `bytes=${offs[y]}-${offs[e - 1] + lens[e - 1] - 1}` } });
     const buf = Buffer.from(await res.arrayBuffer());
     for (let k = y; k < e; k++) {
       const row = inflateSync(buf.subarray(offs[k] - offs[y], offs[k] - offs[y] + lens[k]));
@@ -73,6 +83,23 @@ for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
   }
 }
 
+// Тип листвы: экспорт растра EEA (ImageServer) в WGS 84, ~10 м; 1 — лиственные, 2 — хвойные.
+const DLT = 'https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic/HRL_DominantLeafType2018/ImageServer/exportImage';
+const lw = Math.ceil(cols * CELL / 10), lh = Math.ceil(rows * CELL / 10);
+const res = await get(`${DLT}?bbox=${west},${south},${east},${north}&bboxSR=4326&imageSR=4326&size=${lw},${lh}&format=tiff&pixelType=U8&interpolation=RSP_NearestNeighbor&f=image`);
+const leaf = await (await fromArrayBuffer(await res.arrayBuffer())).getImage();
+const [lt] = await leaf.readRasters();
+const [bx0, by0, bx1, by1] = leaf.getBoundingBox(); // сервер подгоняет bbox под пропорции картинки
+const LW = leaf.getWidth(), LH = leaf.getHeight();
+let broad = 0;
+for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+  const k = r * cols + c;
+  if (!out[k]) continue;
+  out[k] = Math.min(out[k], 127);
+  const x = Math.floor(((west + (c + 0.5) * dlon - bx0) / (bx1 - bx0)) * LW), y = Math.floor(((by1 - (north - (r + 0.5) * dlat)) / (by1 - by0)) * LH);
+  if (x >= 0 && y >= 0 && x < LW && y < LH && lt[y * LW + x] === 1) { out[k] |= 128; broad++; }
+}
+
 const rle = [];
 let zeros = 0;
 for (const v of out) {
@@ -81,10 +108,10 @@ for (const v of out) {
 }
 if (zeros) rle.push(zeros - 1, 0);
 writeFileSync(`data/${city.id}/canopy.bin`, Uint8Array.from(rle));
-const trees = out.filter(Boolean);
+const trees = Array.from(out.filter(Boolean), (v) => v & 127);
 writeFileSync(`data/${city.id}/canopy.json`, JSON.stringify({
-  source: 'High Resolution Canopy Height Maps by WRI and Meta (Tolan et al. 2024), CC BY 4.0; AWS Open Data',
+  source: 'High Resolution Canopy Height Maps by WRI and Meta (Tolan et al. 2024), CC BY 4.0; AWS Open Data. Leaf type: Copernicus HRL Dominant Leaf Type 2018, © European Union, Copernicus Land Monitoring Service',
   fetched: new Date().toISOString().slice(0, 10), west, north, cols, rows, dlon, dlat, min: MIN,
 }));
 const sorted = Float32Array.from(trees).sort();
-console.log(`${city.id}: сетка ${cols}×${rows}, деревья в ${((100 * trees.length) / out.length).toFixed(1)} % ячеек, высота медиана ${sorted[sorted.length >> 1]} м, 90 % — ${sorted[Math.floor(0.9 * sorted.length)]} м; RLE ${rle.length} Б`);
+console.log(`${city.id}: сетка ${cols}×${rows}, деревья в ${((100 * trees.length) / out.length).toFixed(1)} % ячеек, высота медиана ${sorted[sorted.length >> 1]} м, 90 % — ${sorted[Math.floor(0.9 * sorted.length)]} м, лиственных ${Math.round((100 * broad) / trees.length)} %; RLE ${rle.length} Б`);

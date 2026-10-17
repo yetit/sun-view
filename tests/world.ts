@@ -16,7 +16,8 @@ export const rect = (cx: number, cy: number, w: number, h: number) =>
 // Произвольный контур в метрах → lon/lat, замкнутый.
 export const poly = (pts: number[][]) => [...pts, pts[0]].map(([x, y]) => [18 + x / mLon, 42 + y / mLat]);
 
-export function makeWorld(extra: { ring: number[][]; levels: number | null; height?: number | null; building?: string }[] = [], woods: number[][][] = []) {
+// broad — кроны лиственные (старший бит, как в canopy.bin).
+export function makeWorld(extra: { ring: number[][]; levels: number | null; height?: number | null; building?: string }[] = [], woods: number[][][] = [], broad = false) {
   const { bbox, step } = city.dem;
   const cell = step / 3600;
   const cols = Math.round((bbox.east - bbox.west) / cell), rows = Math.round((bbox.north - bbox.south) / cell);
@@ -33,7 +34,7 @@ export function makeWorld(extra: { ring: number[][]; levels: number | null; heig
   const h = new Uint8Array(cw * ch);
   for (let r = 0; r < ch; r++) for (let c = 0; c < cw; c++) {
     const p: [number, number] = [city.bbox.west + (c + 0.5) * dlon, city.bbox.north - (r + 0.5) * dlat];
-    if (woods.some((ring) => inRing(p[0], p[1], ring as [number, number][]))) h[r * cw + c] = 20;
+    if (woods.some((ring) => inRing(p[0], p[1], ring as [number, number][]))) h[r * cw + c] = broad ? 20 | 128 : 20;
   }
   const canopy = { west: city.bbox.west, north: city.bbox.north, cols: cw, rows: ch, dlon, dlat, h };
   return createWorld(city, { type: 'FeatureCollection', features }, canopy, { bbox, cols, rows, cell, nodata: -32768, min: 0, max: 400 }, data.buffer);

@@ -2,7 +2,7 @@
 // лента года (день × час), годовая оценка окна по BRE, видимость моря по 8 румбам, вид из окна,
 // матрица «этажи × фасады», массовые расчёты для карты.
 import SunCalc from 'suncalc';
-import { BCELL, blocked, demAt, facades, HIT, horizonTan, rayHit, seaVisible, TREE, wallPoint, type Bld, type City, type Facade, type World } from './grid.ts';
+import { BCELL, blocked, BROAD, demAt, facades, HIT, horizonTan, rayHit, seaVisible, TREE, wallPoint, type Bld, type City, type Facade, type World } from './grid.ts';
 
 export const STEP_MIN = 10;
 export const N = (24 * 60) / STEP_MIN; // отсчётов в сутках
@@ -87,8 +87,8 @@ export function yearRibbon(w: World, b: Bld, e: Eye) {
 // BRE «Site layout planning for daylight and sunlight»: главное окно жилой комнаты, обращённое
 // не дальше 90° от юга, должно получать в центре окна ≥ 25 % годовых вероятных часов солнца (APSH),
 // из них ≥ 5 % — с 21 сентября по 21 марта. Обе доли — от годовых часов на открытом месте.
-// «Вероятные» учитывают облачность по метеостанции; почасовой открытой климатологии для наших
-// городов нет, поэтому считаем при ясном небе: доля от часов, когда солнце над горизонтом.
+// «Вероятные» учитывают облачность: вес каждого часа — вероятность прямого солнца в этот день года
+// (data/<id>/climate.json, PVGIS-SARAH3). Без неё — при ясном небе, доля от часов, когда солнце над горизонтом.
 export const APSH_DAY_STEP = 10; // дней между отсчётами; середины отрезков, вес — длина отрезка
 export const BRE = { year: 25, winter: 5 }; // %
 const doy = (m: number, d: number) => (Date.UTC(YEAR, m, d) - Date.UTC(YEAR, 0, 1)) / 864e5;
@@ -97,14 +97,14 @@ const WINTER_FROM = doy(8, 21), WINTER_TO = doy(2, 21);
 // Солнце над горизонтом за год в точке здания: отсчёты, вес в часах, зимнее ли полугодие.
 // Одна таблица на здание — общая для всех его окон.
 export type SunYear = { suns: Sun[]; hours: number[]; winter: boolean[]; total: number };
-export function sunYear(b: Bld, step = APSH_DAY_STEP): SunYear {
+export function sunYear(b: Bld, sunshine: number[] | null = null, step = APSH_DAY_STEP): SunYear {
   const y: SunYear = { suns: [], hours: [], winter: [], total: 0 };
   for (let d0 = 0; d0 < 365; d0 += step) {
     const days = Math.min(step, 365 - d0), d = d0 + Math.floor(days / 2);
     for (let i = 0; i < N; i++) {
       const s = sunAt(new Date(Date.UTC(YEAR, 0, 1 + d) + i * STEP_MIN * 60000), b.center[0], b.center[1]);
       if (s.altitude <= 0) continue;
-      const h = (days * STEP_MIN) / 60;
+      const h = ((days * STEP_MIN) / 60) * (sunshine ? sunshineAt(sunshine, new Date(Date.UTC(YEAR, 0, 1 + d))) : 1);
       y.suns.push(s); y.hours.push(h); y.winter.push(d >= WINTER_FROM || d < WINTER_TO); y.total += h;
     }
   }
@@ -114,7 +114,7 @@ export function sunYear(b: Bld, step = APSH_DAY_STEP): SunYear {
 // Доли года и зимнего полугодия, целые %: «оценка 0–100» — это доля года.
 export type Annual = { year: number; winter: number };
 // Горизонт — по азимутам через 1°, каждый считается при первом отсчёте солнца в нём.
-export function annualSun(w: World, b: Bld, e: Eye, y = sunYear(b)): Annual {
+export function annualSun(w: World, b: Bld, e: Eye, y = sunYear(b, w.sunshine)): Annual {
   const hor = new Float32Array(360).fill(NaN);
   let year = 0, winter = 0;
   y.suns.forEach((s, i) => {
@@ -168,7 +168,7 @@ export function windowView(w: World, b: Bld, e: Eye) {
 // Матрица «этажи × фасады»: годовая оценка по BRE (доля года и зимнего полугодия, %) и число лучей с морем.
 // Клетка k = (этаж − 1) × cols + фасад.
 export function facadeMatrix(w: World, b: Bld, floors = b.floors) {
-  const fs = facades(w, b), cols = fs.length, y = sunYear(b);
+  const fs = facades(w, b), cols = fs.length, y = sunYear(b, w.sunshine);
   const score = new Uint8Array(floors * cols), winter = new Uint8Array(floors * cols), sea = new Uint8Array(floors * cols);
   for (let fl = 1; fl <= floors; fl++) fs.forEach((f, c) => {
     const k = (fl - 1) * cols + c, a = annualSun(w, b, eye(w, b, fl, f), y);
@@ -239,7 +239,7 @@ function treesNear(w: World, b: Bld, d: number): boolean {
   const c0 = Math.max(0, Math.floor((b.xy[0] - R - x0) / BCELL)), c1 = Math.min(cols - 1, Math.floor((b.xy[0] + R - x0) / BCELL));
   const r0 = Math.max(0, Math.floor((b.xy[1] - R - y0) / BCELL)), r1 = Math.min(rows - 1, Math.floor((b.xy[1] + R - y0) / BCELL));
   for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
-    if (idx[r * cols + c] !== TREE || z[r * cols + c] <= roof) continue;
+    if ((idx[r * cols + c] !== TREE && idx[r * cols + c] !== BROAD) || z[r * cols + c] <= roof) continue;
     if (Math.hypot(x0 + (c + 0.5) * BCELL - b.xy[0], y0 + (r + 0.5) * BCELL - b.xy[1]) <= R) return true;
   }
   return false;

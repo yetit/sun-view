@@ -8,7 +8,7 @@ let w: World;
 const CHUNK = 150;
 
 export type Req =
-  | { type: 'init'; id: number; city: any; bldMeta: BuildingsMeta; bldBuf: ArrayBuffer; canopy: Canopy | null; demMeta: any; demBuf: ArrayBuffer }
+  | { type: 'init'; id: number; city: any; bldMeta: BuildingsMeta; bldBuf: ArrayBuffer; canopy: Canopy | null; demMeta: any; demBuf: ArrayBuffer; sunshine: number[] | null }
   | { type: 'sun'; id: number; season: number; h: number }
   | { type: 'sea'; id: number; h: number }
   | { type: 'ribbon'; id: number; idx: number; floor: number; side: number | null } // side — номер фасада
@@ -16,7 +16,7 @@ export type Req =
   | { type: 'matrix'; id: number; idx: number; floors: number }; // floors — с учётом уточнения пользователем
 
 self.onmessage = async ({ data: m }: MessageEvent<Req>) => {
-  if (m.type === 'init') { w = createWorld(m.city, unpackBuildings(m.bldMeta, m.bldBuf), m.canopy, m.demMeta, m.demBuf); self.postMessage({ id: m.id, done: true, roofs: w.roofs }); return; } // копия растра — странице
+  if (m.type === 'init') { w = createWorld(m.city, unpackBuildings(m.bldMeta, m.bldBuf), m.canopy, m.demMeta, m.demBuf); w.sunshine = m.sunshine; self.postMessage({ id: m.id, done: true, roofs: w.roofs }); return; } // копия растра — странице
   if (m.type === 'ribbon') {
     const b = w.blds[m.idx];
     const r = yearRibbon(w, b, eye(w, b, m.floor, m.side == null ? null : facades(w, b)[m.side] ?? null));
