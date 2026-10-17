@@ -1,6 +1,6 @@
 // Матрица «этажи × фасады» и годовая оценка окна по BRE. Матрица считается в воркере один раз на здание
 // (и при уточнении этажности); из неё же — оценка в панели, чтобы числа в матрице и в панели совпадали.
-import { bestCell, dirIndex, verdict } from '../analysis.ts';
+import { bestCell, breCell, dirIndex } from '../analysis.ts';
 import { $, $$, ask, currentFacades, state } from '../app.ts';
 import type { Bld, Facade } from '../grid.ts';
 import { t } from '../i18n.ts';
@@ -46,22 +46,8 @@ function matrixHtml(fs: Facade[], m: Matrix) {
 // Выбранная клетка в матрице.
 export const markMatrix = () => matrix && $$<HTMLButtonElement>('.matrix .cell').forEach((el) => el.setAttribute('aria-pressed', String(+el.dataset.f! === state.floor && +el.dataset.c! === (state.side ?? -1))));
 
-// Годовая оценка текущего окна из матрицы; для здания целиком — лучший фасад этажа. null — ещё не посчитана.
-// BRE нормирует только окна, повёрнутые не дальше 90° от юга; для остальных оценка 0–100 остаётся, вердикта нет.
-const breAssessed = (normal: number) => Math.cos(normal) <= 0;
-
-export function breNow() {
-  if (!matrix || state.floor > matrix.floors) return null;
-  const row = (state.floor - 1) * matrix.cols, fs = currentFacades();
-  let c = state.side ?? -1;
-  if (c < 0) {
-    // Здание целиком — лучший фасад этажа, а среди нормируемых BRE (если такие есть) — лучший из них.
-    const pool = fs.map((f, i) => i).filter((i) => breAssessed(fs[i].normal));
-    for (const i of pool.length ? pool : fs.map((f, i) => i)) if (c < 0 || matrix.score[row + i] > matrix.score[row + c]) c = i;
-  }
-  const a = { year: matrix.score[row + c], winter: matrix.winter[row + c] };
-  return { c, a, v: fs[c] && breAssessed(fs[c].normal) ? verdict(a) : ('na' as const) };
-}
+// Годовая оценка текущего окна (см. breCell). null — матрица ещё не посчитана.
+export const breNow = () => (matrix ? breCell(matrix, currentFacades().map((f) => f.normal), state.floor, state.side) : null);
 
 export function breHtml() {
   const fs = currentFacades(), r = breNow();

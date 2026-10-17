@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { annualSun, bestCell, eye, facadeMatrix, seaRose, seasonCalc, floorAt, reliability, sunYear, verdict, windowView, yearRibbon } from '../src/scripts/analysis.ts';
+import { annualSun, bestCell, breCell, eye, facadeMatrix, seaRose, seasonCalc, floorAt, reliability, sunYear, verdict, windowView, yearRibbon } from '../src/scripts/analysis.ts';
 import { blocked, facades } from '../src/scripts/grid.ts';
 import { makeWorld, rect } from './world.ts';
 
@@ -140,4 +140,17 @@ test('лучшая клетка: оценка за год, затем море, 
   assert.equal(bestCell({ cols: 2, score: [10, 30, 30, 20], sea }), 1); // 30 и море 2 > 30 и море 1
   assert.equal(bestCell({ cols: 2, score: [30, 30, 30, 30], sea: [1, 1, 1, 1] }), 2); // всё равно — верхний этаж
   assert.equal(bestCell({ cols: 2, score: [0, 0, 0, 0], sea: [0, 0, 0, 0] }), -1);
+});
+
+test('breCell: выбранный фасад, здание целиком — лучший нормируемый BRE, северный — без вердикта', () => {
+  // 2 этажа × 3 фасада: С (0°), Ю (180°), ВЮВ (~97°). Ряд этажа 2 — индексы 3..5.
+  const m = { floors: 2, cols: 3, score: [10, 20, 30, 60, 30, 40], winter: [1, 2, 3, 9, 6, 7] };
+  const normals = [0, Math.PI, 1.7];
+  assert.deepEqual(breCell(m, normals, 2, 1), { c: 1, a: { year: 30, winter: 6 }, v: 'pass' });
+  // На севере 60 больше, но BRE его не нормирует — лучший среди Ю и ВЮВ.
+  assert.equal(breCell(m, normals, 2, null)!.c, 2);
+  assert.equal(breCell(m, normals, 2, 0)!.v, 'na');
+  // Нормируемых нет — просто лучший.
+  assert.equal(breCell(m, [0, 0.3, -0.3], 2, null)!.c, 0);
+  assert.equal(breCell(m, normals, 3, null), null);
 });

@@ -182,6 +182,22 @@ export function bestCell({ cols, score, sea }: { cols: number; score: ArrayLike<
   return best;
 }
 
+// Годовая оценка окна из матрицы: фасад side на этаже floor; side = null — здание целиком, тогда лучший фасад этажа,
+// а среди нормируемых BRE (если такие есть) — лучший из них. BRE нормирует только окна, повёрнутые не дальше 90°
+// от юга; для остальных оценка 0–100 остаётся, вердикта нет. null — этажа нет в матрице.
+export const breAssessed = (normal: number) => Math.cos(normal) <= 0;
+export function breCell(m: { floors: number; cols: number; score: ArrayLike<number>; winter: ArrayLike<number> }, normals: number[], floor: number, side: number | null) {
+  if (floor > m.floors) return null;
+  const row = (floor - 1) * m.cols;
+  let c = side ?? -1;
+  if (c < 0) {
+    const pool = normals.map((_, i) => i).filter((i) => breAssessed(normals[i]));
+    for (const i of pool.length ? pool : normals.map((_, i) => i)) if (c < 0 || m.score[row + i] > m.score[row + c]) c = i;
+  }
+  const a = { year: m.score[row + c], winter: m.winter[row + c] };
+  return { c, a, v: normals[c] != null && breAssessed(normals[c]) ? verdict(a) : ('na' as const) };
+}
+
 // --- Надёжность результата для здания ------------------------------------------
 // Причины, известные из сверок: этажность предположена; крутой склон — перепад DEM больше 30 м
 // в квадрате ±60 м, отметка глаза на сетке 60 м неточна и горизонт вверх по склону завышен
