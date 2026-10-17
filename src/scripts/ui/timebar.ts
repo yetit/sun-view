@@ -1,5 +1,5 @@
 // Таймбар: сезон, время суток, воспроизведение, режимы карты (солнце/море) и легенда.
-import { eye, facing, floorAt, HEIGHTS, STEP_MIN, sunAt } from '../analysis.ts';
+import { eye, facing, floorAt, HEIGHTS, SEASONS, STEP_MIN, sunAt, sunshineAt } from '../analysis.ts';
 import { $, $$, ask, city, facadeOf, fmtH, fmtT, sliderTime, state, syncUrl, world } from '../app.ts';
 import { loadLevels } from '../data.ts';
 import { blocked } from '../grid.ts';
@@ -64,6 +64,10 @@ export async function applyMode() {
   applyColors();
   updateLight(); // свет зависит от режима (см. updateLight)
   syncUrl();
+  // Облака на дату одинаковы для всех домов города — цвета не меняют, поэтому только подпись под шкалой.
+  const cloud = $('.legend-cloud');
+  cloud.hidden = mode !== 'sun' || !world.sunshine;
+  if (!cloud.hidden) cloud.textContent = t.legendCloud(Math.round(100 * sunshineAt(world.sunshine!, SEASONS[season].date)));
   if (mode === 'normal') { $('.progress').textContent = ''; return; }
   if (mode === 'levels') {
     $('.legend-note').textContent = t.legendLevelsNote;

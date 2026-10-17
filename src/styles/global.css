@@ -285,6 +285,8 @@ html[lang='ru'] [lang='en'], html[lang='en'] [lang='ru'] { display: none; }
 .legend-head b { flex: 1; }
 .legend-info { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1px solid #cfc8bb; background: #fff; font: 600 12px/1 Georgia, serif; font-style: italic; color: var(--muted); padding: 0; }
 .legend-box .legend-ticks { display: flex; justify-content: space-between; color: var(--muted); margin-top: 4px; }
+.legend-box .legend-cloud { display: block; margin-top: 4px; color: var(--muted); }
+.legend-box .legend-cloud[hidden] { display: none; }
 .legend-tip { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); }
 .legend-tip p { margin: 0 0 4px; }
 .legend-tip p:empty { display: none; }
