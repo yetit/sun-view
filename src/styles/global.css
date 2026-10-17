@@ -128,6 +128,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .bre em { font-style: normal; font-weight: 600; font-size: 13.5px; color: #8a2c28; }
 .bre[data-v='pass'] em { color: #1d5c43; }
 .bre[data-v='edge'] em { color: #7a4f00; }
+.bre[data-v='na'] em { color: var(--muted); font-weight: 500; }
 .bre > small { font-size: 11.5px; color: var(--muted); }
 .bre i { position: absolute; left: 0; bottom: 0; height: 3px; width: var(--pct); background: var(--sun); }
 .bre-box { margin-bottom: 8px; }
@@ -322,3 +323,8 @@ body.embed .seasons { grid-template-columns: repeat(4, 1fr); }
 .doc-main .code { overflow-x: auto; padding: 14px 16px; border-radius: 10px; background: #1f1d1a; color: #f3efe6; font-size: 12.5px; line-height: 1.5; }
 .doc-main .code code { background: none; padding: 0; color: inherit; }
 .embed-demo { display: block; width: 100%; height: 720px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+
+/* --- Пояснения под раскрывашкой (оценка BRE) --- */
+.more { margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+.more summary { cursor: pointer; font-weight: 500; width: fit-content; }
+.more .legend { margin-top: 4px; }

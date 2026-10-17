@@ -7,7 +7,7 @@ import { state, world } from '../app.ts';
 import { map, setData } from './layers.ts';
 
 const RADIUS = 300; // м
-const MAX_LEN = 400; // м — очень низкое солнце даёт бесконечные тени
+const MAX_LEN = 250; // м — очень низкое солнце даёт бесконечные тени
 type P = [number, number];
 
 function hull(pts: P[]): P[] {
@@ -36,4 +36,8 @@ export function drawShadows(s: Sun) {
     }
   }
   setData('shadows', features);
+  // Низкое солнце (зима в Бергене — ~6°): длинные тени накладываются и сливаются в тёмное пятно —
+  // чем ниже солнце, тем прозрачнее каждая тень.
+  const k2 = Math.min(1, Math.max(0.4, Math.sin(s.altitude) / Math.sin((20 * Math.PI) / 180)));
+  map.setPaintProperty('shadows', 'fill-opacity', 0.22 * k2);
 }

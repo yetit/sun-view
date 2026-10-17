@@ -16,11 +16,14 @@ export function updateLight() {
   const { current, floor } = state;
   const s = sunAt(time, ...(current?.center ?? city.camera.center));
   const up = s.altitude > 0;
+  // На картах солнца и моря цвет домов — данные: низкое или ночное солнце не должно уводить их в чёрный,
+  // поэтому свет не тусклее нейтрального и без оттенка. В обычном режиме — как у настоящего солнца.
+  const data = state.mode !== 'normal';
   map.setLight({
     anchor: 'map',
     position: [1.5, s.bearing * DEG, up ? 90 - s.altitude * DEG : 88],
-    intensity: up ? 0.3 + 0.4 * Math.sin(s.altitude) : 0.12,
-    color: !up ? '#9fb0d0' : s.altitude < 0.2 ? '#ffd3a0' : '#ffffff',
+    intensity: Math.max(up ? 0.3 + 0.4 * Math.sin(s.altitude) : 0.12, data ? 0.5 : 0),
+    color: data ? '#ffffff' : !up ? '#9fb0d0' : s.altitude < 0.2 ? '#ffd3a0' : '#ffffff',
   });
   $('.clock').textContent = fmtT.format(time);
   $('.timebar').classList.toggle('night', !up);
@@ -58,6 +61,7 @@ export async function applyMode() {
   showLegend();
   $$('.mode-chip').forEach((c) => c.setAttribute('aria-checked', String(c.dataset.mode === mode)));
   applyColors();
+  updateLight(); // свет зависит от режима (см. updateLight)
   syncUrl();
   if (mode === 'normal') { $('.progress').textContent = ''; return; }
   const sun = mode === 'sun';

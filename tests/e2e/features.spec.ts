@@ -24,7 +24,7 @@ test('солнце за год: оценка BRE для здания — луч�
   await open(page, `?c=tivat&b=${B}&f=10&lang=en`);
   const bre = page.locator('.bre');
   await expect(bre).toBeVisible({ timeout: 30_000 });
-  await expect(bre).toHaveAttribute('data-v', /^(pass|edge|fail)$/);
+  await expect(bre).toHaveAttribute('data-v', /^(pass|edge|fail|na)$/);
   await expect(bre).toContainText('best facade on this floor');
   const cell = page.locator('.matrix .cell[data-f="10"]').first();
   const score = (await cell.textContent())!.replace('∿', '');

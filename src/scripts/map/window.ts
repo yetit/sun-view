@@ -4,7 +4,8 @@ import { LngLat, type CameraOptions, type PaddingOptions } from 'maplibre-gl';
 import { eye } from '../analysis.ts';
 import { world } from '../app.ts';
 import type { Bld, Facade } from '../grid.ts';
-import { map, offset } from './layers.ts';
+import { buildingColor } from '../style.ts';
+import { applyColors, map, offset } from './layers.ts';
 
 const HFOV = 64; // °, = VIEW_H
 const AHEAD = 400; // м — точка, на которую смотрит камера, на той же высоте: наклон ровно 90°
@@ -19,6 +20,8 @@ export function enterView(b: Bld, floor: number, f: Facade) {
   if (!saved) {
     saved = { camera: { center: map.getCenter(), zoom: map.getZoom(), bearing: map.getBearing(), pitch: map.getPitch(), roll: map.getRoll() }, padding: map.getPadding(), fov: map.getVerticalFieldOfView(), maxPitch: map.getMaxPitch() };
     for (const id of HIDE) map.setLayoutProperty(id, 'visibility', 'none');
+    // От первого лица раскраска карты солнца читается как непонятные тёмные блоки — дома нейтральные.
+    for (const id of ['buildings', 'buildings-assumed']) map.setPaintProperty(id, 'fill-extrusion-color', buildingColor('normal', false, []) as any);
     map.setMaxPitch(90);
     // Иначе центр (он на высоте окна в 400 м впереди) каждый кадр опускается на рельеф и камера уезжает.
     map.setCenterClampedToGround(false);
@@ -39,6 +42,7 @@ export function enterView(b: Bld, floor: number, f: Facade) {
 export function exitView() {
   if (!saved) return;
   for (const id of HIDE) map.setLayoutProperty(id, 'visibility', 'visible');
+  applyColors();
   map.setCenterClampedToGround(true);
   map.setVerticalFieldOfView(saved.fov);
   map.jumpTo({ ...saved.camera, padding: saved.padding });

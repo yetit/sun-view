@@ -37,13 +37,13 @@ const ru = {
   // Годовая оценка окна по BRE 209 (см. analysis.ts → annualSun).
   bre: {
     title: 'Солнце за год',
+    how: 'Как считается оценка',
     loading: 'Считаем солнце за год…',
     none: 'У здания нет наружных стен длиннее 4 м — оценку окна не посчитать.',
     of: 'из 100',
     detail: (y: number, w: number) => `${y} % годовых часов солнца доходит до окна, из них ${w} % — с 21 сентября по 21 марта; ясное небо`,
     best: (side: string) => `лучший фасад этажа — ${side}`,
-    verdict: { pass: 'Проходит норматив BRE', edge: 'На грани норматива BRE', fail: 'Не проходит норматив BRE' },
-    north: 'окно смотрит на север — BRE такие окна не нормирует',
+    verdict: { pass: 'Проходит норматив BRE', edge: 'На грани норматива BRE', fail: 'Не проходит норматив BRE', na: 'BRE не нормирует: окно повёрнуто дальше 90° от юга' },
     legend: 'Оценка 0–100 — доля годовых часов, когда солнце над горизонтом светит в окно; облачность не учтена. Британский норматив BRE: главное окно жилой комнаты получает ≥ 25 % годовых часов солнца, из них ≥ 5 % — с 21 сентября по 21 марта. «На грани» — до порога не хватает меньше пятой части.',
   },
   seaTitle: 'Вид на море',
@@ -66,7 +66,7 @@ const ru = {
   viewNeedFacade: 'Выберите фасад — покажем вид из его окна.',
   viewLoading: 'Считаем вид…',
   viewStat: (sea: number, sky: number) => `Море ${sea} % поля зрения, небо ${sky} %`,
-  viewLegend: 'Кадр 64° × 40° из окна по нормали фасада, горизонт посередине (пунктир): голубое — небо, зелёное — море, бежевое — рельеф, дома и деревья. Кривизна Земли не учитывается.',
+  viewLegend: 'Кадр 64° × 40° из окна по нормали фасада, горизонт посередине (пунктир): светло-голубое — небо, синее — море, бежевое — рельеф, дома и деревья. Кривизна Земли не учитывается.',
   addCompare: '+ В сравнение',
   downloadPng: 'Скачать PNG',
   compare: 'Сравнение',
@@ -112,6 +112,7 @@ const ru = {
   // Сводка одной фразой: солнце по доле дня зимой и летом, море по числу направлений.
   summarySun: { none: 'Прямого солнца почти нет', allYear: 'Солнечно круглый год', mostly: (w: string) => `Солнечно, зимой ${w} ч в день`, summer: (w: string) => `Солнце в основном летом, зимой ${w} ч`, little: 'Мало прямого солнца круглый год' },
   summaryBre: (score: number, verdict: string) => `Солнце за год ${score} из 100: ${verdict[0].toLowerCase()}${verdict.slice(1)}`,
+  summaryBreScore: (score: number) => `Солнце за год ${score} из 100`,
   summarySea: (n: number) => (n === 0 ? 'моря не видно' : n === 1 ? 'море видно в одну сторону' : `море видно на ${n} ${n < 5 ? 'стороны' : 'сторон'}`),
   noWebgl: 'Карте нужен WebGL, а этот браузер его не поддерживает или он выключен. Откройте страницу в свежем Chrome, Firefox или Safari.',
   mapSlow: 'Карта не загрузилась за 10 секунд. Возможно, медленная сеть или недоступен сервер тайлов.',
@@ -159,13 +160,13 @@ const en: Dict = {
   sunTitle: 'Sun in the windows',
   bre: {
     title: 'Sun over the year',
+    how: 'How the score works',
     loading: 'Working out the annual sun…',
     none: 'The building has no outside walls longer than 4 m, so there is no window to score.',
     of: 'of 100',
     detail: (y: number, w: number) => `${y}% of the year's sun hours reach the window, ${w}% between 21 September and 21 March; clear sky`,
     best: (side: string) => `best facade on this floor: ${side}`,
-    verdict: { pass: 'Meets the BRE guideline', edge: 'Borderline for the BRE guideline', fail: 'Fails the BRE guideline' },
-    north: 'the window faces north, which BRE does not assess',
+    verdict: { pass: 'Meets the BRE guideline', edge: 'Borderline for the BRE guideline', fail: 'Fails the BRE guideline', na: 'Not assessed by BRE: the window faces more than 90° from south' },
     legend: 'The 0–100 score is the share of the year\'s hours with the sun above the horizon when it shines into the window; clouds are not counted. The UK BRE guideline asks that the main window of a living room gets at least 25% of annual sun hours, with at least 5% between 21 September and 21 March. Borderline means less than a fifth short of a threshold.',
   },
   seaTitle: 'Sea view',
@@ -188,7 +189,7 @@ const en: Dict = {
   viewNeedFacade: 'Pick a facade to see the view from its window.',
   viewLoading: 'Computing the view…',
   viewStat: (sea: number, sky: number) => `Sea ${sea}% of the field of view, sky ${sky}%`,
-  viewLegend: 'A 64° × 40° frame from the window along the facade normal, horizon in the middle (dashed): blue is sky, green is sea, beige is terrain, buildings and trees. Earth curvature is ignored.',
+  viewLegend: 'A 64° × 40° frame from the window along the facade normal, horizon in the middle (dashed): light blue is sky, dark blue is sea, beige is terrain, buildings and trees. Earth curvature is ignored.',
   addCompare: '+ Compare',
   downloadPng: 'Download PNG',
   compare: 'Compare',
@@ -232,6 +233,7 @@ const en: Dict = {
   legendInfo: 'How to read the scale',
   summarySun: { none: 'Almost no direct sun', allYear: 'Sunny all year round', mostly: (w: string) => `Sunny; ${w} h a day in winter`, summer: (w: string) => `Sun mostly in summer; ${w} h in winter`, little: 'Little direct sun all year' },
   summaryBre: (score: number, verdict: string) => `Annual sun ${score} of 100: ${verdict[0].toLowerCase()}${verdict.slice(1)}`,
+  summaryBreScore: (score: number) => `Annual sun ${score} of 100`,
   summarySea: (n: number) => (n === 0 ? 'no sea view' : n === 1 ? 'sea visible in one direction' : `sea visible in ${n} directions`),
   noWebgl: 'The map needs WebGL, which this browser does not support or has turned off. Please open the page in a recent Chrome, Firefox or Safari.',
   mapSlow: 'The map did not load within 10 seconds. The network may be slow or the tile server unavailable.',
@@ -257,12 +259,13 @@ export function buildingName(b: { id: number; name: string | null; addr: string 
 
 // Сводка одной фразой по сезонам (часы и световой день) и числу направлений с морем.
 // Годовая оценка BRE — вторым предложением, когда посчитана.
-export function summaryText(seasons: { sun: number; daylight: number }[], seaCount: number, fmt: (v: number) => string, bre?: { score: number; verdict: 'pass' | 'edge' | 'fail' } | null) {
+export function summaryText(seasons: { sun: number; daylight: number }[], seaCount: number, fmt: (v: number) => string, bre?: { score: number; verdict: 'pass' | 'edge' | 'fail' | 'na' } | null) {
   const [, summer, , winter] = seasons;
   const wf = winter.daylight ? winter.sun / winter.daylight : 0, sf = summer.daylight ? summer.sun / summer.daylight : 0;
   const s = t.summarySun;
   const sun = summer.sun < 1 && winter.sun < 0.5 ? s.none : wf >= 0.7 && sf >= 0.6 ? s.allYear : wf >= 0.4 ? s.mostly(fmt(winter.sun)) : sf >= 0.5 ? s.summer(fmt(winter.sun)) : s.little;
-  const year = bre ? t.summaryBre(bre.score, t.bre.verdict[bre.verdict]) : '';
+  // Окно вне норматива BRE — в сводке только оценка, без вердикта.
+  const year = bre ? (bre.verdict === 'na' ? t.summaryBreScore(bre.score) : t.summaryBre(bre.score, t.bre.verdict[bre.verdict])) : '';
   return `${sun}, ${t.summarySea(seaCount)}.${year ? ` ${year}.` : ''}`;
 }
 

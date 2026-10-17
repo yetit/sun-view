@@ -145,13 +145,20 @@ function matrixHtml(fs: Facade[], m: Matrix) {
 }
 
 // Годовая оценка текущего окна из матрицы; для здания целиком — лучший фасад этажа. null — ещё не посчитана.
+// BRE нормирует только окна, повёрнутые не дальше 90° от юга; для остальных оценка 0–100 остаётся, вердикта нет.
+const breAssessed = (normal: number) => Math.cos(normal) <= 0;
+
 function breNow() {
   if (!matrix || state.floor > matrix.floors) return null;
-  const row = (state.floor - 1) * matrix.cols;
+  const row = (state.floor - 1) * matrix.cols, fs = currentFacades();
   let c = state.side ?? -1;
-  if (c < 0) for (let i = 0; i < matrix.cols; i++) if (c < 0 || matrix.score[row + i] > matrix.score[row + c]) c = i;
+  if (c < 0) {
+    // Здание целиком — лучший фасад этажа, а среди нормируемых BRE (если такие есть) — лучший из них.
+    const pool = fs.map((f, i) => i).filter((i) => breAssessed(fs[i].normal));
+    for (const i of pool.length ? pool : fs.map((f, i) => i)) if (c < 0 || matrix.score[row + i] > matrix.score[row + c]) c = i;
+  }
   const a = { year: matrix.score[row + c], winter: matrix.winter[row + c] };
-  return { c, a, v: verdict(a) };
+  return { c, a, v: fs[c] && breAssessed(fs[c].normal) ? verdict(a) : ('na' as const) };
 }
 
 function breHtml() {
@@ -161,8 +168,7 @@ function breHtml() {
   const f = fs[r.c];
   const notes = [t.bre.detail(r.a.year, r.a.winter)];
   if (state.side == null) notes.push(t.bre.best(fName(f)));
-  if (Math.cos(f.normal) > 0) notes.push(t.bre.north); // дальше 90° от юга
-  return `<div class="bre" data-v="${r.v}" style="--pct:${r.a.year}%"><strong>${r.a.year}<small>${t.bre.of}</small></strong><b>${t.bre.title}</b><em>${t.bre.verdict[r.v]}</em><small>${notes.join(' · ')}</small><i></i></div><p class="legend">${t.bre.legend}</p>`;
+  return `<div class="bre" data-v="${r.v}" style="--pct:${r.a.year}%"><strong>${r.a.year}<small>${t.bre.of}</small></strong><b>${t.bre.title}</b><em>${t.bre.verdict[r.v]}</em><small>${notes.join(' · ')}</small><i></i></div><details class="more"><summary>${t.bre.how}</summary><p class="legend">${t.bre.legend}</p></details>`;
 }
 
 function renderBre() {
@@ -301,7 +307,7 @@ function drawPano({ cols, rows, data }: { cols: number; rows: number; data: Uint
   const cv = $<HTMLCanvasElement>('.view-pano');
   cv.width = cols; cv.height = rows;
   const ctx = cv.getContext('2d')!, img = ctx.createImageData(cols, rows);
-  const palette = [[183, 171, 151], [47, 158, 116], [167, 200, 232]]; // HIT: препятствие, море, небо
+  const palette = [[196, 184, 163], [31, 106, 165], [214, 230, 244]]; // HIT: препятствие, море (синее, как вода на карте), небо
   data.forEach((v, i) => { img.data.set(palette[v], i * 4); img.data[i * 4 + 3] = 255; });
   ctx.putImageData(img, 0, 0);
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
