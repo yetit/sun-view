@@ -1,15 +1,12 @@
-// Запуск приложения (после проверки WebGL в main.ts): подписи, город, данные → мир → воркер → карта.
+// Запуск приложения (после проверки WebGL в main.ts): подписи, город, данные → воркер → мир, затем карта.
+// MapLibre (~1 МБ) и интерфейс карты — в ui/start.ts: импорт начинается после запроса данных,
+// чтобы сеть за данными не ждала разбора большого бандла.
 import { cities } from '../../cities.config.mjs';
-import { $, $$, ask, BASE, city, embed, num, params, setWorld, startWorker, state, urlDir } from './app.ts';
+import { $, $$, BASE, city, embed, params, setWorld, startWorker } from './app.ts';
 import { hasData, loadCityData } from './data.ts';
-import { hideFallback, showFallback } from './fallback.ts';
 import { createWorld } from './grid.ts';
 import { cityName, lang, langHref, t } from './i18n.ts';
-import { bindBuildings, map, mapReady } from './map/layers.ts';
-import { initPanel, select } from './ui/panel.ts';
-import { initKeys } from './ui/keys.ts';
 import { initSheet } from './ui/sheet.ts';
-import { applyMode, initTimebar, setPrecomputed, updateLight } from './ui/timebar.ts';
 
 // Статические подписи: data-i — текст, data-i-ph / -title / -aria — атрибуты.
 for (const el of $$('[data-i]')) el.textContent = (t as any)[el.dataset.i!];
@@ -47,7 +44,9 @@ const timing: Record<string, number> = {};
 const mark = (k: string) => (timing[k] = Math.round(performance.mark(`sv:${k}`).startTime));
 
 stage(0);
-const data = await loadCityData(city.id);
+const dataP = loadCityData(city.id);
+const uiP = import('./ui/start.ts'); // MapLibre и интерфейс — параллельно с данными
+const data = await dataP;
 mark('data');
 stage(1);
 // Растр крыш и деревьев строит воркер (ему он нужен для расчётов) и присылает копию сюда.
@@ -56,30 +55,7 @@ mark('worker');
 stage(2);
 const world = createWorld(city, data.geojson, data.greenery, data.demMeta, data.demBuf, roofs);
 setWorld(world, data.geojson);
-setPrecomputed(data.precomputed);
 mark('world');
 (data.geojson.features as any[]).forEach((f, i) => { f.properties.h = world.blds[i].h; f.properties.assumed = world.blds[i].assumed; });
 stage(3);
-// Карта не загрузилась за 10 с (сеть, сервер тайлов) — сообщение с кнопкой; если догрузится — убираем.
-const slow = setTimeout(() => showFallback(t.mapSlow, true), 10000);
-await mapReady;
-clearTimeout(slow);
-hideFallback();
-mark('map');
-if (import.meta.env.DEV) Object.assign(window, { map, world, timing, ask }); // для проверки и замеров из консоли
-
-initTimebar();
-initPanel();
-bindBuildings(select);
-initKeys();
-const known = world.blds.filter((b) => !b.assumed).length;
-$('.hint').textContent = t.count(world.blds.length, known);
-$('.accuracy').textContent = t.accuracy(Math.round((100 * known) / world.blds.length));
-$('.loading').hidden = true;
-$('.empty').hidden = false;
-updateLight();
-await applyMode();
-mark('painted');
-map.on('moveend', () => !state.current && updateLight()); // тени вокруг центра карты
-const b = world.blds.find((x) => x.id === num(params.get('b'), -1));
-if (b) select(b, { floor: num(params.get('f'), 0) || undefined, side: state.side, dir: urlDir, floors: state.floorsOverride });
+await (await uiP).start(world, data, mark, timing);
