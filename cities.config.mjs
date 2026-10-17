@@ -15,7 +15,7 @@ export const cities = [
     dem: { bbox: { south: 42.26, west: 18.477, north: 42.59, east: 18.908 }, step: 2 }, // угл. секунд на ячейку (2" ≈ 60 м)
     camera: { center: [18.695, 42.43], zoom: 14.5, pitch: 60, bearing: -20 },
     // Примеры подобраны по расчёту (scripts/precompute.ts печатает кандидатов): b — OSM id, f — этаж,
-    // d — направление окон (0 = С … 7 = СЗ) или null, s — сезон (0 весна … 3 зима).
+    // d — направление окон (0 = С … 7 = СЗ, берётся ближайший фасад) или null, s — сезон (0 весна … 3 зима).
     examples: [
       { b: 1079696877, f: 6, d: null, s: 1, ru: 'Верхний этаж у моря', en: 'Top floor by the sea' },
       { b: 223248488, f: 2, d: null, s: 3, ru: 'Зимой — час солнца', en: 'One hour of winter sun' },

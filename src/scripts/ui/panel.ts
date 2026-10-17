@@ -1,28 +1,36 @@
-// Правая панель (на телефоне — лист): выбор здания, этаж и сторона, сезоны, лента года, роза моря,
-// сравнение, PNG, поиск, примеры.
-import { eye, eyeHeight, N, reliability, RIBBON_DAY_STEP, SEASONS, seaRose, seasonCalc, STEP_MIN, YEAR, type SeaDir, type Season } from '../analysis.ts';
-import { $, $$, ask, city, fmtH, fmtT, geojson, state, syncUrl, tzOffset, world } from '../app.ts';
-import type { Bld } from '../grid.ts';
+// Правая панель (на телефоне — лист): выбор здания, этаж и фасад, матрица «этажи × фасады», сезоны,
+// лента года, роза моря, сравнение, PNG, поиск, примеры.
+import { bestCell, dirBearing, dirIndex, eye, eyeHeight, N, reliability, RIBBON_DAY_STEP, SEASONS, seaRose, seasonCalc, STEP_MIN, YEAR, type SeaDir, type Season } from '../analysis.ts';
+import { $, $$, ask, city, currentFacades, facadeOf, fmtH, fmtT, geojson, state, syncUrl, tzOffset, world } from '../app.ts';
+import { facades, nearestFacade, type Bld, type Facade } from '../grid.ts';
 import { buildingName, cityName, lang, summaryText, t } from '../i18n.ts';
-import { applyColors, drawFloor, drawSectors, drawSunPath, map, setData, sheetPadding } from '../map/layers.ts';
+import { applyColors, drawFacade, drawFloor, drawSectors, drawSunPath, map, setData, sheetPadding } from '../map/layers.ts';
 import { shareCard } from '../share.ts';
 import { setSheet } from './sheet.ts';
 import { setSeason, updateLight } from './timebar.ts';
 
 let lastSeasons: Season[] = [], lastSea: SeaDir[] = [], ribbonSmall: HTMLCanvasElement | null = null;
-let ribbonReq = 0;
-const sideLabel = () => t.sideLabel(state.side == null ? null : t.dirs[state.side]);
+let ribbonReq = 0, matrixReq = 0;
+const deg = (f: Facade) => Math.round((f.normal * 180) / Math.PI) % 360;
+const fName = (f: Facade) => `${t.dirs[dirIndex(f.normal)]}, ${deg(f)}°`;
+const fTitle = (f: Facade) => t.facade(t.dirs[dirIndex(f.normal)], deg(f), Math.round(f.len));
+const sideLabel = () => t.sideLabel(facadeOf() ? fName(facadeOf()!) : null);
+// Фасад по румбу 0..7 (старые ссылки, примеры) — ближайший по нормали; null — здание целиком.
+const facadeByDir = (b: Bld, d: number | null) => (d == null ? null : nearestFacade(facades(world, b), dirBearing(d)));
 const osmUrl = (b: Bld) => `https://www.openstreetmap.org/${b.osmType}/${b.id}`;
 
-export function select(b: Bld, opts: { floor?: number; side?: number | null; floors?: number | null } = {}) {
+export function select(b: Bld, opts: { floor?: number; side?: number | null; dir?: number | null; floors?: number | null } = {}) {
   if (state.current) map.setFeatureState({ source: 'buildings', id: state.current.id }, { selected: false });
   state.current = b;
   state.floorsOverride = null;
   if (opts.floors && b.assumed) overrideFloors(b, opts.floors);
   map.setFeatureState({ source: 'buildings', id: b.id }, { selected: true });
   state.floor = Math.min(b.floors, Math.max(1, opts.floor ?? Math.ceil(b.floors / 2)));
-  state.side = opts.side === undefined ? null : opts.side;
+  const side = opts.dir != null ? facadeByDir(b, opts.dir) : opts.side;
+  state.side = side != null && side >= 0 && side < facades(world, b).length ? side : null;
   fillFloors(b);
+  fillSides();
+  loadMatrix(b);
   $('.b-name').textContent = buildingName(b);
   $('.loading').hidden = true;
   $('.empty').hidden = true;
@@ -66,12 +74,56 @@ function overrideFloors(b: Bld, n: number) {
   setData('buildings', geojson.features);
 }
 
-// Пересчёт для текущих здания, этажа и стороны.
+// Кнопки фасадов текущего здания: «Все» и по одной на фасад.
+function fillSides() {
+  const btn = (c: number, html: string, title: string) => `<button type="button" class="side" data-c="${c}" aria-pressed="false" title="${title}">${html}</button>`;
+  $('.sides').innerHTML = btn(-1, t.all, t.wholeBuilding) + currentFacades().map((f, c) => btn(c, `${t.dirs[dirIndex(f.normal)]}<small> ${deg(f)}°</small>`, fTitle(f))).join('');
+}
+
+// Матрица «этажи × фасады» считается в воркере один раз на здание (и при уточнении этажности).
+let matrixCols = 0;
+function loadMatrix(b: Bld) {
+  const box = $('.matrix');
+  const fs = currentFacades();
+  matrixCols = 0;
+  box.innerHTML = `<p class="legend">${fs.length ? t.matrixLoading : t.matrixNone}</p>`;
+  if (!fs.length) return;
+  const my = ++matrixReq;
+  ask({ type: 'matrix', idx: b.idx, floors: b.floors }).then((m) => {
+    if (my !== matrixReq) return;
+    box.innerHTML = matrixHtml(fs, m);
+    matrixCols = m.cols;
+    markMatrix();
+  });
+}
+
+function matrixHtml(fs: Facade[], m: { floors: number; cols: number; sun: Float32Array; sea: Uint8Array }) {
+  const best = bestCell(m);
+  const max = Math.max(...m.sun);
+  const head = fs.map((f, c) => `<th data-c="${c}" title="${fTitle(f)}">${t.dirs[dirIndex(f.normal)]}<small>${deg(f)}°</small><small>${Math.round(f.len)} ${t.m}</small></th>`).join('');
+  const rows = [];
+  for (let fl = m.floors; fl >= 1; fl--) {
+    const cells = fs.map((f, c) => {
+      const k = (fl - 1) * m.cols + c, sun = m.sun[k], sea = m.sea[k];
+      const label = t.matrixCell(fl, fName(f), fmtH.format(sun), sea) + (k === best ? ` (${t.best})` : '');
+      return `<td><button type="button" class="cell${k === best ? ' best' : ''}" data-c="${c}" data-f="${fl}" style="--v:${max ? Math.round((100 * sun) / max) : 0}%" aria-label="${label}" title="${label}">${fmtH.format(sun)}${sea ? '<i>∿</i>' : ''}</button></td>`;
+    });
+    rows.push(`<tr><th>${fl}</th>${cells.join('')}</tr>`);
+  }
+  return `<table><thead><tr><th>${t.fl}</th>${head}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+
+// Выбранная клетка в матрице.
+const markMatrix = () => $$<HTMLButtonElement>('.matrix .cell').forEach((el) => el.setAttribute('aria-pressed', String(+el.dataset.f! === state.floor && +el.dataset.c! === (state.side ?? -1))));
+
+// Пересчёт для текущих здания, этажа и фасада.
 function render() {
   const b = state.current;
   if (!b) return;
-  $$<HTMLButtonElement>('.side').forEach((btn) => btn.setAttribute('aria-pressed', String(+btn.dataset.side! === (state.side ?? -1))));
+  $$<HTMLButtonElement>('.side').forEach((btn) => btn.setAttribute('aria-pressed', String(+btn.dataset.c! === (state.side ?? -1))));
+  if (matrixCols) markMatrix();
   drawFloor(b);
+  drawFacade(b, facadeOf());
   $('.eye').textContent = t.eye(fmtH.format(eyeHeight(world, b, state.floor)));
   $('.seasons').innerHTML = seasonsHtml();
   lastSea = seaRose(world, b, state.floor);
@@ -95,7 +147,7 @@ export function refreshSeason() {
 const summary = () => summaryText(lastSeasons, lastSea.filter((s) => s.dist != null).length, (v) => fmtH.format(v));
 
 function seasonsHtml() {
-  const e = eye(world, state.current!, state.floor, state.side);
+  const e = eye(world, state.current!, state.floor, facadeOf());
   lastSeasons = SEASONS.map((_, i) => seasonCalc(world, state.current!, e, i));
   return lastSeasons.map((s, i) => {
     const times = s.sunrise && s.sunset ? `${fmtT.format(s.sunrise)}–${fmtT.format(s.sunset)}` : t.polarNight;
@@ -108,6 +160,7 @@ function seasonsHtml() {
 // Видно — штриховка и волна, не видно — светлый сектор с прочерком: читается и без цвета.
 function roseSvg(sea: SeaDir[]) {
   const c = 100, r1 = 36, r2 = 72;
+  const sel = facadeOf() ? dirIndex(facadeOf()!.normal) : -1;
   const pt = (r: number, a: number) => [c + r * Math.sin(a), c - r * Math.cos(a)].map((v) => v.toFixed(1));
   const n = sea.filter((s) => s.dist != null).length;
   const parts = sea.map(({ bearing, dist }, i) => {
@@ -117,7 +170,7 @@ function roseSvg(sea: SeaDir[]) {
     const title = dist != null ? t.seaAt(dir, fmtH.format(dist / 1000)) : t.noSea(dir);
     const [kx, ky] = pt(54, bearing), [lx, ly] = pt(86, bearing);
     const inner = dist != null ? `<text class="km" x="${kx}" y="${+ky + 3.5}">∿${fmtH.format(dist / 1000)}</text>` : `<text class="nokm" x="${kx}" y="${+ky + 3.5}">—</text>`;
-    return `<path class="${dist != null ? 'yes' : 'no'}${i === state.side ? ' sel' : ''}" d="${d}" data-side="${i}" tabindex="0" role="button" aria-label="${title}"><title>${title}</title></path><text class="dir" x="${lx}" y="${+ly + 4}">${dir}</text>${inner}`;
+    return `<path class="${dist != null ? 'yes' : 'no'}${i === sel ? ' sel' : ''}" d="${d}" data-side="${i}" tabindex="0" role="button" aria-label="${title}"><title>${title}</title></path><text class="dir" x="${lx}" y="${+ly + 4}">${dir}</text>${inner}`;
   });
   const defs = `<defs><pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="5" class="hatch-line"/></pattern></defs>`;
   return `<svg viewBox="0 0 200 200" role="group" aria-label="${t.roseAria(n)}">${defs}${parts.join('')}<text class="count" x="100" y="97">${n}<tspan>/8</tspan></text><text class="sub" x="100" y="112">${t.roseSub}</text></svg>`;
@@ -164,13 +217,13 @@ function drawRibbon({ cols, rows, data }: { cols: number; rows: number; data: Ui
 }
 
 // --- Сравнение ---------------------------------------------------------------
-type Pin = { b: Bld; floor: number; side: number | null; seasons: Season[]; sea: number };
+type Pin = { b: Bld; floor: number; side: number | null; label: string; seasons: Season[]; sea: number };
 const pins: Pin[] = [];
 function renderPins() {
   $('.compare').hidden = !pins.length;
   $('.pin-btn').toggleAttribute('disabled', pins.length >= 4);
   $('.compare-rows').innerHTML = pins.map((p, i) =>
-    `<tr><td><button type="button" class="link" data-i="${i}">${buildingName(p.b)}</button><small>${p.floor} ${t.fl} · ${p.side == null ? t.whole : t.dirs[p.side]}</small></td>${p.seasons.map((s) => `<td>${fmtH.format(s.sun)}</td>`).join('')}<td>${p.sea}/8</td><td><button type="button" class="x" data-i="${i}" aria-label="${t.remove}">×</button></td></tr>`,
+    `<tr><td><button type="button" class="link" data-i="${i}">${buildingName(p.b)}</button><small>${p.floor} ${t.fl} · ${p.label}</small></td>${p.seasons.map((s) => `<td>${fmtH.format(s.sun)}</td>`).join('')}<td>${p.sea}/8</td><td><button type="button" class="x" data-i="${i}" aria-label="${t.remove}">×</button></td></tr>`,
   ).join('');
   $$('.compare .link').forEach((el) => el.addEventListener('click', () => { const p = pins[+el.dataset.i!]; select(p.b, { floor: p.floor, side: p.side }); }));
   $$('.compare .x').forEach((el) => el.addEventListener('click', () => { pins.splice(+el.dataset.i!, 1); renderPins(); }));
@@ -227,14 +280,15 @@ function renderExamples() {
   const list = (city.examples ?? []).map((ex) => ({ ex, b: world.blds.find((x) => x.id === ex.b) })).filter((x) => x.b);
   $('.examples-box').hidden = !list.length;
   $('.examples').innerHTML = list.map(({ ex, b }, i) => {
-    const s = seasonCalc(world, b!, eye(world, b!, ex.f, ex.d), ex.s);
+    const side = facadeByDir(b!, ex.d);
+    const s = seasonCalc(world, b!, eye(world, b!, ex.f, side == null ? null : facades(world, b!)[side] ?? null), ex.s);
     const sea = seaRose(world, b!, ex.f).filter((d) => d.dist != null).length;
     return `<button type="button" class="example" data-i="${i}"><b>${lang === 'en' ? ex.en : ex.ru}</b><small>${t.seasons[ex.s]} · ${t.floor.toLowerCase()} ${ex.f} · ☀ ${fmtH.format(s.sun)} ${t.h} · ∿ ${sea}/8</small></button>`;
   }).join('');
   $$<HTMLButtonElement>('.example').forEach((btn) => btn.addEventListener('click', () => {
     const { ex, b } = list[+btn.dataset.i!];
     if (state.season !== ex.s) setSeason(ex.s);
-    select(b!, { floor: ex.f, side: ex.d });
+    select(b!, { floor: ex.f, dir: ex.d });
   }));
 }
 
@@ -243,11 +297,30 @@ export function initPanel() {
   renderExamples();
   const floorSel = $<HTMLSelectElement>('.floor');
   floorSel.addEventListener('change', () => { state.floor = +floorSel.value; render(); });
-  $('.sides').innerHTML = [t.all, ...t.dirs].map((d, i) => `<button type="button" class="side" data-side="${i - 1}" aria-pressed="false" title="${i ? t.facing(d) : t.wholeBuilding}">${d}</button>`).join('');
-  $$<HTMLButtonElement>('.side').forEach((btn) => btn.addEventListener('click', () => { state.side = +btn.dataset.side! < 0 ? null : +btn.dataset.side!; render(); }));
+  $('.sides').addEventListener('click', (e) => {
+    const btn = (e.target as Element).closest<HTMLElement>('.side');
+    if (btn) { state.side = +btn.dataset.c! < 0 ? null : +btn.dataset.c!; render(); }
+  });
+  $('.matrix').addEventListener('click', (e) => {
+    const cell = (e.target as Element).closest<HTMLElement>('.cell');
+    if (!cell) return;
+    state.floor = +cell.dataset.f!;
+    state.side = +cell.dataset.c!;
+    floorSel.value = String(state.floor);
+    render();
+  });
+  // Наведение на фасад в матрице или в ряду кнопок — подсветить его стену на карте.
+  for (const box of [$('.matrix'), $('.sides')]) {
+    box.addEventListener('mouseover', (e) => {
+      const el = (e.target as Element).closest<HTMLElement>('[data-c]');
+      if (state.current && el) drawFacade(state.current, currentFacades()[+el.dataset.c!] ?? null);
+    });
+    box.addEventListener('mouseleave', () => state.current && drawFacade(state.current, facadeOf()));
+  }
   const pickSide = (e: Event) => {
     const p = (e.target as Element).closest('path');
-    if (p) { state.side = +p.getAttribute('data-side')!; render(); }
+    const side = state.current && p ? nearestFacade(currentFacades(), dirBearing(+p.getAttribute('data-side')!)) : -1;
+    if (side >= 0) { state.side = side; render(); }
   };
   $('.rose').addEventListener('click', pickSide);
   $('.rose').addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), pickSide(e)));
@@ -263,12 +336,13 @@ export function initPanel() {
     overrideFloors(b, n);
     state.floor = Math.min(state.floor, n);
     fillFloors(b);
+    loadMatrix(b);
     render();
   });
 
   $('.pin-btn').addEventListener('click', () => {
     if (!state.current || pins.length >= 4) return;
-    pins.push({ b: state.current, floor: state.floor, side: state.side, seasons: lastSeasons, sea: lastSea.filter((s) => s.dist != null).length });
+    pins.push({ b: state.current, floor: state.floor, side: state.side, label: facadeOf() ? fName(facadeOf()!) : t.whole, seasons: lastSeasons, sea: lastSea.filter((s) => s.dist != null).length });
     renderPins();
   });
 

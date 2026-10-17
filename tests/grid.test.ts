@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { blocked, defaultFloors, demAt, groundAt, horizonAngle, makeDem, seaVisible, wallPoint } from '../src/scripts/grid.ts';
-import { makeWorld, rect } from './world.ts';
+import { blocked, defaultFloors, demAt, facades, groundAt, horizonAngle, makeDem, nearestFacade, seaVisible, wallPoint } from '../src/scripts/grid.ts';
+import { makeWorld, poly, rect } from './world.ts';
 
 const deg = (d: number) => (d * Math.PI) / 180;
 const DIR = { N: 0, E: deg(90), S: deg(180), W: deg(270) };
@@ -34,6 +34,66 @@ test('точка на стене лежит на 1 м снаружи прямо�
   const b = makeWorld().blds[0];
   const [x, y] = wallPoint(b, DIR.E);
   assert.ok(Math.abs(x - 11) < 0.01 && Math.abs(y) < 0.01, `${x},${y}`);
+});
+
+const degs = (fs: { normal: number }[]) => fs.map((f) => Math.round((f.normal * 180) / Math.PI));
+const near = (a: number, b: number, eps = 0.05) => Math.abs(a - b) < eps;
+
+test('фасады прямоугольника 20×20: четыре стены, нормали наружу, окно в 1 м от середины', () => {
+  const w = makeWorld();
+  const fs = facades(w, w.blds[0]);
+  assert.deepEqual(degs(fs), [0, 90, 180, 270]);
+  assert.ok(fs.every((f) => near(f.len, 20)));
+  assert.deepEqual(fs.map((f) => [Math.round(f.x), Math.round(f.y)]), [[0, 11], [11, 0], [0, -11], [-11, 0]]);
+});
+
+test('фасады повёрнутого дома при обходе по часовой: нормали наружу, порядок от севера', () => {
+  const a = (30 * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a);
+  const pts = [[-15, -5], [-15, 5], [15, 5], [15, -5]].map(([x, y]) => [300 + x * c + y * s, -x * s + y * c]); // по часовой, повёрнут на 30°
+  const w = makeWorld([{ ring: poly(pts), levels: 3 }]);
+  const b = w.blds[1];
+  const fs = facades(w, b);
+  assert.deepEqual(degs(fs), [30, 120, 210, 300]);
+  for (const f of fs) assert.ok((f.x - b.xy[0]) * Math.sin(f.normal) + (f.y - b.xy[1]) * Math.cos(f.normal) > 0, 'окно снаружи по нормали');
+  assert.deepEqual(fs.map((f) => Math.round(f.len)), [30, 10, 30, 10]);
+});
+
+test('стена из нескольких рёбер почти на одной прямой — один фасад; стена короче 4 м — не фасад', () => {
+  // южная стена 30 м разбита двумя точками с изломом 3°, торцы 3 м
+  const w = makeWorld([{ ring: poly([[300, 0], [310, -0.5], [320, -0.5], [330, 0], [330, 3], [300, 3]]), levels: 3 }]);
+  const fs = facades(w, w.blds[1]);
+  assert.deepEqual(degs(fs), [0, 180]);
+  assert.ok(near(fs[1].len, 30) && near(fs[1].x, 315, 0.1) && fs[1].y < -0.5, `${fs[1].len} ${fs[1].x},${fs[1].y}`);
+});
+
+test('общая стена с соседом — не фасад', () => {
+  const w = makeWorld([{ ring: rect(300, 0, 20, 10), levels: 3 }, { ring: rect(320, 0, 20, 10), levels: 3 }]); // общая стена x = 310
+  assert.deepEqual(degs(facades(w, w.blds[1])), [0, 180, 270]);
+  assert.deepEqual(degs(facades(w, w.blds[2])), [0, 90, 180]);
+  // сосед закрывает 4 м из 10 восточной стены — фасадом остаются открытые 6 м, окно посередине них
+  const half = makeWorld([{ ring: rect(300, 0, 20, 10), levels: 3 }, { ring: rect(315, 3, 10, 4), levels: 3 }]);
+  const east = facades(half, half.blds[1]).find((f) => near(f.normal, Math.PI / 2))!;
+  assert.ok(near(east.len, 6, 0.2) && near(east.y, -2, 0.2), `${east.len} ${east.y}`);
+});
+
+test('ступенька в 1,5 м — один фасад из двух стен; крыло в 10 м впереди — отдельный фасад', () => {
+  // южная сторона: стена 0..10 на y=0, ступенька, стена 10..30 на y=-1.5 (один фасад); затем L-крыло
+  const step = makeWorld([{ ring: poly([[300, 0], [310, 0], [310, -1.5], [330, -1.5], [330, 10], [300, 10]]), levels: 3 }]);
+  const south = facades(step, step.blds[1]).filter((f) => near(f.normal, Math.PI));
+  assert.equal(south.length, 1);
+  assert.equal(south[0].segs.length, 2);
+  assert.ok(near(south[0].len, 30) && near(south[0].x, 320, 0.1), 'окно — на самой длинной стене');
+  const ell = makeWorld([{ ring: poly([[300, 0], [310, 0], [310, -10], [330, -10], [330, 10], [300, 10]]), levels: 3 }]);
+  assert.equal(facades(ell, ell.blds[1]).filter((f) => near(f.normal, Math.PI)).length, 2);
+});
+
+test('ближайший фасад к румбу — для старых ссылок d=0..7', () => {
+  const w = makeWorld();
+  const fs = facades(w, w.blds[0]);
+  assert.equal(nearestFacade(fs, DIR.S), 2);
+  assert.equal(nearestFacade(fs, (200 * Math.PI) / 180), 2);
+  assert.equal(nearestFacade(fs, (350 * Math.PI) / 180), 0);
+  assert.equal(nearestFacade([], DIR.N), -1);
 });
 
 test('гора на востоке закрывает низкое солнце, высокое — нет', () => {

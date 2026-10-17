@@ -1,7 +1,7 @@
 // Расчёт для здания, этажа и стороны: траектория солнца за сутки, часы по сезонам,
-// лента года (день × час), видимость моря по 8 румбам, массовые расчёты для карты.
+// лента года (день × час), видимость моря по 8 румбам, матрица «этажи × фасады», массовые расчёты для карты.
 import SunCalc from 'suncalc';
-import { BCELL, blocked, demAt, seaVisible, TREE, wallPoint, type Bld, type World } from './grid.ts';
+import { BCELL, blocked, demAt, facades, seaVisible, TREE, wallPoint, type Bld, type Facade, type World } from './grid.ts';
 
 export const STEP_MIN = 10;
 export const N = (24 * 60) / STEP_MIN; // отсчётов в сутках
@@ -14,6 +14,7 @@ export const SEASONS = [
 ];
 export const DIRECTIONS = ['С', 'СВ', 'В', 'ЮВ', 'Ю', 'ЮЗ', 'З', 'СЗ'];
 export const dirBearing = (i: number) => (i * Math.PI) / 4;
+export const dirIndex = (bearing: number) => Math.round(bearing / (Math.PI / 4)) % 8; // ближайший румб, bearing в [0, 2π)
 
 export type Sun = { altitude: number; bearing: number }; // рад; bearing — от севера по часовой
 
@@ -25,14 +26,13 @@ export function sunAt(t: Date, lon: number, lat: number): Sun {
 
 export const eyeHeight = (w: World, b: Bld, floor: number) => b.ground + (floor - 0.5) * w.city.floorHeight;
 
-// Откуда смотрит окно: side — румб фасада (0..7) или null — здание целиком (из центра).
-export type Eye = { x: number; y: number; z: number; side: number | null };
-export function eye(w: World, b: Bld, floor: number, side: number | null): Eye {
-  const [x, y] = side == null ? b.xy : wallPoint(b, dirBearing(side));
-  return { x, y, z: eyeHeight(w, b, floor), side };
+// Откуда смотрит окно: с фасада (normal — азимут его нормали) или null — здание целиком (из центра).
+export type Eye = { x: number; y: number; z: number; normal: number | null };
+export function eye(w: World, b: Bld, floor: number, f: Facade | null): Eye {
+  return { x: f ? f.x : b.xy[0], y: f ? f.y : b.xy[1], z: eyeHeight(w, b, floor), normal: f ? f.normal : null };
 }
 // Солнце перед фасадом (в полусфере его нормали)?
-export const facing = (e: Eye, bearing: number) => e.side == null || Math.cos(bearing - dirBearing(e.side)) > 0;
+export const facing = (e: Eye, bearing: number) => e.normal == null || Math.cos(bearing - e.normal) > 0;
 
 export type Sample = Sun & { t: Date; lit: boolean; facing: boolean };
 
@@ -82,6 +82,35 @@ export function seaRose(w: World, b: Bld, floor: number): SeaDir[] {
     const [x, y] = wallPoint(b, dirBearing(i));
     return { dir, bearing: dirBearing(i), dist: seaVisible(w, b, x, y, z, dirBearing(i)) };
   });
+}
+
+// Море из окна фасада: лучи по нормали и в ±45° от неё — сколько из трёх видят воду.
+export const SEA_FAN = [-Math.PI / 4, 0, Math.PI / 4];
+export const facadeSea = (w: World, b: Bld, f: Facade, floor: number) =>
+  SEA_FAN.filter((da) => seaVisible(w, b, f.x, f.y, eyeHeight(w, b, floor), f.normal + da) != null).length;
+
+// Матрица «этажи × фасады»: часы солнца в зимнее солнцестояние и число лучей с морем.
+// Клетка k = (этаж − 1) × cols + фасад.
+export function facadeMatrix(w: World, b: Bld, floors = b.floors) {
+  const fs = facades(w, b), cols = fs.length;
+  const sun = new Float32Array(floors * cols), sea = new Uint8Array(floors * cols);
+  for (let fl = 1; fl <= floors; fl++) fs.forEach((f, c) => {
+    const k = (fl - 1) * cols + c;
+    sun[k] = seasonCalc(w, b, eye(w, b, fl, f), 3).sun;
+    sea[k] = facadeSea(w, b, f, fl);
+  });
+  return { floors, cols, sun, sea };
+}
+
+// Лучшая клетка: максимум зимнего солнца, при равенстве — больше моря, затем выше этаж.
+// −1, если сравнивать нечего: ни солнца, ни моря ни в одной клетке.
+export function bestCell({ cols, sun, sea }: { cols: number; sun: ArrayLike<number>; sea: ArrayLike<number> }) {
+  let best = -1;
+  for (let k = 0; k < sun.length; k++) {
+    if (!sun[k] && !sea[k]) continue;
+    if (best < 0 || sun[k] > sun[best] || (sun[k] === sun[best] && (sea[k] > sea[best] || (sea[k] === sea[best] && Math.floor(k / cols) > Math.floor(best / cols))))) best = k;
+  }
+  return best;
 }
 
 // --- Надёжность результата для здания ------------------------------------------

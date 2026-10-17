@@ -1,6 +1,6 @@
 // Таймбар: сезон, время суток, воспроизведение, режимы карты (солнце/море) и легенда.
 import { eye, facing, floorAt, HEIGHTS, STEP_MIN, sunAt } from '../analysis.ts';
-import { $, $$, ask, city, fmtH, fmtT, sliderTime, state, syncUrl, world } from '../app.ts';
+import { $, $$, ask, city, facadeOf, fmtH, fmtT, sliderTime, state, syncUrl, world } from '../app.ts';
 import { blocked } from '../grid.ts';
 import { t } from '../i18n.ts';
 import { applyColors, map, pathPoint, setData } from '../map/layers.ts';
@@ -12,7 +12,7 @@ const DEG = 180 / Math.PI;
 
 export function updateLight() {
   const time = sliderTime();
-  const { current, floor, side } = state;
+  const { current, floor } = state;
   const s = sunAt(time, ...(current?.center ?? city.camera.center));
   const up = s.altitude > 0;
   map.setLight({
@@ -25,7 +25,7 @@ export function updateLight() {
   $('.timebar').classList.toggle('night', !up);
   drawShadows(s);
   if (!current) return;
-  const e = eye(world, current, floor, side);
+  const e = eye(world, current, floor, facadeOf());
   const front = facing(e, s.bearing);
   const lit = up && front && !blocked(world, current, e.x, e.y, e.z, s.bearing, s.altitude);
   const now = $('.now');
