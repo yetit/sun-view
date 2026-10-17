@@ -1,4 +1,5 @@
-// Тяжёлые расчёты вне главного потока: карта солнца/моря для всех зданий, лента года и матрица «этажи × фасады».
+// Тяжёлые расчёты вне главного потока: карта солнца/моря для всех зданий, лента года
+// и матрица «этажи × фасады» с годовой оценкой окон по BRE.
 import { unpackBuildings, type BuildingsMeta } from './buildings-bin.ts';
 import { createWorld, facades, type World } from './grid.ts';
 import { eye, facadeMatrix, massSea, massSun, yearRibbon } from './analysis.ts';
@@ -23,7 +24,7 @@ self.onmessage = async ({ data: m }: MessageEvent<Req>) => {
   }
   if (m.type === 'matrix') {
     const r = facadeMatrix(w, w.blds[m.idx], m.floors);
-    self.postMessage({ id: m.id, done: true, ...r }, { transfer: [r.sun.buffer, r.sea.buffer] });
+    self.postMessage({ id: m.id, done: true, ...r }, { transfer: [r.score.buffer, r.winter.buffer, r.sea.buffer] });
     return;
   }
   const n = w.blds.length;

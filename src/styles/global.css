@@ -120,6 +120,18 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .now.shade { background: #ebe8e1; color: #4f4a42; }
 .now.night { background: #e4e8f1; color: #3f4860; }
 
+/* Солнце за год (BRE): оценка 0–100, вердикт цветом и словом, полоса — доля года. */
+.bre { position: relative; overflow: hidden; display: grid; grid-template-columns: auto 1fr; gap: 1px 12px; align-items: baseline; padding: 10px 12px 12px; border-radius: 10px; background: #f3efe6; }
+.bre strong { grid-row: span 3; align-self: center; font-size: 30px; font-weight: 650; letter-spacing: -0.02em; line-height: 1; text-align: center; }
+.bre strong small { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0; color: var(--muted); }
+.bre b { font-weight: 500; font-size: 12.5px; color: var(--muted); }
+.bre em { font-style: normal; font-weight: 600; font-size: 13.5px; color: #8a2c28; }
+.bre[data-v='pass'] em { color: #1d5c43; }
+.bre[data-v='edge'] em { color: #7a4f00; }
+.bre > small { font-size: 11.5px; color: var(--muted); }
+.bre i { position: absolute; left: 0; bottom: 0; height: 3px; width: var(--pct); background: var(--sun); }
+.bre-box { margin-bottom: 8px; }
+.bre-box .legend { margin-top: 4px; }
 .seasons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .card { position: relative; overflow: hidden; padding: 10px 12px 12px; border-radius: 10px; border: 0; background: #f3efe6; display: flex; flex-direction: column; gap: 2px; text-align: left; }
 .card b { font-weight: 500; font-size: 12.5px; color: var(--muted); }

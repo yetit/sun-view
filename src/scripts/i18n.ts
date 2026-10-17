@@ -34,6 +34,18 @@ const ru = {
   eye: (m: string) => `окно на ${m} м над морем`,
   now: { night: 'солнце за горизонтом', lit: 'солнце в окнах', shade: 'окна в тени', back: 'солнце с другой стороны дома' },
   sunTitle: 'Солнце в окнах',
+  // Годовая оценка окна по BRE 209 (см. analysis.ts → annualSun).
+  bre: {
+    title: 'Солнце за год',
+    loading: 'Считаем солнце за год…',
+    none: 'У здания нет наружных стен длиннее 4 м — оценку окна не посчитать.',
+    of: 'из 100',
+    detail: (y: number, w: number) => `${y} % годовых часов солнца доходит до окна, из них ${w} % — с 21 сентября по 21 марта; ясное небо`,
+    best: (side: string) => `лучший фасад этажа — ${side}`,
+    verdict: { pass: 'Проходит норматив BRE', edge: 'На грани норматива BRE', fail: 'Не проходит норматив BRE' },
+    north: 'окно смотрит на север — BRE такие окна не нормирует',
+    legend: 'Оценка 0–100 — доля годовых часов, когда солнце над горизонтом светит в окно; облачность не учтена. Британский норматив BRE: главное окно жилой комнаты получает ≥ 25 % годовых часов солнца, из них ≥ 5 % — с 21 сентября по 21 марта. «На грани» — до порога не хватает меньше пятой части.',
+  },
   seaTitle: 'Вид на море',
   seasons: ['Весна', 'Лето', 'Осень', 'Зима'],
   seasonsFull: ['Весеннее равноденствие', 'Летнее солнцестояние', 'Осеннее равноденствие', 'Зимнее солнцестояние'],
@@ -52,13 +64,13 @@ const ru = {
   addCompare: '+ В сравнение',
   downloadPng: 'Скачать PNG',
   compare: 'Сравнение',
-  compareHead: ['Квартира', 'Вес', 'Лет', 'Осн', 'Зим', 'Море', ''],
-  compareLegend: 'Часы солнца в окнах по сезонам и направления с морем.',
+  compareHead: ['Квартира', 'Вес', 'Лет', 'Осн', 'Зим', 'Год', 'Море', ''],
+  compareLegend: 'Часы солнца в окнах по сезонам, оценка солнца за год (0–100) и направления с морем.',
   matrixTitle: 'Какая квартира лучше',
-  matrixLegend: 'Строки — этажи, столбцы — фасады дома (синяя стенка на карте). В клетке — часы солнца в окнах 21 декабря, ∿ — из окон видно море. ★ — больше всего зимнего солнца, при равенстве — больше моря, затем выше этаж. Клик по клетке выбирает этаж и фасад.',
+  matrixLegend: 'Строки — этажи, столбцы — фасады дома (синяя стенка на карте). В клетке — оценка солнца за год (0–100, см. ниже), ∿ — из окон видно море. ★ — самая высокая оценка, при равенстве — больше моря, затем выше этаж. Клик по клетке выбирает этаж и фасад.',
   matrixLoading: 'Считаем этажи и фасады…',
   matrixNone: 'У здания нет наружных стен длиннее 4 м — сравнивать нечего.',
-  matrixCell: (floor: number, side: string, h: string, sea: number) => `${floor} этаж, фасад на ${side}: ${h} ч зимнего солнца, ${sea ? 'видно море' : 'моря не видно'}`,
+  matrixCell: (floor: number, side: string, score: number, winter: number, sea: number) => `${floor} этаж, фасад на ${side}: солнце за год ${score} из 100, зимой ${winter} %, ${sea ? 'видно море' : 'моря не видно'}`,
   best: 'лучшая',
   remove: 'Убрать',
   whole: 'всё здание',
@@ -93,6 +105,7 @@ const ru = {
   legendInfo: 'Как читать шкалу',
   // Сводка одной фразой: солнце по доле дня зимой и летом, море по числу направлений.
   summarySun: { none: 'Прямого солнца почти нет', allYear: 'Солнечно круглый год', mostly: (w: string) => `Солнечно, зимой ${w} ч в день`, summer: (w: string) => `Солнце в основном летом, зимой ${w} ч`, little: 'Мало прямого солнца круглый год' },
+  summaryBre: (score: number, verdict: string) => `Солнце за год ${score} из 100: ${verdict[0].toLowerCase()}${verdict.slice(1)}`,
   summarySea: (n: number) => (n === 0 ? 'моря не видно' : n === 1 ? 'море видно в одну сторону' : `море видно на ${n} ${n < 5 ? 'стороны' : 'сторон'}`),
   noWebgl: 'Карте нужен WebGL, а этот браузер его не поддерживает или он выключен. Откройте страницу в свежем Chrome, Firefox или Safari.',
   mapSlow: 'Карта не загрузилась за 10 секунд. Возможно, медленная сеть или недоступен сервер тайлов.',
@@ -138,6 +151,17 @@ const en: Dict = {
   eye: (m: string) => `window at ${m} m above sea level`,
   now: { night: 'sun below the horizon', lit: 'sun in the windows', shade: 'windows in shade', back: 'sun on the other side' },
   sunTitle: 'Sun in the windows',
+  bre: {
+    title: 'Sun over the year',
+    loading: 'Working out the annual sun…',
+    none: 'The building has no outside walls longer than 4 m, so there is no window to score.',
+    of: 'of 100',
+    detail: (y: number, w: number) => `${y}% of the year's sun hours reach the window, ${w}% between 21 September and 21 March; clear sky`,
+    best: (side: string) => `best facade on this floor: ${side}`,
+    verdict: { pass: 'Meets the BRE guideline', edge: 'Borderline for the BRE guideline', fail: 'Fails the BRE guideline' },
+    north: 'the window faces north, which BRE does not assess',
+    legend: 'The 0–100 score is the share of the year\'s hours with the sun above the horizon when it shines into the window; clouds are not counted. The UK BRE guideline asks that the main window of a living room gets at least 25% of annual sun hours, with at least 5% between 21 September and 21 March. Borderline means less than a fifth short of a threshold.',
+  },
   seaTitle: 'Sea view',
   seasons: ['Spring', 'Summer', 'Autumn', 'Winter'],
   seasonsFull: ['March equinox', 'June solstice', 'September equinox', 'December solstice'],
@@ -156,13 +180,13 @@ const en: Dict = {
   addCompare: '+ Compare',
   downloadPng: 'Download PNG',
   compare: 'Compare',
-  compareHead: ['Flat', 'Spr', 'Sum', 'Aut', 'Win', 'Sea', ''],
-  compareLegend: 'Hours of sun in the windows by season, and directions with a sea view.',
+  compareHead: ['Flat', 'Spr', 'Sum', 'Aut', 'Win', 'Year', 'Sea', ''],
+  compareLegend: 'Hours of sun in the windows by season, the annual sun score (0–100), and directions with a sea view.',
   matrixTitle: 'Which flat is best',
-  matrixLegend: 'Rows are floors, columns are the facades of the building (blue wall on the map). Each cell shows hours of sun in the windows on 21 December; ∿ means the sea is visible. ★ marks the most winter sun, then more sea, then the higher floor. Click a cell to pick that floor and facade.',
+  matrixLegend: 'Rows are floors, columns are the facades of the building (blue wall on the map). Each cell shows the annual sun score (0–100, see below); ∿ means the sea is visible. ★ marks the highest score, then more sea, then the higher floor. Click a cell to pick that floor and facade.',
   matrixLoading: 'Working out floors and facades…',
   matrixNone: 'This building has no outer walls longer than 4 m, so there is nothing to compare.',
-  matrixCell: (floor: number, side: string, h: string, sea: number) => `Floor ${floor}, facade facing ${side}: ${h} h of winter sun, ${sea ? 'sea visible' : 'no sea view'}`,
+  matrixCell: (floor: number, side: string, score: number, winter: number, sea: number) => `Floor ${floor}, facade facing ${side}: annual sun ${score} of 100, winter ${winter}%, ${sea ? 'sea visible' : 'no sea view'}`,
   best: 'best',
   remove: 'Remove',
   whole: 'whole',
@@ -195,6 +219,7 @@ const en: Dict = {
   heightTitle: (h: number) => `windows ${h} m above ground`,
   legendInfo: 'How to read the scale',
   summarySun: { none: 'Almost no direct sun', allYear: 'Sunny all year round', mostly: (w: string) => `Sunny; ${w} h a day in winter`, summer: (w: string) => `Sun mostly in summer; ${w} h in winter`, little: 'Little direct sun all year' },
+  summaryBre: (score: number, verdict: string) => `Annual sun ${score} of 100: ${verdict[0].toLowerCase()}${verdict.slice(1)}`,
   summarySea: (n: number) => (n === 0 ? 'no sea view' : n === 1 ? 'sea visible in one direction' : `sea visible in ${n} directions`),
   noWebgl: 'The map needs WebGL, which this browser does not support or has turned off. Please open the page in a recent Chrome, Firefox or Safari.',
   mapSlow: 'The map did not load within 10 seconds. The network may be slow or the tile server unavailable.',
@@ -219,12 +244,14 @@ export function buildingName(b: { id: number; name: string | null; addr: string 
 }
 
 // Сводка одной фразой по сезонам (часы и световой день) и числу направлений с морем.
-export function summaryText(seasons: { sun: number; daylight: number }[], seaCount: number, fmt: (v: number) => string) {
+// Годовая оценка BRE — вторым предложением, когда посчитана.
+export function summaryText(seasons: { sun: number; daylight: number }[], seaCount: number, fmt: (v: number) => string, bre?: { score: number; verdict: 'pass' | 'edge' | 'fail' } | null) {
   const [, summer, , winter] = seasons;
   const wf = winter.daylight ? winter.sun / winter.daylight : 0, sf = summer.daylight ? summer.sun / summer.daylight : 0;
   const s = t.summarySun;
   const sun = summer.sun < 1 && winter.sun < 0.5 ? s.none : wf >= 0.7 && sf >= 0.6 ? s.allYear : wf >= 0.4 ? s.mostly(fmt(winter.sun)) : sf >= 0.5 ? s.summer(fmt(winter.sun)) : s.little;
-  return `${sun}, ${t.summarySea(seaCount)}.`;
+  const year = bre ? t.summaryBre(bre.score, t.bre.verdict[bre.verdict]) : '';
+  return `${sun}, ${t.summarySea(seaCount)}.${year ? ` ${year}.` : ''}`;
 }
 
 export const cityName = (c: { name: string; nameEn?: string }) => (lang === 'en' ? c.nameEn ?? c.name : c.name);

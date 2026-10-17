@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { bestCell, eye, facadeMatrix, seaRose, seasonCalc, floorAt, reliability, yearRibbon } from '../src/scripts/analysis.ts';
-import { facades } from '../src/scripts/grid.ts';
+import { annualSun, bestCell, eye, facadeMatrix, seaRose, seasonCalc, floorAt, reliability, sunYear, verdict, yearRibbon } from '../src/scripts/analysis.ts';
+import { blocked, facades } from '../src/scripts/grid.ts';
 import { makeWorld, rect } from './world.ts';
 
 test('здание целиком: летом на плоской суше солнце весь день, кроме утра за горой', () => {
@@ -69,23 +69,60 @@ test('надёжность: ровное место с этажностью — 
   assert.deepEqual(reliability(wood, wood.blds[0]).reasons, ['trees']);
 });
 
+test('BRE: южный фасад без препятствий проходит, северный — нет', () => {
+  const w = makeWorld();
+  const b = w.blds[0], fs = facades(w, b); // С, В, Ю, З
+  const south = annualSun(w, b, eye(w, b, 3, fs[2])), north = annualSun(w, b, eye(w, b, 3, fs[0]));
+  assert.ok(south.year >= 25 && south.winter >= 5, `юг ${JSON.stringify(south)}`);
+  assert.equal(verdict(south), 'pass');
+  assert.equal(north.winter, 0); // зимой солнце не заходит на север
+  assert.ok(north.year > 0 && north.year < 20, `север ${north.year}`); // летом утром и вечером
+  assert.equal(verdict(north), 'fail');
+});
+
+test('BRE: стена-сосед к югу снижает оценку, сильнее всего зимой', () => {
+  const open = makeWorld(), wall = makeWorld([{ ring: rect(0, -30, 80, 4), levels: 8 }]); // 24 м в 18 м от фасада
+  const at = (w: typeof open) => annualSun(w, w.blds[0], eye(w, w.blds[0], 1, facades(w, w.blds[0])[2]));
+  const a = at(open), b = at(wall);
+  assert.ok(b.year < a.year - 5, `год ${a.year} → ${b.year}`);
+  assert.ok(b.winter < a.winter, `зима ${a.winter} → ${b.winter}`);
+  assert.equal(verdict(b), 'fail');
+});
+
+test('BRE: год — сумма часов солнца по дням, доли от часов над горизонтом, вердикт с полосой «на грани»', () => {
+  const w = makeWorld();
+  const b = w.blds[0], y = sunYear(b);
+  assert.ok(Math.abs(y.total - 4383) < 30, `часов над горизонтом ${y.total}`); // ≈ половина года
+  // горизонт по азимутам через 1° даёт то же, что луч на каждый отсчёт (±1 %)
+  const e = eye(w, b, 2, facades(w, b)[1]);
+  let lit = 0;
+  y.suns.forEach((s, i) => { if (Math.cos(s.bearing - e.normal!) > 0 && !blocked(w, b, e.x, e.y, e.z, s.bearing, s.altitude)) lit += y.hours[i]; });
+  assert.ok(Math.abs(annualSun(w, b, e, y).year - (100 * lit) / y.total) <= 1);
+  assert.equal(verdict({ year: 25, winter: 5 }), 'pass');
+  assert.equal(verdict({ year: 22, winter: 5 }), 'edge');
+  assert.equal(verdict({ year: 40, winter: 4 }), 'edge');
+  assert.equal(verdict({ year: 40, winter: 3 }), 'fail');
+  assert.equal(verdict({ year: 19, winter: 9 }), 'fail');
+});
+
 test('матрица «этажи × фасады»: море с запада и косыми лучами с севера и юга, лучшая клетка — юг наверху', () => {
   const w = makeWorld();
   const m = facadeMatrix(w, w.blds[0]); // 5 этажей × фасады С, В, Ю, З
   assert.equal(m.cols, 4);
-  assert.equal(m.sun.length, 20);
+  assert.equal(m.score.length, 20);
   const at = (fl: number, c: number) => (fl - 1) * m.cols + c;
-  assert.equal(m.sun[at(3, 0)], 0); // север зимой
-  assert.ok(m.sun[at(3, 2)] > m.sun[at(3, 1)] && m.sun[at(3, 2)] > m.sun[at(3, 3)], 'юг солнечнее востока и запада');
+  assert.equal(m.winter[at(3, 0)], 0); // север зимой
+  assert.deepEqual([m.score[at(3, 2)], m.winter[at(3, 2)]], Object.values(annualSun(w, w.blds[0], eye(w, w.blds[0], 3, facades(w, w.blds[0])[2]))));
+  assert.ok(m.score[at(3, 2)] > m.score[at(3, 1)] && m.score[at(3, 2)] > m.score[at(3, 3)], 'юг солнечнее востока и запада');
   // море на западе: С и Ю видят его лучом в ±45° (на СЗ и ЮЗ), В — нет, З — больше всех
   assert.deepEqual([0, 1, 2].map((c) => m.sea[at(5, c)]), [1, 0, 1]);
   assert.ok(m.sea[at(5, 3)] > 1, `запад ${m.sea[at(5, 3)]}`);
   assert.equal(bestCell(m), at(5, 2));
 });
 
-test('лучшая клетка: солнце, затем море, затем выше этаж; пустая матрица — нет лучшей', () => {
+test('лучшая клетка: оценка за год, затем море, затем выше этаж; пустая матрица — нет лучшей', () => {
   const sea = Uint8Array.from([0, 2, 1, 0]);
-  assert.equal(bestCell({ cols: 2, sun: [1, 3, 3, 2], sea }), 1); // 3 ч и море 2 > 3 ч и море 1
-  assert.equal(bestCell({ cols: 2, sun: [3, 3, 3, 3], sea: [1, 1, 1, 1] }), 2); // всё равно — верхний этаж
-  assert.equal(bestCell({ cols: 2, sun: [0, 0, 0, 0], sea: [0, 0, 0, 0] }), -1);
+  assert.equal(bestCell({ cols: 2, score: [10, 30, 30, 20], sea }), 1); // 30 и море 2 > 30 и море 1
+  assert.equal(bestCell({ cols: 2, score: [30, 30, 30, 30], sea: [1, 1, 1, 1] }), 2); // всё равно — верхний этаж
+  assert.equal(bestCell({ cols: 2, score: [0, 0, 0, 0], sea: [0, 0, 0, 0] }), -1);
 });

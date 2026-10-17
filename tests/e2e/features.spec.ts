@@ -1,4 +1,4 @@
-// Сценарии интерфейса: матрица «этажи × фасады», сравнение, PNG, состояние в ссылке, язык,
+// Сценарии интерфейса: матрица «этажи × фасады», солнце за год, сравнение, PNG, состояние в ссылке, язык,
 // встраивание и клавиатура. Локально — против astro preview, в CI — против опубликованного демо.
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
@@ -18,6 +18,20 @@ test('матрица этажи × фасады: клик по клетке вы
   await expect(page.locator(`.side[data-c="${c}"]`)).toHaveAttribute('aria-pressed', 'true');
   await expect(cell).toHaveAttribute('aria-pressed', 'true');
   expect(page.url()).toContain(`f=${f}`);
+});
+
+test('солнце за год: оценка BRE для здания — лучший фасад этажа, для окна — как в клетке матрицы', async ({ page }) => {
+  await open(page, `?c=tivat&b=${B}&f=10&lang=en`);
+  const bre = page.locator('.bre');
+  await expect(bre).toBeVisible({ timeout: 30_000 });
+  await expect(bre).toHaveAttribute('data-v', /^(pass|edge|fail)$/);
+  await expect(bre).toContainText('best facade on this floor');
+  const cell = page.locator('.matrix .cell[data-f="10"]').first();
+  const score = (await cell.textContent())!.replace('∿', '');
+  await cell.click();
+  await expect(page.locator('.bre strong')).toHaveText(`${score}of 100`);
+  await expect(bre).not.toContainText('best facade');
+  await expect(page.locator('.summary')).toContainText(`Annual sun ${score} of 100`);
 });
 
 test('сравнение двух квартир', async ({ page }) => {

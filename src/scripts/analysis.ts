@@ -1,7 +1,8 @@
 // Расчёт для здания, этажа и стороны: траектория солнца за сутки, часы по сезонам,
-// лента года (день × час), видимость моря по 8 румбам, матрица «этажи × фасады», массовые расчёты для карты.
+// лента года (день × час), годовая оценка окна по BRE, видимость моря по 8 румбам, матрица «этажи × фасады»,
+// массовые расчёты для карты.
 import SunCalc from 'suncalc';
-import { BCELL, blocked, demAt, facades, seaVisible, TREE, wallPoint, type Bld, type City, type Facade, type World } from './grid.ts';
+import { BCELL, blocked, demAt, facades, horizonTan, seaVisible, TREE, wallPoint, type Bld, type City, type Facade, type World } from './grid.ts';
 
 export const STEP_MIN = 10;
 export const N = (24 * 60) / STEP_MIN; // отсчётов в сутках
@@ -74,6 +75,56 @@ export function yearRibbon(w: World, b: Bld, e: Eye) {
   return { cols, rows: N, data };
 }
 
+// --- Годовое солнце окна по BRE 209 ------------------------------------------
+// BRE «Site layout planning for daylight and sunlight»: главное окно жилой комнаты, обращённое
+// не дальше 90° от юга, должно получать в центре окна ≥ 25 % годовых вероятных часов солнца (APSH),
+// из них ≥ 5 % — с 21 сентября по 21 марта. Обе доли — от годовых часов на открытом месте.
+// «Вероятные» учитывают облачность по метеостанции; почасовой открытой климатологии для наших
+// городов нет, поэтому считаем при ясном небе: доля от часов, когда солнце над горизонтом.
+export const APSH_DAY_STEP = 10; // дней между отсчётами; середины отрезков, вес — длина отрезка
+export const BRE = { year: 25, winter: 5 }; // %
+const doy = (m: number, d: number) => (Date.UTC(YEAR, m, d) - Date.UTC(YEAR, 0, 1)) / 864e5;
+const WINTER_FROM = doy(8, 21), WINTER_TO = doy(2, 21);
+
+// Солнце над горизонтом за год в точке здания: отсчёты, вес в часах, зимнее ли полугодие.
+// Одна таблица на здание — общая для всех его окон.
+export type SunYear = { suns: Sun[]; hours: number[]; winter: boolean[]; total: number };
+export function sunYear(b: Bld, step = APSH_DAY_STEP): SunYear {
+  const y: SunYear = { suns: [], hours: [], winter: [], total: 0 };
+  for (let d0 = 0; d0 < 365; d0 += step) {
+    const days = Math.min(step, 365 - d0), d = d0 + Math.floor(days / 2);
+    for (let i = 0; i < N; i++) {
+      const s = sunAt(new Date(Date.UTC(YEAR, 0, 1 + d) + i * STEP_MIN * 60000), b.center[0], b.center[1]);
+      if (s.altitude <= 0) continue;
+      const h = (days * STEP_MIN) / 60;
+      y.suns.push(s); y.hours.push(h); y.winter.push(d >= WINTER_FROM || d < WINTER_TO); y.total += h;
+    }
+  }
+  return y;
+}
+
+// Доли года и зимнего полугодия, целые %: «оценка 0–100» — это доля года.
+export type Annual = { year: number; winter: number };
+// Горизонт — по азимутам через 1°, каждый считается при первом отсчёте солнца в нём.
+export function annualSun(w: World, b: Bld, e: Eye, y = sunYear(b)): Annual {
+  const hor = new Float32Array(360).fill(NaN);
+  let year = 0, winter = 0;
+  y.suns.forEach((s, i) => {
+    if (!facing(e, s.bearing)) return;
+    const a = Math.round((s.bearing * 180) / Math.PI) % 360;
+    if (Number.isNaN(hor[a])) hor[a] = horizonTan(w, b, e.x, e.y, e.z, (a * Math.PI) / 180);
+    if (Math.tan(s.altitude) < hor[a]) return;
+    year += y.hours[i];
+    if (y.winter[i]) winter += y.hours[i];
+  });
+  return { year: Math.round((100 * year) / y.total), winter: Math.round((100 * winter) / y.total) };
+}
+
+// Вердикт по BRE. «На грани» — наше: не дотягивает, но обе доли не ниже 80 % порога.
+export type Verdict = 'pass' | 'edge' | 'fail';
+export const verdict = ({ year, winter }: Annual): Verdict =>
+  year >= BRE.year && winter >= BRE.winter ? 'pass' : year >= 0.8 * BRE.year && winter >= 0.8 * BRE.winter ? 'edge' : 'fail';
+
 // Море по 8 румбам, каждый — из окна на своей стене.
 export type SeaDir = { dir: string; bearing: number; dist: number | null };
 export function seaRose(w: World, b: Bld, floor: number): SeaDir[] {
@@ -89,26 +140,27 @@ export const SEA_FAN = [-Math.PI / 4, 0, Math.PI / 4];
 export const facadeSea = (w: World, b: Bld, f: Facade, floor: number) =>
   SEA_FAN.filter((da) => seaVisible(w, b, f.x, f.y, eyeHeight(w, b, floor), f.normal + da) != null).length;
 
-// Матрица «этажи × фасады»: часы солнца в зимнее солнцестояние и число лучей с морем.
+// Матрица «этажи × фасады»: годовая оценка по BRE (доля года и зимнего полугодия, %) и число лучей с морем.
 // Клетка k = (этаж − 1) × cols + фасад.
 export function facadeMatrix(w: World, b: Bld, floors = b.floors) {
-  const fs = facades(w, b), cols = fs.length;
-  const sun = new Float32Array(floors * cols), sea = new Uint8Array(floors * cols);
+  const fs = facades(w, b), cols = fs.length, y = sunYear(b);
+  const score = new Uint8Array(floors * cols), winter = new Uint8Array(floors * cols), sea = new Uint8Array(floors * cols);
   for (let fl = 1; fl <= floors; fl++) fs.forEach((f, c) => {
-    const k = (fl - 1) * cols + c;
-    sun[k] = seasonCalc(w, b, eye(w, b, fl, f), 3).sun;
+    const k = (fl - 1) * cols + c, a = annualSun(w, b, eye(w, b, fl, f), y);
+    score[k] = a.year;
+    winter[k] = a.winter;
     sea[k] = facadeSea(w, b, f, fl);
   });
-  return { floors, cols, sun, sea };
+  return { floors, cols, score, winter, sea };
 }
 
-// Лучшая клетка: максимум зимнего солнца, при равенстве — больше моря, затем выше этаж.
+// Лучшая клетка: максимум годовой оценки, при равенстве — больше моря, затем выше этаж.
 // −1, если сравнивать нечего: ни солнца, ни моря ни в одной клетке.
-export function bestCell({ cols, sun, sea }: { cols: number; sun: ArrayLike<number>; sea: ArrayLike<number> }) {
+export function bestCell({ cols, score, sea }: { cols: number; score: ArrayLike<number>; sea: ArrayLike<number> }) {
   let best = -1;
-  for (let k = 0; k < sun.length; k++) {
-    if (!sun[k] && !sea[k]) continue;
-    if (best < 0 || sun[k] > sun[best] || (sun[k] === sun[best] && (sea[k] > sea[best] || (sea[k] === sea[best] && Math.floor(k / cols) > Math.floor(best / cols))))) best = k;
+  for (let k = 0; k < score.length; k++) {
+    if (!score[k] && !sea[k]) continue;
+    if (best < 0 || score[k] > score[best] || (score[k] === score[best] && (sea[k] > sea[best] || (sea[k] === sea[best] && Math.floor(k / cols) > Math.floor(best / cols))))) best = k;
   }
   return best;
 }

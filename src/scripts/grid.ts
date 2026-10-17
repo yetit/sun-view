@@ -258,6 +258,28 @@ export function blocked(w: World, b: Bld, x: number, y: number, z: number, beari
   return false;
 }
 
+// Горизонт из окна по азимуту с домами и деревьями: максимум (препятствие − z) / расстояние по тем же
+// точкам луча, что в blocked(). Солнце закрыто ⟺ tg высоты солнца меньше — так годовой расчёт
+// трассирует один луч на азимут, а не на каждый отсчёт солнца.
+export function horizonTan(w: World, b: Bld, x: number, y: number, z: number, bearing: number): number {
+  const sx = Math.sin(bearing), sy = Math.cos(bearing);
+  const skipDem = b.radius + w.dem.cell * w.proj.mLat;
+  let max = -Infinity;
+  for (let d = 2; d < FAR; d += d < NEAR ? 3 : 30) {
+    if (d >= NEAR && (w.dem.max - z) / d <= max) break; // дальше рельеф не поднимется выше
+    const px = x + d * sx, py = y + d * sy;
+    if (d < NEAR) {
+      const [roof, i] = roofAt(w.roofs, px, py);
+      if (i !== b.idx) max = Math.max(max, (roof - z) / d);
+    }
+    if (d < skipDem) continue;
+    const t = demAt(w.dem, ...w.proj.toLonLat(px, py));
+    if (t == null) break;
+    max = Math.max(max, (t - z) / d);
+  }
+  return max;
+}
+
 // Угол места рельефного горизонта (рад) из точки (x,y,z) по азимуту bearing: максимум по лучу
 // с тем же шагом, что в blocked(), только DEM, без зданий и деревьев. Ближе from DEM не читаем —
 // по умолчанию одна ячейка, как blocked() для точки без своего здания. Для сверки с PVGIS.
