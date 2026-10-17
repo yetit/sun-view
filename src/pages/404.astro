@@ -27,8 +27,7 @@ const base = import.meta.env.BASE_URL;
       <p class="lead" lang="ru">Возможно, ссылка устарела или в ней опечатка. Солнце и вид на море можно посмотреть на карте.</p>
       <p class="lead" lang="en">The link may be out of date or mistyped. Sun hours and sea views are on the map.</p>
       <p>
-        <a lang="ru" href={`${base}?lang=ru`}>← к карте</a><a lang="en" href={`${base}?lang=en`}>← back to the map</a>
-        · <a lang="ru" href={`${base}method?lang=ru`}>как считается</a><a lang="en" href={`${base}method?lang=en`}>how it works</a>
+        <a lang="ru" href={`${base}?lang=ru`}>← к карте</a><a lang="en" href={`${base}?lang=en`}>← back to the map</a>{' · '}<a lang="ru" href={`${base}method?lang=ru`}>как считается</a><a lang="en" href={`${base}method?lang=en`}>how it works</a>
       </p>
       <p>
         {cities.map((c, i) => <>{i > 0 && ' · '}<a href={`${base}?c=${c.id}`}><span lang="ru">{c.name}</span><span lang="en">{c.nameEn}</span></a></>)}
