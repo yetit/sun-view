@@ -2,18 +2,19 @@
 // чтобы карта красилась сразу при входе, без 2–3 секунд расчёта в воркере.
 // Заодно печатает кандидатов для примеров (cities.config.mjs → examples).
 // Запуск: node scripts/precompute.ts <id> (Node ≥ 22.18, типы снимаются сам Node).
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { getCity } from '../cities.config.mjs';
 import { eye, HEIGHTS, massSea, massSun, seaRose, seasonCalc, STEP_MIN } from '../src/scripts/analysis.ts';
 import { unpackBuildings } from '../src/scripts/buildings-bin.ts';
-import { createWorld, type City } from '../src/scripts/grid.ts';
+import { createWorld, makeCanopy, type City } from '../src/scripts/grid.ts';
 
 const city = getCity(process.argv[2]) as City;
 const dir = `data/${city.id}`;
 const json = (name: string) => JSON.parse(readFileSync(`${dir}/${name}.json`, 'utf8'));
 const ab = (name: string) => { const b = readFileSync(`${dir}/${name}.bin`); return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength); };
 // Здания — из buildings.bin, как в браузере: координаты округлены одинаково, предрасчёт совпадает с расчётом на странице.
-const w = createWorld(city, unpackBuildings(json('buildings.meta'), ab('buildings')), json('greenery'), json('dem'), ab('dem'));
+const canopy = existsSync(`${dir}/canopy.json`) ? makeCanopy(json('canopy'), ab('canopy')) : null;
+const w = createWorld(city, unpackBuildings(json('buildings.meta'), ab('buildings')), canopy, json('dem'), ab('dem'));
 const n = w.blds.length;
 
 // Слои: sun:<сезон>:<высота окна, м> — солнце в окнах в шагах по STEP_MIN минут (0..144),

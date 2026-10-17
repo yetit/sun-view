@@ -1,4 +1,4 @@
-// Здания и зелень города из OSM (Overpass) → data/<id>/buildings.json и greenery.json (GeoJSON).
+// Здания города из OSM (Overpass) → data/<id>/buildings.json (GeoJSON).
 // Запуск: node scripts/fetch-buildings.mjs <id>. Данные коммитятся, сайт в рантайме Overpass не дёргает.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { getCity } from '../cities.config.mjs';
@@ -52,10 +52,3 @@ for (const f of buildings) {
 writeFileSync(`data/${city.id}/buildings.json`, fc(buildings, { bbox: city.bbox }));
 console.log(`${city.id}: ${buildings.length} зданий, с этажностью или высотой: ${buildings.filter((f) => f.properties.levels ?? f.properties.height).length}, с адресом: ${buildings.filter((f) => f.properties.addr).length}, у улицы: ${named}`);
 
-// Деревья: леса и парки как препятствия высотой city.treeHeight (в DSM они уже есть, но сетка там грубая).
-const green = polygons(
-  await overpass(`[out:json][timeout:180];(way["natural"="wood"](${bb});way["landuse"="forest"](${bb});way["leisure"="park"](${bb});relation["natural"="wood"](${bb});relation["landuse"="forest"](${bb});relation["leisure"="park"](${bb}););out geom tags;`),
-  (e) => ({ id: e.id, kind: e.tags.natural ?? e.tags.landuse ?? e.tags.leisure }),
-);
-writeFileSync(`data/${city.id}/greenery.json`, fc(green, {}));
-console.log(`${city.id}: ${green.length} зелёных массивов`);

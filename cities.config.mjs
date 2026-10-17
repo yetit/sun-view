@@ -1,6 +1,6 @@
 // Все города — здесь. Добавить город: описать его, запустить `npm run fetch -- <id>` —
 // данные лягут в data/<id>/, приложение подхватит их по ?c=<id>.
-const common = { timezone: 'Europe/Podgorica', floorHeight: 3, treeHeight: 10 };
+const common = { timezone: 'Europe/Podgorica', floorHeight: 3 };
 
 export const cities = [
   {

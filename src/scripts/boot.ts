@@ -50,11 +50,11 @@ const data = await dataP;
 mark('data');
 stage(1);
 // Растр крыш и деревьев строит воркер (ему он нужен для расчётов) и присылает копию сюда.
-const { roofs } = await startWorker({ city, bldMeta: data.bldMeta, bldBuf: data.bldBuf, greenery: data.greenery, demMeta: data.demMeta, demBuf: data.demBuf });
+const { roofs } = await startWorker({ city, bldMeta: data.bldMeta, bldBuf: data.bldBuf, canopy: data.canopy, demMeta: data.demMeta, demBuf: data.demBuf });
 mark('worker');
 stage(2);
-const world = createWorld(city, data.geojson, data.greenery, data.demMeta, data.demBuf, roofs);
-setWorld(world, data.geojson);
+const world = createWorld(city, data.geojson, data.canopy, data.demMeta, data.demBuf, roofs);
+setWorld(world, data.geojson, data.sunshine);
 mark('world');
 (data.geojson.features as any[]).forEach((f, i) => { f.properties.h = world.blds[i].h; f.properties.assumed = world.blds[i].assumed; });
 stage(3);

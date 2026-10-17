@@ -5,10 +5,10 @@
 //   docs/levels-todo/<id>.geojson    — задачи для MapRoulette: контур, ссылка на объект, приоритет
 //                                       (инструкция задачи — одна на челлендж, см. docs/levels-todo/README.md)
 //   docs/levels-todo/<id>.csv        — топ-100 для обхода
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { getCity } from '../cities.config.mjs';
 import { unpackBuildings } from '../src/scripts/buildings-bin.ts';
-import { createWorld } from '../src/scripts/grid.ts';
+import { createWorld, makeCanopy } from '../src/scripts/grid.ts';
 import { HIGH, levelsTodo, LOW, RADIUS } from '../src/scripts/levels.ts';
 
 const city = getCity(process.argv[2]);
@@ -16,7 +16,8 @@ const dir = `data/${city.id}`;
 const json = (n) => JSON.parse(readFileSync(`${dir}/${n}.json`, 'utf8'));
 const ab = (n) => { const b = readFileSync(`${dir}/${n}.bin`); return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength); };
 const geojson = unpackBuildings(json('buildings.meta'), ab('buildings'));
-const w = createWorld(city, geojson, json('greenery'), json('dem'), ab('dem'));
+const canopy = existsSync(`${dir}/canopy.json`) ? makeCanopy(json('canopy'), ab('canopy')) : null;
+const w = createWorld(city, geojson, canopy, json('dem'), ab('dem'));
 const t0 = Date.now();
 const todo = levelsTodo(w).filter((r) => r.windows > 0);
 const date = new Date().toISOString().slice(0, 10);

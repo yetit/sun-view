@@ -13,6 +13,14 @@ export const SEASONS = [
   { name: 'Осеннее равноденствие', short: 'Осень', date: new Date(Date.UTC(YEAR, 8, 22)) },
   { name: 'Зимнее солнцестояние', short: 'Зима', date: new Date(Date.UTC(YEAR, 11, 21)) },
 ];
+// Вероятность прямого солнца на дату: линейно между серединами месяцев (scripts/fetch-climate.mjs).
+export function sunshineAt(months: number[], date: Date) {
+  const m = date.getUTCMonth(), dim = new Date(Date.UTC(YEAR, m + 1, 0)).getUTCDate();
+  const f = (date.getUTCDate() - 0.5) / dim - 0.5; // −0,5..0,5 от середины месяца
+  const n = (m + (f < 0 ? 11 : 1)) % 12, k = Math.abs(f);
+  return months[m] * (1 - k) + months[n] * k;
+}
+
 export const DIRECTIONS = ['С', 'СВ', 'В', 'ЮВ', 'Ю', 'ЮЗ', 'З', 'СЗ'];
 export const dirBearing = (i: number) => (i * Math.PI) / 4;
 export const dirIndex = (bearing: number) => Math.round(bearing / (Math.PI / 4)) % 8; // ближайший румб, bearing в [0, 2π)
@@ -201,7 +209,8 @@ export function breCell(m: { floors: number; cols: number; score: ArrayLike<numb
 // --- Надёжность результата для здания ------------------------------------------
 // Причины, известные из сверок: этажность предположена; крутой склон — перепад DEM больше 30 м
 // в квадрате ±60 м, отметка глаза на сетке 60 м неточна и горизонт вверх по склону завышен
-// (docs/horizon-check.md, п. 4); деревья растра (лес и парки OSM, 10 м) в 20 м от описанной окружности.
+// (docs/horizon-check.md, п. 4); деревья выше крыши в 20 м от описанной окружности — кроны из спутниковой модели
+// (ошибка ~3 м, листва по сезонам не учтена), а влияют на все этажи. Деревья ниже крыши у дома почти везде.
 // Нет причин — высокая, одна — средняя, две и больше — низкая.
 export type Reason = 'assumed' | 'slope' | 'trees';
 export type Reliability = { level: 'high' | 'medium' | 'low'; reasons: Reason[]; drop: number };
@@ -222,14 +231,15 @@ export function reliability(w: World, b: Bld, assumed = b.assumed): Reliability 
   return { level: reasons.length === 0 ? 'high' : reasons.length === 1 ? 'medium' : 'low', reasons, drop };
 }
 
-// Есть ли ячейка деревьев в растре на расстоянии до d от описанной окружности здания.
+// Есть ли ячейка деревьев выше крыши здания на расстоянии до d от его описанной окружности.
 function treesNear(w: World, b: Bld, d: number): boolean {
-  const { x0, y0, cols, rows, idx } = w.roofs;
+  const { x0, y0, cols, rows, idx, z } = w.roofs;
+  const roof = b.ground + b.h;
   const R = b.radius + d;
   const c0 = Math.max(0, Math.floor((b.xy[0] - R - x0) / BCELL)), c1 = Math.min(cols - 1, Math.floor((b.xy[0] + R - x0) / BCELL));
   const r0 = Math.max(0, Math.floor((b.xy[1] - R - y0) / BCELL)), r1 = Math.min(rows - 1, Math.floor((b.xy[1] + R - y0) / BCELL));
   for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
-    if (idx[r * cols + c] !== TREE) continue;
+    if (idx[r * cols + c] !== TREE || z[r * cols + c] <= roof) continue;
     if (Math.hypot(x0 + (c + 0.5) * BCELL - b.xy[0], y0 + (r + 0.5) * BCELL - b.xy[1]) <= R) return true;
   }
   return false;

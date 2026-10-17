@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { annualSun, bestCell, breCell, eye, facadeMatrix, seaRose, seasonCalc, floorAt, reliability, sunYear, verdict, windowView, yearRibbon } from '../src/scripts/analysis.ts';
+import { annualSun, bestCell, breCell, eye, sunshineAt, facadeMatrix, seaRose, seasonCalc, floorAt, reliability, sunYear, verdict, windowView, yearRibbon } from '../src/scripts/analysis.ts';
 import { blocked, facades } from '../src/scripts/grid.ts';
 import { makeWorld, rect } from './world.ts';
 
@@ -153,4 +153,12 @@ test('breCell: выбранный фасад, здание целиком — л
   // Нормируемых нет — просто лучший.
   assert.equal(breCell(m, [0, 0.3, -0.3], 2, null)!.c, 0);
   assert.equal(breCell(m, normals, 3, null), null);
+});
+
+test('sunshineAt: середина месяца — значение месяца, граница — среднее соседних, декабрь переходит в январь', () => {
+  const months = [0.2, 0.4, 0.6, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.0];
+  assert.ok(Math.abs(sunshineAt(months, new Date(Date.UTC(2026, 0, 16))) - 0.2) < 0.01);
+  assert.ok(Math.abs(sunshineAt(months, new Date(Date.UTC(2026, 1, 1))) - 0.3) < 0.02);
+  assert.ok(Math.abs(sunshineAt(months, new Date(Date.UTC(2026, 11, 31))) - 0.1) < 0.02);
+  assert.ok(Math.abs(sunshineAt(months, new Date(Date.UTC(2026, 0, 1))) - 0.1) < 0.02);
 });

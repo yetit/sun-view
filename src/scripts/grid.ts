@@ -10,7 +10,6 @@ export type City = {
   camera: { center: [number, number]; zoom: number; pitch: number; bearing: number };
   timezone: string;
   floorHeight: number;
-  treeHeight: number;
   examples?: { b: number; f: number; d: number | null; s: number; ru: string; en: string }[];
 };
 
@@ -102,6 +101,19 @@ export function prepareBuildings(city: City, geojson: any, dem: Dem, proj: Proj)
   });
 }
 
+// Высота крон (scripts/fetch-canopy.mjs): сетка ~6 м в градусах от северо-западного угла, метры над землёй, 0 — нет дерева.
+// В файле — RLE: пары (нулей перед значением, значение).
+export type Canopy = { west: number; north: number; cols: number; rows: number; dlon: number; dlat: number; h: Uint8Array };
+export function makeCanopy(meta: any, buf: ArrayBuffer): Canopy {
+  const rle = new Uint8Array(buf), h = new Uint8Array(meta.cols * meta.rows);
+  for (let i = 0, k = 0; i < rle.length; i += 2) { k += rle[i]; h[k++] = rle[i + 1]; }
+  return { west: meta.west, north: meta.north, cols: meta.cols, rows: meta.rows, dlon: meta.dlon, dlat: meta.dlat, h };
+}
+const canopyAt = (t: Canopy, lon: number, lat: number) => {
+  const c = Math.floor((lon - t.west) / t.dlon), r = Math.floor((t.north - lat) / t.dlat);
+  return c < 0 || r < 0 || c >= t.cols || r >= t.rows ? 0 : t.h[r * t.cols + c];
+};
+
 // Растр препятствий: абсолютная отметка верха и индекс здания (+1) в каждой ячейке; деревья — TREE.
 export const BCELL = 6; // м
 export const TREE = 0xffff;
@@ -116,7 +128,7 @@ export function inRing(x: number, y: number, ring: [number, number][]): boolean 
   return inside;
 }
 
-export function rasterizeRoofs(city: City, proj: Proj, dem: Dem, blds: Bld[], greenery: any | null): Roofs {
+export function rasterizeRoofs(city: City, proj: Proj, dem: Dem, blds: Bld[], canopy: Canopy | null): Roofs {
   const { south, west, north, east } = city.bbox;
   const [x0, y0] = proj.toXY(west, south);
   const [x1, y1] = proj.toXY(east, north);
@@ -134,9 +146,11 @@ export function rasterizeRoofs(city: City, proj: Proj, dem: Dem, blds: Bld[], gr
       if (t > z[k]) { z[k] = t; idx[k] = id; }
     }
   };
-  // Деревья первыми: здание внутри парка перекроет их своей ячейкой.
-  for (const f of greenery?.features ?? []) for (const ring of polyRings(f.geometry)) {
-    paint(ring.map((p) => proj.toXY(p[0], p[1])), (x, y) => (demAt(dem, ...proj.toLonLat(x, y)) ?? 0) + city.treeHeight, TREE);
+  // Деревья первыми: здание перекроет их своей ячейкой.
+  if (canopy) for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const [lon, lat] = proj.toLonLat(x0 + (c + 0.5) * BCELL, y0 + (r + 0.5) * BCELL);
+    const h = canopyAt(canopy, lon, lat);
+    if (h) { z[r * cols + c] = (demAt(dem, lon, lat) ?? 0) + h; idx[r * cols + c] = TREE; }
   }
   for (const b of blds) for (const ring of b.rings) paint(ring, () => b.ground + b.h, b.idx + 1);
   return { x0, y0, cols, rows, z, idx };
@@ -152,11 +166,11 @@ function roofAt(roofs: Roofs, x: number, y: number): [number, number] {
 export type World = { city: City; proj: Proj; dem: Dem; roofs: Roofs; blds: Bld[] };
 
 // roofs — готовый растр (страница берёт его у воркера, чтобы не строить второй раз на главном потоке).
-export function createWorld(city: City, geojson: any, greenery: any | null, demMeta: any, demBuf: ArrayBuffer, roofs?: Roofs): World {
+export function createWorld(city: City, geojson: any, canopy: Canopy | null, demMeta: any, demBuf: ArrayBuffer, roofs?: Roofs): World {
   const proj = makeProj(city.camera.center);
   const dem = makeDem(demMeta, demBuf);
   const blds = prepareBuildings(city, geojson, dem, proj);
-  return { city, proj, dem, roofs: roofs ?? rasterizeRoofs(city, proj, dem, blds, greenery), blds };
+  return { city, proj, dem, roofs: roofs ?? rasterizeRoofs(city, proj, dem, blds, canopy), blds };
 }
 
 // Фасады — реальные стены контура. Соседние рёбра, почти лежащие на одной прямой (OSM дробит стену

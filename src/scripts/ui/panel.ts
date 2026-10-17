@@ -1,7 +1,7 @@
 // Правая панель (на телефоне — лист): выбор здания, этаж и фасад, сезоны, сводка и связка частей панели.
 // Матрица и BRE — matrix.ts, рисунки — charts.ts, вид из окна — view.ts, сравнение, поиск, примеры — отдельные модули.
-import { dirBearing, dirIndex, eye, eyeHeight, reliability, SEASONS, seaRose, seasonCalc, type SeaDir, type Season } from '../analysis.ts';
-import { $, $$, ask, city, currentFacades, facadeOf, fmtH, fmtT, geojson, state, syncUrl, world } from '../app.ts';
+import { dirBearing, dirIndex, eye, eyeHeight, reliability, SEASONS, seaRose, seasonCalc, sunshineAt, type SeaDir, type Season } from '../analysis.ts';
+import { $, $$, ask, city, currentFacades, facadeOf, fmtH, fmtT, geojson, state, sunshine, syncUrl, world } from '../app.ts';
 import { facades, nearestFacade, type Bld } from '../grid.ts';
 import { buildingName, cityName, summaryText, t } from '../i18n.ts';
 import { applyColors, drawFacade, drawFloor, drawSectors, drawSunPath, map, setData, sheetPadding } from '../map/layers.ts';
@@ -153,7 +153,9 @@ function seasonsHtml() {
   return lastSeasons.map((s, i) => {
     const times = s.sunrise && s.sunset ? `${fmtT.format(s.sunrise)}–${fmtT.format(s.sunset)}` : t.polarNight;
     const pct = s.daylight ? Math.round((100 * s.sun) / s.daylight) : 0;
-    return `<button type="button" class="card${i === state.season ? ' current' : ''}" data-s="${i}" style="--pct:${pct}%" title="${t.seasonsFull[i]}"><b>${t.seasons[i]}</b><strong>${fmtH.format(s.sun)} ${t.h}</strong><small>${t.of} ${fmtH.format(s.daylight)} · ${times}</small><i></i></button>`;
+    // С облаками — часы при ясном небе × вероятность прямого солнца в этот день года.
+    const cloud = sunshine && s.sun ? `<small class="cloud">${t.cloudy(fmtH.format(s.sun * sunshineAt(sunshine, SEASONS[i].date)))}</small>` : '';
+    return `<button type="button" class="card${i === state.season ? ' current' : ''}" data-s="${i}" style="--pct:${pct}%" title="${t.seasonsFull[i]}"><b>${t.seasons[i]}</b><strong>${fmtH.format(s.sun)} ${t.h}</strong><small>${t.of} ${fmtH.format(s.daylight)} · ${times}</small>${cloud}<i></i></button>`;
   }).join('');
 }
 
@@ -164,6 +166,7 @@ function renderBre() {
 }
 
 export function initPanel() {
+  $('.seasons-note').hidden = !sunshine;
   initSearch(select);
   renderExamples((ex, b) => {
     if (state.season !== ex.s) setSeason(ex.s);

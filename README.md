@@ -13,12 +13,12 @@
 
 ## What it does
 
-- **Sun in the windows.** Hours of direct sun for the March equinox, June solstice, September equinox and December solstice, plus a year ribbon (day × hour). Pick the whole building or one facing (N … NW).
+- **Sun in the windows.** Hours of direct sun for the March equinox, June solstice, September equinox and December solstice, plus a year ribbon (day × hour). Each season also shows the average with clouds, from PVGIS satellite data. Pick the whole building or one facing (N … NW).
 - **Annual sun, BRE-style.** A 0–100 window score: the share of the year's hours with the sun above the horizon when it shines into the window on the chosen floor and facade, with a verdict against the UK [BRE 209](https://bregroup.com/store/bookshop/site-layout-planning-for-daylight-and-sunlight-a-guide-to-good-practice-br-209-2022-edition) guideline: at least 25% over the year and 5% between 21 September and 21 March (meets / borderline / fails). BRE uses “probable” hours that allow for cloud; there is no open hourly sunshine climatology for these cities, so we count clear-sky hours. The same score fills the floors × facades matrix and the comparison. Details on the [method page](https://yetit.github.io/sun-view/method?lang=en).
 - **Sea view.** For each of 8 directions, whether water is visible from the window level and how far away it is.
 - **City maps.** On load the whole city is coloured by winter sun; switch to the sea map, or pick the window height: 2, 5 or 10 m above ground. Colours follow the actual spread of hours in the current layer, and the legend shows them. Buildings lower than the chosen height are faded and shown from their top floor.
 - **Time slider.** Building shading, ground shadows and the sun marker follow the time of day; ▶ plays a whole day.
-- **Reliability label.** Each building gets high, medium or low reliability with the reasons: floor count estimated, steep slope, woods next to it.
+- **Reliability label.** Each building gets high, medium or low reliability with the reasons: floor count estimated, steep slope, trees taller than the building next to it.
 - **Compare and share.** Pin up to four flats side by side, download a PNG card, or share the URL. The URL keeps the city, building, floor, side, season and time.
 - **Where floor counts are missing.** The "Floors" map mode colours buildings that have no floor count in OSM by how many neighbours' sun or sea view depends on it. The same list is ready to survey: [docs/levels-todo](docs/levels-todo/). See [Help fill in floor counts](#help-fill-in-floor-counts).
 - **Keyboard.** Tab to the map. Enter selects the building in the centre, arrow keys move to the nearest building in that direction on screen, Esc clears the selection. The selection and its summary are announced to screen readers.
@@ -69,7 +69,7 @@ Measured on an Apple M2 Pro with the production build (`astro preview`), Tivat, 
 | | |
 | --- | --- |
 | JavaScript, gzip | 300 KB, mostly MapLibre |
-| City data, gzip | 111 KB in Tivat, 112 KB in Kotor and 229 KB in Bergen for buildings, greenery and precomputed maps, plus a terrain grid of 420–490 KB |
+| City data, gzip | 233 KB in Tivat, 262 KB in Kotor and 248 KB in Bergen for buildings, tree heights and precomputed maps, plus a terrain grid of 420–490 KB |
 | First load until the coloured map | 2.0–2.4 s: data 0.15 s, roof raster in the worker 0.22 s, the rest is waiting for basemap and terrain tiles |
 | Main-thread long tasks during load | 60–80 ms in total (before the Lighthouse round below: 200–320 ms) |
 | Repeat load with HTTP cache | 0.55 s |
@@ -137,7 +137,9 @@ Local Lighthouse, 5 runs each: performance median 62 before and 62 after. Total 
 
 | What | Source | Licence |
 | --- | --- | --- |
-| Buildings, floors, heights, woods and parks, coastline | [OpenStreetMap](https://www.openstreetmap.org/copyright) via Overpass API | ODbL, © OpenStreetMap contributors |
+| Buildings, floors, heights, coastline | [OpenStreetMap](https://www.openstreetmap.org/copyright) via Overpass API | ODbL, © OpenStreetMap contributors |
+| Tree heights | [High Resolution Canopy Height Maps](https://registry.opendata.aws/dataforgood-fb-forests/) by WRI and Meta, AWS Open Data | CC BY 4.0, © Meta and World Resources Institute |
+| Cloud (chance of direct sun by month) | [PVGIS](https://re.jrc.ec.europa.eu/pvg_tools/en/) SARAH3 hourly series, JRC | © European Union, reuse with attribution |
 | Terrain for the computation | [Copernicus DEM GLO-30](https://registry.opendata.aws/copernicus-dem/), AWS Open Data | © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the EU and ESA |
 | Basemap and display terrain | [OpenFreeMap](https://openfreemap.org) / © OpenMapTiles, [Terrain Tiles](https://registry.opendata.aws/terrain-tiles/) | open |
 | Address search | [Photon](https://photon.komoot.io) by Komoot | OSM data, ODbL |
@@ -150,7 +152,7 @@ The data lives in `data/<city>/` and is committed. The site calls no APIs at run
 
 - **Floor counts are known for only 14% of buildings in Tivat and 3% in Kotor.** The rest get a default by OSM tag and footprint: sheds, garages, carports, containers, roofs, ruins, construction sites and footprints under 40 m² get 1 floor, everything else 2. They are drawn semi-transparent, and the panel lets you correct the count. Open height layers do not help here: [GHS-BUILT-H](https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_H_GLOBE_R2023A/) (JRC, 100 m, CC BY 4.0) correlates weakly with known OSM heights in these towns (r = 0.22 in Tivat, 0.30 in Kotor) and errs more than the 2-floor constant (mean error 3.8 vs 2.9 m in Tivat, 5.3 vs 3.6 m in Kotor). In [Overture Maps](https://overturemaps.org/) (release 2026-09-23) heights and floor counts here come only from OSM, and its Microsoft ML footprints carry none.
 - **Copernicus is a surface model**, so its cells include roofs and canopies. It is flattened under buildings. An exact ground needs a DTM.
-- **Trees are OSM woods and parks** at a single height of 10 m.
+- **Tree heights come from a satellite model** (Meta and WRI, about 1 m per pixel, about 3 m error), reduced to a 6 m grid. Leaves stay on all year, so in winter deciduous trees shade as much as in summer.
 - **"Sun in the window" means a direct line of sight** from the window point. Glazing, balconies and reflections are not modelled.
 - **Ground shadows on the map are an illustration** on flat ground. Sun hours come from the rays.
 

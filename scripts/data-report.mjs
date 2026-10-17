@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { getCity } from '../cities.config.mjs';
 
-const FILES = ['buildings.json', 'buildings.bin', 'buildings.meta.json', 'greenery.json', 'dem.json', 'dem.bin', 'precomputed.json', 'precomputed.bin'];
+const FILES = ['buildings.json', 'buildings.bin', 'buildings.meta.json', 'canopy.json', 'canopy.bin', 'dem.json', 'dem.bin', 'precomputed.json', 'precomputed.bin'];
 const old = (path) => { try { return execFileSync('git', ['show', `HEAD:${path}`], { maxBuffer: 1 << 28 }); } catch { return null; } };
 // Даты выгрузки и расчёта меняются каждый раз — сравниваем без них.
 const strip = (buf) => buf && JSON.stringify({ ...JSON.parse(buf), fetched: null, computed: null });
