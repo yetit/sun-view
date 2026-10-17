@@ -1,8 +1,8 @@
-// Тяжёлые расчёты вне главного потока: карта солнца/моря для всех зданий, лента года
+// Тяжёлые расчёты вне главного потока: карта солнца/моря для всех зданий, лента года, вид из окна
 // и матрица «этажи × фасады» с годовой оценкой окон по BRE.
 import { unpackBuildings, type BuildingsMeta } from './buildings-bin.ts';
 import { createWorld, facades, type World } from './grid.ts';
-import { eye, facadeMatrix, massSea, massSun, yearRibbon } from './analysis.ts';
+import { eye, facadeMatrix, massSea, massSun, windowView, yearRibbon } from './analysis.ts';
 
 let w: World;
 const CHUNK = 150;
@@ -12,6 +12,7 @@ export type Req =
   | { type: 'sun'; id: number; season: number; h: number }
   | { type: 'sea'; id: number; h: number }
   | { type: 'ribbon'; id: number; idx: number; floor: number; side: number | null } // side — номер фасада
+  | { type: 'view'; id: number; idx: number; floor: number; side: number }
   | { type: 'matrix'; id: number; idx: number; floors: number }; // floors — с учётом уточнения пользователем
 
 self.onmessage = async ({ data: m }: MessageEvent<Req>) => {
@@ -19,6 +20,12 @@ self.onmessage = async ({ data: m }: MessageEvent<Req>) => {
   if (m.type === 'ribbon') {
     const b = w.blds[m.idx];
     const r = yearRibbon(w, b, eye(w, b, m.floor, m.side == null ? null : facades(w, b)[m.side] ?? null));
+    self.postMessage({ id: m.id, done: true, ...r }, { transfer: [r.data.buffer] });
+    return;
+  }
+  if (m.type === 'view') {
+    const b = w.blds[m.idx];
+    const r = windowView(w, b, eye(w, b, m.floor, facades(w, b)[m.side]));
     self.postMessage({ id: m.id, done: true, ...r }, { transfer: [r.data.buffer] });
     return;
   }

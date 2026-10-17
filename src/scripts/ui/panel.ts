@@ -1,16 +1,17 @@
 // Правая панель (на телефоне — лист): выбор здания, этаж и фасад, матрица «этажи × фасады», солнце за год, сезоны,
-// лента года, роза моря, сравнение, PNG, поиск, примеры.
+// лента года, роза моря, вид из окна, сравнение, PNG, поиск, примеры.
 import { bestCell, dirBearing, dirIndex, eye, eyeHeight, N, reliability, RIBBON_DAY_STEP, SEASONS, seaRose, seasonCalc, STEP_MIN, verdict, YEAR, type SeaDir, type Season } from '../analysis.ts';
 import { $, $$, ask, city, currentFacades, facadeOf, fmtH, fmtT, geojson, state, syncUrl, tzOffset, world } from '../app.ts';
 import { facades, nearestFacade, type Bld, type Facade } from '../grid.ts';
 import { buildingName, cityName, lang, summaryText, t } from '../i18n.ts';
 import { applyColors, drawFacade, drawFloor, drawSectors, drawSunPath, map, setData, sheetPadding } from '../map/layers.ts';
+import { enterView, exitView, grabFrame, viewing } from '../map/window.ts';
 import { shareCard } from '../share.ts';
 import { setSheet } from './sheet.ts';
 import { setSeason, updateLight } from './timebar.ts';
 
 let lastSeasons: Season[] = [], lastSea: SeaDir[] = [], ribbonSmall: HTMLCanvasElement | null = null;
-let ribbonReq = 0, matrixReq = 0;
+let ribbonReq = 0, matrixReq = 0, viewReq = 0, viewText = '';
 const deg = (f: Facade) => Math.round((f.normal * 180) / Math.PI) % 360;
 const fName = (f: Facade) => `${t.dirs[dirIndex(f.normal)]}, ${deg(f)}°`;
 const fTitle = (f: Facade) => t.facade(t.dirs[dirIndex(f.normal)], deg(f), Math.round(f.len));
@@ -21,6 +22,7 @@ const osmUrl = (b: Bld) => `https://www.openstreetmap.org/${b.osmType}/${b.id}`;
 
 export function select(b: Bld, opts: { floor?: number; side?: number | null; dir?: number | null; floors?: number | null } = {}) {
   if (state.current) map.setFeatureState({ source: 'buildings', id: state.current.id }, { selected: false });
+  setView(false);
   state.current = b;
   state.floorsOverride = null;
   if (opts.floors && b.assumed) overrideFloors(b, opts.floors);
@@ -50,6 +52,7 @@ export function select(b: Bld, opts: { floor?: number; side?: number | null; dir
 export function deselect() {
   const b = state.current;
   if (!b) return;
+  setView(false);
   map.setFeatureState({ source: 'buildings', id: b.id }, { selected: false });
   state.current = null;
   state.side = null;
@@ -187,6 +190,7 @@ function render() {
   drawSunPath();
   updateLight();
   syncUrl();
+  loadView(b);
   const my = ++ribbonReq;
   ask({ type: 'ribbon', idx: b.idx, floor: state.floor, side: state.side }).then((r) => my === ribbonReq && drawRibbon(r));
 }
@@ -271,6 +275,51 @@ function drawRibbon({ cols, rows, data }: { cols: number; rows: number; data: Ui
     const x = left + (pw * ((s.date.getTime() - Date.UTC(YEAR, 0, 1)) / 864e5)) / 365;
     ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + ph); ctx.stroke();
   }
+}
+
+// --- Вид из окна ------------------------------------------------------------
+// Доли моря и неба в кадре из окна выбранного фасада — в воркере; камера на карте — по кнопке.
+function loadView(b: Bld) {
+  const f = facadeOf(), btn = $<HTMLButtonElement>('.view-btn');
+  btn.disabled = !f;
+  $('.view-pano').hidden = $('.view-legend').hidden = !f;
+  $('.view-stat').textContent = f ? t.viewLoading : t.viewNeedFacade;
+  viewText = '';
+  if (!f) { setView(false); return; }
+  if (viewing()) enterView(b, state.floor, f);
+  const my = ++viewReq;
+  ask({ type: 'view', idx: b.idx, floor: state.floor, side: state.side }).then((v) => {
+    if (my !== viewReq) return;
+    viewText = t.viewStat(Math.round(100 * v.sea), Math.round(100 * v.sky));
+    $('.view-stat').textContent = $('.view-badge-stat').textContent = viewText;
+    drawPano(v);
+  });
+}
+
+// Полоса-панорама: клетка — луч (небо, море, препятствие), пунктир — горизонт.
+function drawPano({ cols, rows, data }: { cols: number; rows: number; data: Uint8Array }) {
+  const cv = $<HTMLCanvasElement>('.view-pano');
+  cv.width = cols; cv.height = rows;
+  const ctx = cv.getContext('2d')!, img = ctx.createImageData(cols, rows);
+  const palette = [[183, 171, 151], [47, 158, 116], [167, 200, 232]]; // HIT: препятствие, море, небо
+  data.forEach((v, i) => { img.data.set(palette[v], i * 4); img.data[i * 4 + 3] = 255; });
+  ctx.putImageData(img, 0, 0);
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  for (let x = 0; x < cols; x += 2) ctx.fillRect(x, (rows - 1) / 2, 1, 1);
+  cv.setAttribute('aria-label', viewText);
+}
+
+function setView(on: boolean) {
+  const f = facadeOf();
+  if (on && state.current && f) {
+    enterView(state.current, state.floor, f);
+    setSheet('peek');
+  } else exitView();
+  $('.view-btn').setAttribute('aria-pressed', String(viewing()));
+  $('.view-btn').textContent = viewing() ? t.viewClose : t.viewOpen;
+  $('.view-badge-stat').textContent = viewText || t.viewLoading;
+  $('.view-badge').hidden = !viewing();
+  document.body.classList.toggle('viewing', viewing()); // легенда цветов домов из окна не нужна
 }
 
 // --- Сравнение ---------------------------------------------------------------
@@ -386,6 +435,9 @@ export function initPanel() {
     if (c) setSeason(+c.dataset.s!);
   });
 
+  $('.view-btn').addEventListener('click', () => setView(!viewing()));
+  $('.view-exit').addEventListener('click', () => setView(false));
+
   $('.assumed-apply').addEventListener('click', () => {
     const b = state.current;
     const n = Math.round(+$<HTMLInputElement>('.assumed-input').value);
@@ -407,7 +459,8 @@ export function initPanel() {
     const b = state.current;
     if (!b) return;
     const name = cityName(city);
-    const blob = await shareCard({ city: name, title: buildingName(b), summary: summary(), subtitle: `${name} · ${t.card.floor(state.floor)} · ${sideLabel()}`, seasons: lastSeasons, sea: lastSea, ribbon: ribbonSmall });
+    const view = viewing() && viewText ? { frame: await grabFrame(), text: viewText } : null;
+    const blob = await shareCard({ view, city: name, title: buildingName(b), summary: summary(), subtitle: `${name} · ${t.card.floor(state.floor)} · ${sideLabel()}`, seasons: lastSeasons, sea: lastSea, ribbon: ribbonSmall });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `sun-view-${city.id}-${b.id}-${state.floor}.png`;

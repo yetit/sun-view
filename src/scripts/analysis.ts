@@ -1,8 +1,8 @@
 // Расчёт для здания, этажа и стороны: траектория солнца за сутки, часы по сезонам,
-// лента года (день × час), годовая оценка окна по BRE, видимость моря по 8 румбам, матрица «этажи × фасады»,
-// массовые расчёты для карты.
+// лента года (день × час), годовая оценка окна по BRE, видимость моря по 8 румбам, вид из окна,
+// матрица «этажи × фасады», массовые расчёты для карты.
 import SunCalc from 'suncalc';
-import { BCELL, blocked, demAt, facades, horizonTan, seaVisible, TREE, wallPoint, type Bld, type City, type Facade, type World } from './grid.ts';
+import { BCELL, blocked, demAt, facades, HIT, horizonTan, rayHit, seaVisible, TREE, wallPoint, type Bld, type City, type Facade, type World } from './grid.ts';
 
 export const STEP_MIN = 10;
 export const N = (24 * 60) / STEP_MIN; // отсчётов в сутках
@@ -139,6 +139,23 @@ export function seaRose(w: World, b: Bld, floor: number): SeaDir[] {
 export const SEA_FAN = [-Math.PI / 4, 0, Math.PI / 4];
 export const facadeSea = (w: World, b: Bld, f: Facade, floor: number) =>
   SEA_FAN.filter((da) => seaVisible(w, b, f.x, f.y, eyeHeight(w, b, floor), f.normal + da) != null).length;
+
+// Вид из окна фасада: кадр VIEW_H° по горизонтали (шаг 2°) и ±VIEW_V° по вертикали от горизонта (шаг 1° —
+// полоса моря у горизонта узкая). Клетка — что видит луч (HIT), строка 0 — верх кадра, столбец 0 — левый край.
+// Доли — от числа лучей (в полосе ±20° это почти доли телесного угла).
+export const VIEW_H = 64, VIEW_V = 20; // градусы
+export function windowView(w: World, b: Bld, e: Eye) {
+  const cols = VIEW_H / 2 + 1, rows = 2 * VIEW_V + 1, rad = Math.PI / 180;
+  const data = new Uint8Array(cols * rows);
+  let sea = 0, sky = 0;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const v = rayHit(w, b, e.x, e.y, e.z, (e.normal ?? 0) + (c * 2 - VIEW_H / 2) * rad, (VIEW_V - r) * rad);
+    data[r * cols + c] = v;
+    if (v === HIT.sea) sea++;
+    else if (v === HIT.sky) sky++;
+  }
+  return { cols, rows, data, sea: sea / data.length, sky: sky / data.length };
+}
 
 // Матрица «этажи × фасады»: годовая оценка по BRE (доля года и зимнего полугодия, %) и число лучей с морем.
 // Клетка k = (этаж − 1) × cols + фасад.

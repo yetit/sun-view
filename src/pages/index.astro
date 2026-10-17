@@ -13,6 +13,7 @@ import Meta from '../components/Meta.astro';
   <body data-mode="sun" data-sheet="peek">
     <div id="map" class="map" role="region" aria-label="3D map"></div>
     <div class="map-keys" aria-hidden="true" hidden></div>
+    <div class="view-badge" hidden><span class="view-badge-stat"></span><button class="view-exit" type="button" data-i="viewClose"></button></div>
     <p class="sr-only sr-live" aria-live="polite"></p>
     <div class="map-fallback" role="alert" hidden><p class="map-fallback-text"></p><button class="map-fallback-retry" type="button" hidden></button></div>
     <div class="legend-box" hidden>
@@ -90,6 +91,9 @@ import Meta from '../components/Meta.astro';
         <h3 data-i="seaTitle"></h3>
         <div class="rose"></div>
         <p class="legend" data-i="roseLegend"></p>
+        <div class="view-row"><button class="view-btn" type="button" aria-pressed="false" data-i="viewOpen"></button><span class="view-stat"></span></div>
+        <canvas class="view-pano" role="img" hidden></canvas>
+        <p class="legend view-legend" data-i="viewLegend" hidden></p>
 
         <div class="actions"><button class="pin-btn" type="button" data-i="addCompare"></button><button class="share-btn" type="button" data-i="downloadPng"></button></div>
       </div>

@@ -61,6 +61,12 @@ const ru = {
   roseAria: (n: number) => `Видимость моря: ${n} из 8 направлений`,
   roseSub: 'направл.',
   roseLegend: 'Луч с уровня окна на стене каждого направления. Видно — штриховка и расстояние до воды, не видно — светлый сектор с прочерком. Клик по сектору выбирает ближайший фасад.',
+  viewOpen: 'Вид из окна',
+  viewClose: 'Вернуть карту',
+  viewNeedFacade: 'Выберите фасад — покажем вид из его окна.',
+  viewLoading: 'Считаем вид…',
+  viewStat: (sea: number, sky: number) => `Море ${sea} % поля зрения, небо ${sky} %`,
+  viewLegend: 'Кадр 64° × 40° из окна по нормали фасада, горизонт посередине (пунктир): голубое — небо, зелёное — море, бежевое — рельеф, дома и деревья. Кривизна Земли не учитывается.',
   addCompare: '+ В сравнение',
   downloadPng: 'Скачать PNG',
   compare: 'Сравнение',
@@ -116,7 +122,7 @@ const ru = {
   mapKeysShort: 'Enter — здание в центре · ←↑→↓ — соседнее · Esc — снять',
   deselected: 'Выбор здания снят',
   announce: (name: string, summary: string) => `${name}. ${summary}`,
-  card: { sun: 'СОЛНЦЕ В ОКНАХ', sea: 'ВИД НА МОРЕ', year: 'год →', day: '↓ сутки', floor: (n: number) => `${n} этаж`, footer: 'данные: OpenStreetMap (ODbL), Copernicus DEM GLO-30, suncalc' },
+  card: { sun: 'СОЛНЦЕ В ОКНАХ', sea: 'ВИД НА МОРЕ', view: 'ВИД ИЗ ОКНА', year: 'год →', day: '↓ сутки', floor: (n: number) => `${n} этаж`, footer: 'данные: OpenStreetMap (ODbL), Copernicus DEM GLO-30, suncalc' },
 };
 
 type Dict = typeof ru;
@@ -177,6 +183,12 @@ const en: Dict = {
   roseAria: (n: number) => `Sea view: ${n} of 8 directions`,
   roseSub: 'directions',
   roseLegend: 'A ray from window level on the wall facing each direction. Visible: hatched, with the distance to the water. Not visible: light sector with a dash. Click a sector to pick the nearest facade.',
+  viewOpen: 'Window view',
+  viewClose: 'Back to map',
+  viewNeedFacade: 'Pick a facade to see the view from its window.',
+  viewLoading: 'Computing the view…',
+  viewStat: (sea: number, sky: number) => `Sea ${sea}% of the field of view, sky ${sky}%`,
+  viewLegend: 'A 64° × 40° frame from the window along the facade normal, horizon in the middle (dashed): blue is sky, green is sea, beige is terrain, buildings and trees. Earth curvature is ignored.',
   addCompare: '+ Compare',
   downloadPng: 'Download PNG',
   compare: 'Compare',
@@ -230,7 +242,7 @@ const en: Dict = {
   mapKeysShort: 'Enter — building in the centre · ←↑→↓ — next one · Esc — clear',
   deselected: 'Building selection cleared',
   announce: (name: string, summary: string) => `${name}. ${summary}`,
-  card: { sun: 'SUN IN THE WINDOWS', sea: 'SEA VIEW', year: 'year →', day: '↓ day', floor: (n: number) => `floor ${n}`, footer: 'data: OpenStreetMap (ODbL), Copernicus DEM GLO-30, suncalc' },
+  card: { sun: 'SUN IN THE WINDOWS', sea: 'SEA VIEW', view: 'WINDOW VIEW', year: 'year →', day: '↓ day', floor: (n: number) => `floor ${n}`, footer: 'data: OpenStreetMap (ODbL), Copernicus DEM GLO-30, suncalc' },
 };
 
 export const t: Dict = lang === 'en' ? en : ru;

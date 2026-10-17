@@ -1,9 +1,9 @@
-// Карточка результата в PNG 1200×630: заголовок, четыре сезона, лента года, роза моря.
+// Карточка результата в PNG 1200×630: заголовок, четыре сезона, лента года, роза моря или кадр вида из окна.
 import type { SeaDir, Season } from './analysis.ts';
 import { t } from './i18n.ts';
 
 const fmt = new Intl.NumberFormat(t.locale, { maximumFractionDigits: 1 });
-export type CardData = { city: string; title: string; subtitle: string; summary: string; seasons: Season[]; sea: SeaDir[]; ribbon: HTMLCanvasElement | null };
+export type CardData = { city: string; title: string; subtitle: string; summary: string; seasons: Season[]; sea: SeaDir[]; ribbon: HTMLCanvasElement | null; view: { frame: HTMLCanvasElement; text: string } | null };
 
 export async function shareCard(o: CardData): Promise<Blob> {
   const W = 1200, H = 630;
@@ -33,6 +33,19 @@ export async function shareCard(o: CardData): Promise<Blob> {
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(o.ribbon, 56, 324, 660, 232);
     font(400, 12); text(t.card.year, 56 + 660, 574, '#7a746a', 'right'); text(t.card.day, 56, 574, '#7a746a');
+  }
+
+  if (o.view) {
+    // Кадр вида из окна вместо розы: обрезка по центру под рамку.
+    const { frame: f } = o.view, x = 760, y = 208, w = 384, h = 300;
+    const k = Math.max(w / f.width, h / f.height), sw = w / k, sh = h / k;
+    font(600, 13); text(t.card.view, x, 196, '#7a746a');
+    ctx.save(); ctx.beginPath(); ctx.roundRect(x, y, w, h, 12); ctx.clip();
+    ctx.drawImage(f, (f.width - sw) / 2, (f.height - sh) / 2, sw, sh, x, y, w, h);
+    ctx.restore();
+    font(600, 18); text(o.view.text, x, y + h + 32, '#1f1d1a');
+    font(400, 14); text(`Sun & View · ${o.city} · ${t.card.footer}`, 56, 608, '#7a746a');
+    return new Promise((res) => cv.toBlob((b) => res(b!), 'image/png'));
   }
 
   // Роза. Штриховка для «море видно», как в панели.
