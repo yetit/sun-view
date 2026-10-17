@@ -46,7 +46,8 @@ export const cities = [
     nameEn: 'Bergen',
     bbox: { south: 60.383, west: 5.305, north: 60.403, east: 5.345 },
     // ±15 км: ±0.135° по широте, ±0.27° по долготе (на 60° градус долготы ≈ 55 км).
-    dem: { bbox: { south: 60.248, west: 5.035, north: 60.538, east: 5.615 }, step: 2 },
+    // Земля — лидарный DTM Картверкета: в Copernicus (модель поверхности) на склонах Флёйена кроны леса.
+    dem: { bbox: { south: 60.248, west: 5.035, north: 60.538, east: 5.615 }, step: 2, dtm: 'kartverket' },
     camera: { center: [5.325, 60.393], zoom: 14.4, pitch: 60, bearing: 120 },
     examples: [
       { b: 289528809, f: 13, d: null, s: 1, ru: '13-й этаж над фьордом', en: '13th floor over the fjord' },

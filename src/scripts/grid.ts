@@ -6,7 +6,7 @@ export type City = {
   name: string;
   nameEn?: string;
   bbox: { south: number; west: number; north: number; east: number };
-  dem: { bbox: { south: number; west: number; north: number; east: number }; step: number };
+  dem: { bbox: { south: number; west: number; north: number; east: number }; step: number; dtm?: 'kartverket' };
   camera: { center: [number, number]; zoom: number; pitch: number; bearing: number };
   timezone: string;
   floorHeight: number;

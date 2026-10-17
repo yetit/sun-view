@@ -93,7 +93,7 @@ const repo = 'https://github.com/yetit/sun-view';
 
       <h2><span lang="ru">6. Что упрощено</span><span lang="en">6. Simplifications</span></h2>
       <ul lang="ru">
-        <li>Copernicus — модель поверхности: в ячейках есть крыши и кроны. Под зданиями DSM опущен до соседей с поправкой на наклон склона. Для точной земли нужен DTM (например, FABDEM, лицензия CC BY-NC-SA).</li>
+        <li>Copernicus — модель поверхности: в ячейках есть крыши и кроны. Под зданиями DSM опущен до соседей с поправкой на наклон склона. Для точной земли нужен DTM (например, FABDEM, лицензия CC BY-NC-SA). В Бергене рельеф уже из лидарного DTM 1 м Картверкета.</li>
         <li>Шаг рельефа 60 м, высота между ячейками интерполируется: гребни и узкие проходы сглажены, на крутых склонах отметка дома между источниками расходится на 20–70 м.</li>
         <li>Высота крон — модель по спутниковым снимкам (Tolan et al., 2024) с ошибкой около 3 м; снимки разных лет, свежие посадки и вырубки могут не совпадать. В расчётах деревья всегда в листве. Для весны и зимы панель показывает и верхнюю границу — если лиственные кроны (по карте Copernicus HRL Dominant Leaf Type 2018, 10 м) стоят голыми: данные не отличают листопадные деревья от вечнозелёных олив и каменного дуба, а голые ветви тоже затеняют.</li>
         <li>Этажность в OSM известна примерно у 14 % зданий Тивата, 3 % Котора и 58 % Бергена; остальным даётся 1 этаж (хозпостройки, руины, стройки, контуры меньше 40 м²) или 2 этажа (на карте они полупрозрачные), этажность можно уточнить в панели. Метка надёжности в панели называет, что из этого списка касается выбранного здания: оценённая этажность, крутой склон, деревья выше дома рядом.</li>
@@ -101,7 +101,7 @@ const repo = 'https://github.com/yetit/sun-view';
         <li>Тени на карте — иллюстрация (проекция контура на ровную землю); часы солнца считаются лучами.</li>
       </ul>
       <ul lang="en">
-        <li>Copernicus is a surface model: cells include roofs and canopies. Under buildings the DSM is lowered to its neighbours, corrected for the slope. Exact ground needs a DTM (e.g. FABDEM, CC BY-NC-SA).</li>
+        <li>Copernicus is a surface model: cells include roofs and canopies. Under buildings the DSM is lowered to its neighbours, corrected for the slope. Exact ground needs a DTM (e.g. FABDEM, CC BY-NC-SA). In Bergen the terrain already comes from Kartverket's 1 m lidar DTM.</li>
         <li>The 60 m terrain grid is interpolated between cells; it smooths ridges and gaps, and on steep slopes sources disagree on a building's ground by 20–70 m.</li>
         <li>Crown heights come from a model trained on satellite imagery (Tolan et al., 2024) with about 3 m error; the imagery spans several years, so recent planting or felling may be missing. Trees are always in leaf in the computation. For spring and winter the panel also shows an upper bound with the broadleaved crowns (from the Copernicus HRL Dominant Leaf Type 2018 map, 10 m) bare: the data cannot tell deciduous trees from evergreen olives and holm oaks, and bare branches still cast shade.</li>
         <li>OSM has floor counts for about 14% of buildings in Tivat, 3% in Kotor and 58% in Bergen; the rest get 1 floor (sheds, garages, ruins, construction, footprints under 40 m²) or 2 floors (shown semi-transparent), and you can correct it in the panel. The reliability label in the panel says which of these limits apply to the selected building: estimated floors, steep slope, trees taller than the building nearby.</li>

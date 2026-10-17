@@ -139,6 +139,7 @@ Lighthouse локально, по 5 прогонов: медиана произ�
 | --- | --- | --- |
 | Здания, этажность, высоты, береговая линия | [OpenStreetMap](https://www.openstreetmap.org/copyright) через Overpass API | ODbL, © участники OpenStreetMap |
 | Высота деревьев | [High Resolution Canopy Height Maps](https://registry.opendata.aws/dataforgood-fb-forests/), WRI и Meta, AWS Open Data; тип листвы — [Copernicus HRL Dominant Leaf Type 2018](https://land.copernicus.eu/en/products/high-resolution-layer-dominant-leaf-type) | CC BY 4.0, © Meta и World Resources Institute; © Европейский союз, Copernicus Land Monitoring Service |
+| Рельеф для расчёта в Бергене | [DTM 1 м Картверкета](https://hoydedata.no), WCS | © Kartverket, CC BY 4.0 |
 | Облачность (вероятность прямого солнца по месяцам) | [PVGIS](https://re.jrc.ec.europa.eu/pvg_tools/en/), почасовой ряд SARAH3, JRC | © Европейский союз, повторное использование с указанием источника |
 | Рельеф для расчёта | [Copernicus DEM GLO-30](https://registry.opendata.aws/copernicus-dem/), AWS Open Data | © DLR e.V. 2010–2014 и © Airbus Defence and Space GmbH 2014–2018, предоставлено ЕС и ESA в рамках Copernicus |
 | Подложка и рельеф для показа | [OpenFreeMap](https://openfreemap.org) / © OpenMapTiles, [Terrain Tiles](https://registry.opendata.aws/terrain-tiles/) | открытые |
@@ -151,7 +152,7 @@ Lighthouse локально, по 5 прогонов: медиана произ�
 ## Ограничения
 
 - **Этажность известна только у 14 % зданий Тивата и 3 % Котора.** Остальным она задаётся по тегу и площади контура: сараи, гаражи, навесы, контейнеры, крыши, руины, стройки и контуры меньше 40 м² — 1 этаж, всё прочее — 2. Такие дома на карте полупрозрачные, а в панели этажность можно уточнить. Открытые слои высот здесь не помогают: [GHS-BUILT-H](https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_H_GLOBE_R2023A/) (JRC, 100 м, CC BY 4.0) слабо связан с известными высотами OSM в этих городах (r = 0,22 в Тивате, 0,30 в Которе) и ошибается сильнее константы «2 этажа» (средняя ошибка 3,8 против 2,9 м в Тивате, 5,3 против 3,6 м в Которе). В [Overture Maps](https://overturemaps.org/) (выпуск 2026-09-23) высоты и этажность здесь только из OSM, у контуров Microsoft ML их нет.
-- **Copernicus — модель поверхности**, в её ячейках есть крыши и кроны. Под зданиями она сглажена. Для точной земли нужен DTM.
+- **Copernicus — модель поверхности**, в её ячейках есть крыши и кроны. Под зданиями она сглажена. Для точной земли в Тивате и Которе нужен DTM; в Бергене земля уже из лидарного DTM 1 м Картверкета.
 - **Высота деревьев — из спутниковой модели** (Meta и WRI, пиксель около 1 м, ошибка около 3 м), сведённой в сетку 6 м. Во всех расчётах деревья в листве; для весны и зимы панель добавляет верхнюю границу с голыми лиственными деревьями (тип листвы — Copernicus HRL Dominant Leaf Type 2018), потому что данные не отличают листопадные деревья от вечнозелёных олив и каменного дуба.
 - **«Солнце в окне» означает прямую видимость** солнца из точки окна. Остекление, лоджии и отражения не моделируются.
 - **Тени на карте — иллюстрация** на ровной земле. Часы солнца считаются лучами.

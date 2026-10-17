@@ -139,6 +139,7 @@ Local Lighthouse, 5 runs each: performance median 62 before and 62 after. Total 
 | --- | --- | --- |
 | Buildings, floors, heights, coastline | [OpenStreetMap](https://www.openstreetmap.org/copyright) via Overpass API | ODbL, © OpenStreetMap contributors |
 | Tree heights | [High Resolution Canopy Height Maps](https://registry.opendata.aws/dataforgood-fb-forests/) by WRI and Meta, AWS Open Data; leaf type from [Copernicus HRL Dominant Leaf Type 2018](https://land.copernicus.eu/en/products/high-resolution-layer-dominant-leaf-type) | CC BY 4.0, © Meta and World Resources Institute; © European Union, Copernicus Land Monitoring Service |
+| Terrain for the computation in Bergen | [Kartverket DTM 1 m](https://hoydedata.no), WCS | © Kartverket, CC BY 4.0 |
 | Cloud (chance of direct sun by month) | [PVGIS](https://re.jrc.ec.europa.eu/pvg_tools/en/) SARAH3 hourly series, JRC | © European Union, reuse with attribution |
 | Terrain for the computation | [Copernicus DEM GLO-30](https://registry.opendata.aws/copernicus-dem/), AWS Open Data | © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the EU and ESA |
 | Basemap and display terrain | [OpenFreeMap](https://openfreemap.org) / © OpenMapTiles, [Terrain Tiles](https://registry.opendata.aws/terrain-tiles/) | open |
@@ -151,7 +152,7 @@ The data lives in `data/<city>/` and is committed. The site calls no APIs at run
 ## Limitations
 
 - **Floor counts are known for only 14% of buildings in Tivat and 3% in Kotor.** The rest get a default by OSM tag and footprint: sheds, garages, carports, containers, roofs, ruins, construction sites and footprints under 40 m² get 1 floor, everything else 2. They are drawn semi-transparent, and the panel lets you correct the count. Open height layers do not help here: [GHS-BUILT-H](https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_H_GLOBE_R2023A/) (JRC, 100 m, CC BY 4.0) correlates weakly with known OSM heights in these towns (r = 0.22 in Tivat, 0.30 in Kotor) and errs more than the 2-floor constant (mean error 3.8 vs 2.9 m in Tivat, 5.3 vs 3.6 m in Kotor). In [Overture Maps](https://overturemaps.org/) (release 2026-09-23) heights and floor counts here come only from OSM, and its Microsoft ML footprints carry none.
-- **Copernicus is a surface model**, so its cells include roofs and canopies. It is flattened under buildings. An exact ground needs a DTM.
+- **Copernicus is a surface model**, so its cells include roofs and canopies. It is flattened under buildings. Tivat and Kotor would need a DTM for exact ground; in Bergen the ground already comes from Kartverket's 1 m lidar DTM.
 - **Tree heights come from a satellite model** (Meta and WRI, about 1 m per pixel, about 3 m error), reduced to a 6 m grid. Leaves stay on in every count; for spring and winter the panel adds an upper bound with broadleaved trees bare (leaf type from Copernicus HRL Dominant Leaf Type 2018), because the data cannot tell deciduous trees from evergreen olives and holm oaks.
 - **"Sun in the window" means a direct line of sight** from the window point. Glazing, balconies and reflections are not modelled.
 - **Ground shadows on the map are an illustration** on flat ground. Sun hours come from the rays.

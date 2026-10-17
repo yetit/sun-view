@@ -3,9 +3,11 @@
 // Затем: 1) море размечаем по береговой линии OSM (natural=coastline: суша слева, вода справа) —
 // ячейки моря получают 0, суша ниже 0 поднимается до 1; 2) под зданиями из buildings.json DSM
 // опускаем до соседей (крыши в модели поверхности есть), не роняя дома на склоне.
+// Где есть модель земли (city.dem.dtm: 'kartverket' — лидарный DTM 1 м Норвегии), высоты берутся из неё,
+// а сглаживание под зданиями не нужно.
 // Запуск: node scripts/fetch-dem.mjs <id>.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { fromUrl } from 'geotiff';
+import { fromArrayBuffer, fromUrl } from 'geotiff';
 import { getCity } from '../cities.config.mjs';
 import { bboxStr, overpass } from './overpass.mjs';
 import { bilinear } from './resample.mjs';
@@ -57,6 +59,19 @@ for (let lat = Math.floor(bbox.south); lat < bbox.north; lat++) {
   }
 }
 
+// --- 1б. Модель земли вместо модели поверхности --------------------------------
+// Картверкет отдаёт DTM через WCS сразу в нашей сетке: тот же bbox в WGS 84 и столько же пикселей.
+const dtm = city.dem.dtm === 'kartverket';
+if (dtm) {
+  const url = `https://wcs.geonorge.no/skwms1/wcs.hoyde-dtm-nhm-25833?service=WCS&version=1.0.0&request=GetCoverage&coverage=nhm_dtm_topo_25833&CRS=EPSG:4326&BBOX=${bbox.west},${bbox.south},${bbox.east},${bbox.north}&WIDTH=${cols}&HEIGHT=${rows}&FORMAT=GeoTIFF`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Kartverket WCS: ${res.status}`);
+  const [band] = await (await (await fromArrayBuffer(await res.arrayBuffer())).getImage()).readRasters();
+  let n = 0;
+  band.forEach((v, k) => { if (Number.isFinite(v) && v > -100) { out[k] = Math.round(v); n++; } });
+  console.log(`DTM Картверкета: ${n} из ${cols * rows} ячеек`);
+}
+
 // --- 2. Море по береговой линии OSM ------------------------------------------
 // Для ячейки ищем ближайшее пересечение береговой линии лучом на восток: линия идёт на север —
 // суша слева (на западе), т.е. ячейка на суше; на юг — ячейка в воде. Нет пересечений на востоке —
@@ -87,7 +102,8 @@ console.log(`ячеек моря: ${sea}, суши ниже уровня мор�
 
 // --- 3. Сглаживание DSM под зданиями ------------------------------------------
 const bPath = `data/${city.id}/buildings.json`;
-if (existsSync(bPath)) {
+if (dtm) console.log('DTM — земля без крыш, сглаживание под зданиями не нужно');
+else if (existsSync(bPath)) {
   const src = Int16Array.from(out);
   const inRing = (x, y, ring) => {
     let inside = false;
@@ -132,7 +148,9 @@ writeFileSync(`data/${city.id}/dem.bin`, Buffer.from(out.buffer)); // Int16 LE, 
 writeFileSync(
   `data/${city.id}/dem.json`,
   JSON.stringify({
-    source: 'Copernicus DEM GLO-30 (DSM), © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018, provided under COPERNICUS by the European Union and ESA; AWS Open Data. Море — OpenStreetMap natural=coastline (ODbL)',
+    source: dtm
+      ? 'Kartverket DTM 1 m (NHM), © Kartverket, CC BY 4.0, via WCS; Copernicus DEM GLO-30 where DTM is missing. Море — OpenStreetMap natural=coastline (ODbL)'
+      : 'Copernicus DEM GLO-30 (DSM), © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018, provided under COPERNICUS by the European Union and ESA; AWS Open Data. Море — OpenStreetMap natural=coastline (ODbL)',
     fetched: new Date().toISOString().slice(0, 10), bbox, cols, rows, cell, nodata: NODATA, min, max,
   }),
 );
