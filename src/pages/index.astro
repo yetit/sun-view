@@ -8,7 +8,11 @@ import Meta from '../components/Meta.astro';
 <!doctype html>
 <html lang="ru">
   <head>
-    <Meta title="Sun & View" imageAlt="Sun & View: a 3D map of Tivat with buildings coloured by hours of winter sun, and the app's title card" description="How many hours of sun reach each window, and can you see the sea? Click any building in Tivat, Kotor or Bergen — computed in the browser from open data. · Сколько солнца в окнах и видно ли море: расчёт в браузере по открытым данным." />
+    <Meta
+      title="Sun & View"
+      description="How many hours of sun reach each window, and can you see the sea? Click any building in Tivat, Kotor or Bergen: computed in your browser from open data. · Сколько часов солнца попадает в окна и видно ли море? Кликните любой дом в Тивате, Которе или Бергене: расчёт в браузере по открытым данным."
+      imageAlt="Sun & View: a 3D map of Tivat with buildings coloured by hours of winter sun · Sun & View: 3D-карта Тивата, дома окрашены по часам зимнего солнца"
+    />
   </head>
   <body data-mode="sun" data-sheet="peek">
     <div id="map" class="map" role="region" aria-label="3D map"></div>

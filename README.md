@@ -20,6 +20,7 @@
 - **Time slider.** Building shading, ground shadows and the sun marker follow the time of day; ▶ plays a whole day.
 - **Reliability label.** Each building gets high, medium or low reliability with the reasons: floor count estimated, steep slope, woods next to it.
 - **Compare and share.** Pin up to four flats side by side, download a PNG card, or share the URL. The URL keeps the city, building, floor, side, season and time.
+- **Where floor counts are missing.** The "Floors" map mode colours buildings that have no floor count in OSM by how many neighbours' sun or sea view depends on it. The same list is ready to survey: [docs/levels-todo](docs/levels-todo/). See [Help fill in floor counts](#help-fill-in-floor-counts).
 - **Keyboard.** Tab to the map. Enter selects the building in the centre, arrow keys move to the nearest building in that direction on screen, Esc clears the selection. The selection and its summary are announced to screen readers.
 - **Embed.** Add `embed=1` to any link to get only the map, the building and a compact panel for an `<iframe>`. The iframe can size itself through `postMessage`. Ready-made code is on the [embed page](https://yetit.github.io/sun-view/embed/?lang=en) and below.
 
@@ -120,6 +121,18 @@ Load stages from `npm run bench -- <url> 3 4` on the production build. These are
 
 **Lighthouse did not change.** Locally, 3 runs each: performance median 58 before and 56 after, total blocking time 7.1 s and 6.8 s, within noise. Almost all main-thread time is the MapLibre bundle: 6–7 s of script evaluation under Lighthouse's slowdown, where WebGL runs on SwiftShader on the CPU. Parsing the GeoJSON module was never the bottleneck, as the profile above had already shown. The binary format halves the building data on the wire and takes the GeoJSON copy out of the worker handshake. On the GitHub runner, the map page scored 33, 40 and 65 before (median 40) and 43, 63 and 63 after (median 63), with page weight going from 2,550 to 2,468 KB. The ranges overlap, so I don't count it as a gain from the format.
 
+### Lazy MapLibre
+
+`boot.ts` used to import MapLibre statically, so the browser downloaded and evaluated about 1 MB of JS before it even requested the city data. Now `boot.ts` is 2 KB. It requests the data first and starts a dynamic import of `ui/start.ts` (MapLibre and the map UI) in parallel. The worker builds its world while the map bundle loads.
+
+| Production build, CPU ×4, 6 runs per stage, old and new builds alternating | Before | After |
+| --- | --- | --- |
+| Data loaded | 0.85–1.68 s | 0.35–0.65 s |
+| Worker ready | 1.11–1.78 s | 0.83–1.30 s |
+| Map painted | 4.3–5.4 s | 4.1–5.2 s |
+
+Local Lighthouse, 5 runs each: performance median 62 before and 62 after. Total blocking time median went from 9.0 s to 5.6 s, but with a wide spread (2.8–11.2 s before, 2.9–6.0 s after). LCP went from 1.52 s to 1.67 s. The early stages gain beyond noise, while the time to a painted map is set by basemap tiles from the network. I kept the change because data and the worker are ready half a second sooner, even though the Lighthouse score did not move.
+
 ## Data and licences
 
 | What | Source | Licence |
@@ -138,6 +151,17 @@ The data lives in `data/<city>/` and is committed. The site calls no APIs at run
 - **Trees are OSM woods and parks** at a single height of 10 m.
 - **"Sun in the window" means a direct line of sight** from the window point. Glazing, balconies and reflections are not modelled.
 - **Ground shadows on the map are an illustration** on flat ground. Sun hours come from the rays.
+
+## Help fill in floor counts
+
+Floor counts are missing for most buildings in Tivat and Kotor and for about 40% in Bergen. Where they are missing, the sun and the view are estimates. `npm run levels -- <city>` ranks those buildings by how much their unknown floor count matters to the neighbours. It raises each one from 1 to 4 floors and counts the neighbours within 100 m whose winter sun changes by half an hour or more, or who gain or lose a sea view. The result is in [docs/levels-todo](docs/levels-todo/): `<city>.csv` is the top 100 for a walk, and `<city>.geojson` is ready for MapRoulette. On the map, the "Floors" mode shows the same order.
+
+**This project never edits OpenStreetMap; people do.** Ways to help:
+- **StreetComplete** on Android has a quest for building floor counts. Walk past the buildings from the list and answer what you see.
+- **MapRoulette**: create a challenge from `<city>.geojson`. Setup and the challenge instruction are in [docs/levels-todo/README.md](docs/levels-todo/README.md).
+- **JOSM or iD**: open the building from the `osm` link and add `building:levels`, the number of above-ground floors, and `roof:levels` if the roof has habitable floors.
+
+**OSM rules apply.** Add only what you have seen on site or on street-level imagery with a compatible licence, such as Mapillary or Panoramax. Do not guess from shadows, satellite images, Google Street View or listings. If you can't tell, leave it. Don't import the list as data; it is only a to-do list.
 
 ## Embed
 
@@ -178,3 +202,16 @@ npm run test:e2e   # Playwright against the production build: smoke for every ci
 2. Set build command `npm run build`, output `dist`, env `NODE_VERSION=24`. Leave `BASE_PATH` unset: the site is served from the root.
 3. Add `public/_headers` with `/_astro/*` → `Cache-Control: public, max-age=31536000, immutable`.
 4. Point `SITE` to the new domain for `og:image`, and update the demo link, `homepage` and `DEMO` in `live.yml`.
+
+**A custom domain on GitHub Pages, for later.** Nothing is connected now. To connect one:
+1. **DNS.** For a subdomain such as `sun.example.com`, add a `CNAME` record pointing to `yetit.github.io`. For an apex domain, add `A` records `185.199.108.153`, `185.199.109.153`, `185.199.110.153` and `185.199.111.153`, and the matching `AAAA` records `2606:50c0:8000::153` to `2606:50c0:8003::153`.
+2. **Pages settings.** In Settings → Pages → Custom domain, enter the domain, wait for the DNS check, then turn on Enforce HTTPS. Verifying the domain in your account settings protects it from takeover.
+3. **CNAME file.** Add `public/CNAME` containing the domain on one line. With a workflow deploy the settings field is what counts, but the file keeps the setting in the repository.
+4. **Base path.** The site moves from `/sun-view/` to the root. In `.github/workflows/deploy.yml`, set `BASE_PATH: /` and `SITE: https://<domain>`. `astro.config.mjs` reads both, so `site` and `base` follow.
+5. **Absolute links.** Update every `https://yetit.github.io/sun-view/`:
+   - `DEMO` in `.github/workflows/live.yml`, and the repository homepage;
+   - the demo links and the embed code in both READMEs;
+   - `demo` in `src/pages/embed.astro`;
+   - the origin check `e.origin !== 'https://yetit.github.io'` in the embed code, which becomes `https://<domain>`.
+
+   `og:image` and `og:url` are built from `SITE` and need no edits.
