@@ -2,7 +2,9 @@
 // Для контрольных точек города берём угол горизонта по 48 азимутам (шаг 7,5°) из PVGIS и считаем
 // тот же угол нашим ядром: horizonAngle из grid.ts по сетке DEM, без зданий, с высоты земли + 1,5 м.
 // Печатаем разницу и что она даёт для восхода и заката 21 декабря.
-// Запуск: nvm use && node scripts/check-horizon.mjs <cityId>
+// Севернее 60° с. ш. у PVGIS рельеф с ячейкой 30″, а не 3″ (docs/horizon-check.md, Берген), поэтому для
+// Норвегии есть второй эталон — профиль, построенный здесь же по DTM 1 м Картверкета (ws.geonorge.no).
+// Запуск: nvm use && node scripts/check-horizon.mjs <cityId> [pvgis|kartverket]
 import { readFileSync } from 'node:fs';
 import SunCalc from 'suncalc';
 import { getCity } from '../cities.config.mjs';
@@ -30,6 +32,16 @@ const POINTS = {
     ['Прчань', 42.459, 18.743],
     ['Серпантин на Ловчен', 42.417, 18.788],
   ],
+  bergen: [
+    ['Брюгген, набережная', 60.3975, 5.324],
+    ['Нурднес', 60.3985, 5.308],
+    ['Фестплассен, центр', 60.3915, 5.327],
+    ['Скансен, подножие Флёйена', 60.396, 5.331],
+    ['Склон Флёйена', 60.397, 5.336],
+    ['Флёйен, верхняя станция', 60.3945, 5.3435],
+    ['Подножие Ульрикена', 60.3775, 5.362],
+    ['Склон Ульрикена', 60.379, 5.37],
+  ],
 };
 const EYE = 1.5; // м над землёй
 const STEP = 7.5; // шаг азимута PVGIS, °
@@ -56,6 +68,33 @@ async function pvgis(lat, lon, tries = 3) {
   if (prof.length !== 360 / STEP || prof.some(([a], i) => a !== i * STEP)) throw new Error('неожиданная сетка азимутов PVGIS');
   return { elevation: j.inputs.location.elevation, h: prof.map(([, h]) => h) };
 }
+
+// Профиль по DTM 1 м Картверкета (только суша Норвегии; над морем API отдаёт глубину — считаем 0).
+// По 48 азимутам точки через 20 м до 1 км, 100 м до 5 км, 250 м до 15 км; ближе 60 м не берём, как ядро.
+const KV_D = [];
+for (let d = 60; d <= FAR; d += d < 1000 ? 20 : d < 5000 ? 100 : 250) KV_D.push(d);
+async function kvHeights(pts, tries = 3) {
+  const url = `https://ws.geonorge.no/hoydedata/v1/datakilder/dtm1/punkt?koordsys=4258&punkter=${encodeURIComponent(JSON.stringify(pts))}`;
+  const r = await fetch(url).catch(() => null);
+  if (!r?.ok) { if (tries > 1) return kvHeights(pts, tries - 1); throw new Error(`Kartverket ${r?.status}`); }
+  return (await r.json()).punkter.map((p) => Math.max(0, p.z ?? 0));
+}
+async function kartverket(lat, lon) {
+  const kx = 111320 * Math.cos(lat * deg), pts = [[lon, lat]];
+  for (let i = 0; i < 360 / STEP; i++) for (const d of KV_D) pts.push([+(lon + (d * Math.sin(i * STEP * deg)) / kx).toFixed(6), +(lat + (d * Math.cos(i * STEP * deg)) / 111320).toFixed(6)]);
+  const z = [];
+  for (let k = 0; k < pts.length; k += 300) { // по 50 точек в запросе, 6 запросов параллельно
+    const part = await Promise.all([0, 50, 100, 150, 200, 250].filter((o) => k + o < pts.length).map((o) => kvHeights(pts.slice(k + o, k + o + 50))));
+    z.push(...part.flat());
+  }
+  const eye = z[0] + EYE;
+  const h = [];
+  for (let i = 0; i < 360 / STEP; i++) h.push(Math.max(0, ...KV_D.map((d, j) => Math.atan2(z[1 + i * KV_D.length + j] - eye, d) / deg)));
+  return { elevation: Math.round(z[0]), h };
+}
+const REF = process.argv[3] ?? 'pvgis';
+const reference = { pvgis, kartverket }[REF];
+const REF_NAME = { pvgis: 'PVGIS', kartverket: 'Kartverket DTM 1 м' }[REF];
 
 // Горизонт по азимуту (°) линейной интерполяцией профиля с шагом STEP.
 const horAt = (h, a) => {
@@ -85,17 +124,17 @@ const hhmm = (m) => (m == null ? '—' : new Date(Date.parse(`${DAY}T00:00:00Z`)
 const dmin = (a, b) => (a == null || b == null ? '—' : `${a - b > 0 ? '+' : ''}${a - b}`);
 const f1 = (v) => `${v > 0 ? '+' : ''}${v.toFixed(1)}`;
 
-console.log(`${city.name}: горизонт ядра (DEM ${meta.cell * 3600}″, bbox рельефа, ≤ ${FAR / 1000} км) против PVGIS v5_3; Δ = наш − PVGIS, °`);
-console.log('Наш угол ниже 0 считаем 0: PVGIS отрицательных не отдаёт. «При высоте PVGIS» — тот же расчёт, но глаз на его отметке + 1,5 м.');
-console.log('Восход/закат — 21.12 по нашему профилю и по профилю PVGIS, местное время, Δ в минутах.\n');
-console.log('| Точка | Земля наша / PVGIS, м | До края bbox, км | Δ средн. | \\|Δ\\| средн. | \\|Δ\\| при высоте PVGIS | Δ макс. (азимут) | \\|Δ\\| > 3°: азимутов, худшие | Восход наш / PVGIS (Δ) | Закат наш / PVGIS (Δ) |');
+console.log(`${city.name}: горизонт ядра (DEM ${meta.cell * 3600}″, bbox рельефа, ≤ ${FAR / 1000} км) против ${REF_NAME}; Δ = наш − эталон, °`);
+console.log(`Углы ниже 0 считаем 0: PVGIS отрицательных не отдаёт. «При высоте эталона» — тот же расчёт, но глаз на его отметке + 1,5 м.`);
+console.log(`Восход/закат — 21.12 по нашему профилю и по профилю эталона, местное время, Δ в минутах.\n`);
+console.log(`| Точка | Земля наша / ${REF_NAME}, м | До края bbox, км | Δ средн. | \\|Δ\\| средн. | \\|Δ\\| при высоте эталона | Δ макс. (азимут) | \\|Δ\\| > 3°: азимутов, худшие | Восход наш / эталон (Δ) | Закат наш / эталон (Δ) |`);
 console.log('|---|---|---|---|---|---|---|---|---|---|');
 const all = [], allPv = [];
 const meanAbs = (a) => a.reduce((s, d) => s + Math.abs(d), 0) / a.length;
 for (const [name, lat, lon] of points) {
   const ground = demAt(w.dem, lon, lat);
   const [x, y] = w.proj.toXY(lon, lat);
-  const pv = await pvgis(lat, lon);
+  const pv = await reference(lat, lon);
   const hor = (z) => pv.h.map((_, i) => Math.max(0, horizonAngle(w, x, y, z, i * STEP * deg) / deg));
   const ours = hor((ground ?? 0) + EYE);
   const diff = ours.map((v, i) => v - pv.h[i]);
@@ -111,4 +150,4 @@ for (const [name, lat, lon] of points) {
   console.log(`| ${name} | ${Math.round(ground)} / ${pv.elevation} | ${Math.min(...edge).toFixed(1)}–${Math.max(...edge).toFixed(1)} | ${f1(mean)} | ${meanAbs(diff).toFixed(1)} | ${meanAbs(diffPv).toFixed(1)} | ${f1(diff[iMax])} (${iMax * STEP}°) | ${bigStr} | ${hhmm(so.first)} / ${hhmm(sp.first)} (${dmin(so.first, sp.first)}) | ${hhmm(so.last)} / ${hhmm(sp.last)} (${dmin(so.last, sp.last)}) |`);
 }
 const sum = (a) => `Δ средн. ${f1(a.reduce((s, d) => s + d, 0) / a.length)}°, |Δ| средн. ${meanAbs(a).toFixed(2)}°, |Δ| > 3° — ${a.filter((d) => Math.abs(d) > 3).length} из ${a.length}`;
-console.log(`\nВсего: ${sum(all)}. При высоте PVGIS: ${sum(allPv)}.`);
+console.log(`\nВсего: ${sum(all)}. При высоте эталона: ${sum(allPv)}.`);

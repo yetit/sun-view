@@ -8,6 +8,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fromUrl } from 'geotiff';
 import { getCity } from '../cities.config.mjs';
 import { bboxStr, overpass } from './overpass.mjs';
+import { bilinear } from './resample.mjs';
 
 const city = getCity(process.argv[2]);
 const { bbox, step } = city.dem;
@@ -29,23 +30,27 @@ for (let lat = Math.floor(bbox.south); lat < bbox.north; lat++) {
     const tiff = await fromUrl(`https://copernicus-dem-30m.s3.amazonaws.com/${name}/${name}.tif`);
     const img = await tiff.getImage();
     // Тайлы помечены PixelIsPoint: точка привязки (getOrigin) — центр первого пикселя, на целом градусе.
-    // Берём пиксель с ближайшим центром.
+    // Высота в центре нашей ячейки — билинейно по четырём пикселям. Раньше брался ближайший, а севернее
+    // 50° с. ш. шаг тайла по долготе 1,5–2″, и центр ячейки мог попасть ровно между пикселями: в Бергене
+    // брался сосед на 15 м восточнее, на склоне Флёйена это +17 м (docs/horizon-check.md, Берген).
     const [x0, y1] = img.getOrigin();
     const [rx, ry] = img.getResolution();
-    const ix = (lon) => Math.round((lon - x0) / rx), iy = (lat) => Math.round((y1 - lat) / -ry);
-    const px0 = Math.max(0, ix(bbox.west)), px1 = Math.min(img.getWidth(), ix(bbox.east) + 1);
-    const py0 = Math.max(0, iy(bbox.north)), py1 = Math.min(img.getHeight(), iy(bbox.south) + 1);
+    const W = img.getWidth(), H = img.getHeight();
+    const fx = (lon) => (lon - x0) / rx, fy = (lat) => (y1 - lat) / -ry;
+    const own = (f, n) => f >= -0.5 && f < n - 0.5; // ячейка — у тайла, в котором её ближайший пиксель
+    const px0 = Math.max(0, Math.floor(fx(bbox.west))), px1 = Math.min(W, Math.ceil(fx(bbox.east)) + 1);
+    const py0 = Math.max(0, Math.floor(fy(bbox.north))), py1 = Math.min(H, Math.ceil(fy(bbox.south)) + 1);
     if (px0 >= px1 || py0 >= py1) continue;
     const [band] = await img.readRasters({ window: [px0, py0, px1, py1] });
     const ww = px1 - px0;
-    console.log(`${name}: начало ${x0}, ${y1}; окно ${ww}×${py1 - py0} px`);
+    console.log(`${name}: начало ${x0}, ${y1}; шаг ${rx * 3600}″ × ${-ry * 3600}″; окно ${ww}×${py1 - py0} px`);
     for (let r = 0; r < rows; r++) {
-      const py = iy(latAt(r));
-      if (py < py0 || py >= py1) continue;
+      const y = fy(latAt(r));
+      if (!own(y, H)) continue;
       for (let c = 0; c < cols; c++) {
-        const px = ix(lonAt(c));
-        if (px < px0 || px >= px1) continue;
-        const v = band[(py - py0) * ww + px - px0];
+        const x = fx(lonAt(c));
+        if (!own(x, W)) continue;
+        const v = bilinear(band, ww, py1 - py0, x - px0, y - py0);
         out[r * cols + c] = Number.isFinite(v) ? Math.round(v) : NODATA;
       }
     }

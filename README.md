@@ -43,17 +43,20 @@ Code: `src/scripts/grid.ts` (rasters, rays), `analysis.ts` (seasons, sea rose, c
 
 ## Validation
 
-The terrain horizon was checked against [PVGIS](https://re.jrc.ec.europa.eu/pvg_tools/en/) from the European Commission JRC. The check covered 16 points in Tivat and Kotor, 48 azimuths each. The full report is in Russian: [docs/horizon-check.md](docs/horizon-check.md).
+The terrain horizon was checked against [PVGIS](https://re.jrc.ec.europa.eu/pvg_tools/en/) from the European Commission JRC. The check covered 16 points in Tivat and Kotor, 48 azimuths each. North of 60° N, PVGIS terrain turns out to be a 30″ grid (about 0.9 × 0.5 km), not 3″: it puts Bergen's Fløyen funicular top station (320 m) at 140 m. So 8 points in Bergen were checked against a horizon built from the Norwegian Mapping Authority's 1 m lidar terrain model ([Kartverket](https://hoydedata.no) DTM). The full report is in Russian: [docs/horizon-check.md](docs/horizon-check.md).
 
 | Where | Mean horizon difference | 21 December sunrise |
 | --- | --- | --- |
 | Flat ground by the sea, Tivat | 0.2° | same minute as PVGIS (±1) |
 | All 8 points, Tivat | 1.5° (was 2.1°) | — |
 | All 8 points, Kotor | 1.3° (was 1.7°) | — |
-| Steep slope, Vrmac | 5.6° (was 8.3°) | 98 min later than PVGIS; sunset now matches (was 39 min early) |
+| Steep slope, Vrmac | 5.5° (was 8.3°) | 99 min later than PVGIS; sunset now matches (was 39 min early) |
 | 7 hillside points vs the source Copernicus 1″ | 0.4° (was 2.2°) | — |
+| All 8 points, Bergen, vs Kartverket DTM | 0.8° (was 1.0°) | — |
+| Flat ground, Bergen: Bryggen, Festplassen, foot of Ulriken | 0.3–0.4° | within 1 min at Bryggen and Festplassen, 8 min early at Ulriken |
+| Bergen against PVGIS, for reference | 5.0° | off by one to two hours: PVGIS's coarse terrain |
 
-Terrain height is interpolated bilinearly, both at the observer and along the ray. Before, the nearest 60 m cell was used: on a slope the eye sat 20–30 m below the surface the ray sees, and the hill looked steeper. What remains on slopes against PVGIS is mostly PVGIS's own ground elevation: 339 m on the Vrmac slope against 312–317 m in three Copernicus samples. For buildings on steep slopes, uphill results are an estimate good to tens of minutes. The ray core is covered by synthetic tests (`npm test`): scenes with a hill, a neighbouring wall and the sea.
+Terrain height is interpolated bilinearly, both at the observer and along the ray. Before, the nearest 60 m cell was used: on a slope the eye sat 20–30 m below the surface the ray sees, and the hill looked steeper. What remains on slopes against PVGIS is mostly PVGIS's own ground elevation: 339 m on the Vrmac slope against 312–317 m in three Copernicus samples. For buildings on steep slopes, uphill results are an estimate good to tens of minutes. Bergen showed one more error, now fixed. North of 50° N the Copernicus tiles have a coarser longitude step, and Bergen's cell centres fell exactly between two tile pixels. The nearest-pixel lookup took the one 15 m to the east, uphill, and slope points came out 12–17 m too high. Tiles are now sampled bilinearly. What remains in Bergen is the observer's height on forested slopes: Copernicus is a surface model and sits about 20 m above the bare ground there. On top of that, the noon sun is only 6° high on 21 December, so a one-degree error decides whether a hillside flat gets winter sun at all. The ray core is covered by synthetic tests (`npm test`): scenes with a hill, a neighbouring wall and the sea. `npm test` also checks the committed data. The building count in the precompute must match `buildings.json`, the example buildings must exist, and `dem.bin` must match the size in `dem.json`.
 
 ## Performance
 
@@ -104,7 +107,7 @@ npm run test:e2e   # Playwright smoke test against the production build
 
 **Adding a city.** Describe it in `cities.config.mjs` and run `npm run fetch -- <id>`. That runs buildings, terrain with coastline, and the precompute. The city then appears in the switcher as `?c=<id>`.
 
-**Deploy.** `.github/workflows/deploy.yml` runs type check, tests and build, then publishes to GitHub Pages on push to `main`. It only publishes while the repository is public. After each deploy, `.github/workflows/live.yml` checks the published page:
+**Deploy.** `.github/workflows/deploy.yml` runs type check, tests and build, then publishes to GitHub Pages on push to `main`. It only publishes while the repository is public. Once a month, `.github/workflows/data.yml` re-fetches every city and opens a pull request if anything besides the fetch date changed. Overpass often answers 5xx, so each city gets up to three attempts. The PR description lists buildings before and after, the share with floor counts, and whether the example buildings are still there. For the bot to open PRs, enable Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests". After each deploy, `.github/workflows/live.yml` checks the published page:
 - **Playwright smoke test** for every city: the map container has height, the map is drawn, and a click on an example fills the panel.
 - **Lighthouse**, 3 runs on the mobile profile, median. Thresholds are in `lighthouserc.json` and are set from measurements on the GitHub runner. The map page scored 33–40 for performance; its threshold is 30. The method page scored 98–99; its threshold is 90. Accessibility, best practices and SEO scored 100 on both pages; their threshold is 95. Performance on the map page is low because of the WebGL map with terrain and 3D buildings, plus building the rasters on the main thread under the profile's 4× CPU slowdown.
 

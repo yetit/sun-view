@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { blocked, defaultFloors, demAt, groundAt, horizonAngle, makeDem, seaVisible, wallPoint } from '../src/scripts/grid.ts';
+import { bilinear } from '../scripts/resample.mjs';
 import { makeWorld, rect } from './world.ts';
 
 const deg = (d: number) => (d * Math.PI) / 180;
@@ -103,4 +104,12 @@ test('рельеф билинейно: на склоне отметка плав
   assert.equal(demAt(dem, 5, 1.5), null); // за сеткой
   assert.equal(groundAt(dem, 2.25, 1.5), 122.5); // дом на склоне — по склону; минимум соседей дал бы 100
   assert.equal(groundAt(dem, 1.0, 1.5), 100); // у воды — по суше, а не 50
+});
+
+test('выборка тайла Copernicus: центр ячейки между пикселями — среднее, а не сосед с востока', () => {
+  // склон на восток 200, 230, 260 м, два ряда; как в Бергене: шаг тайла 2″, центр нашей ячейки на x = 0.5
+  const band = [200, 230, 260, 200, 230, 260];
+  assert.equal(bilinear(band, 3, 2, 0.5, 0), 215); // ближайший (Math.round) дал бы 230
+  assert.equal(bilinear(band, 3, 2, 1, 1), 230); // в центре пикселя — сам пиксель
+  assert.equal(bilinear(band, 3, 2, 2.5, 0.5), 260); // за краем окна — крайний пиксель
 });
