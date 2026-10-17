@@ -35,7 +35,7 @@
 
 **Why Bergen.** I wanted a third city that differs in latitude and terrain and has decent floor data. Among Tromsø, Bergen, Trondheim, Ålesund, Bodø, Innsbruck and Lugano, Bergen has the best floor coverage at 54–58% of central buildings. It also has the sea, so the sea view still means something. Innsbruck has similar coverage but no sea. Tromsø is further north, but only 34% of its buildings have floor counts. Buildings in Bergen carry no addresses in OSM, because Norway maps them as separate points. They are labelled with the nearest street instead.
 
-![A building in Tivat with sea-view sectors, the sun path and a result card](docs/screenshot.png)
+![A house in Tivat on the winter sun map: the annual BRE score, season cards with the average with clouds and the bare-tree bound, and the year ribbon](docs/screenshot.png)
 
 ## How it works
 
