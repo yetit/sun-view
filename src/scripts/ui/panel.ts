@@ -9,6 +9,7 @@ import { grabFrame, viewing } from '../map/window.ts';
 import { loadLevels } from '../data.ts';
 import { shareCard } from '../share.ts';
 import { drawRibbon, roseSvg } from './charts.ts';
+import { initBetter, resetBetter } from './better.ts';
 import { addPin, initCompare } from './compare.ts';
 import { renderExamples } from './examples.ts';
 import { deg, facadeByDir, fName, fTitle, osmUrl, sideLabel } from './format.ts';
@@ -35,6 +36,7 @@ export function select(b: Bld, opts: { floor?: number; side?: number | null; dir
   state.side = side != null && side >= 0 && side < facades(world, b).length ? side : null;
   fillFloors(b);
   fillSides();
+  resetBetter();
   loadMatrix(b, renderBre);
   $('.b-name').textContent = buildingName(b);
   $('.loading').hidden = true;
@@ -179,6 +181,7 @@ export function initPanel() {
   });
   initCompare((p) => select(p.b, { floor: p.floor, side: p.side }));
   initView();
+  initBetter((b, floor) => select(b, { floor }));
   const floorSel = $<HTMLSelectElement>('.floor');
   floorSel.addEventListener('change', () => { state.floor = +floorSel.value; render(); });
   $('.sides').addEventListener('click', (e) => {

@@ -57,6 +57,9 @@ async function layerValues(key: string, progress: HTMLElement): Promise<ArrayLik
   return my === modeReq ? res.data : null;
 }
 
+// Слой «Солнце» для сезона и высоты окна (часы по зданиям) — для поиска «солнечнее рядом».
+export const sunLayer = (season: number, h: number) => layerValues(`sun:${season}:${h}`, $('.progress'));
+
 export async function applyMode() {
   const { mode, height, season } = state;
   showLegend();
