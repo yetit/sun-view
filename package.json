@@ -2,6 +2,7 @@
   "name": "sun-view",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "predev": "node scripts/copy-maplibre-worker.mjs",

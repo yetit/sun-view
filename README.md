@@ -144,6 +144,8 @@ Local Lighthouse, 5 runs each: performance median 62 before and 62 after. Total 
 
 The data lives in `data/<city>/` and is committed. The site calls no APIs at runtime except address search.
 
+**Licence.** The code is under the [MIT licence](LICENSE). The data keeps its sources' terms: OpenStreetMap-derived files, including the precomputed maps and the survey lists, are under ODbL 1.0, and the terrain is under the Copernicus DEM licence. The details per file are in [DATA-LICENSE.md](DATA-LICENSE.md).
+
 ## Limitations
 
 - **Floor counts are known for only 14% of buildings in Tivat and 3% in Kotor.** The rest get a default by OSM tag and footprint: sheds, garages, carports, containers, roofs, ruins, construction sites and footprints under 40 m² get 1 floor, everything else 2. They are drawn semi-transparent, and the panel lets you correct the count. Open height layers do not help here: [GHS-BUILT-H](https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_H_GLOBE_R2023A/) (JRC, 100 m, CC BY 4.0) correlates weakly with known OSM heights in these towns (r = 0.22 in Tivat, 0.30 in Kotor) and errs more than the 2-floor constant (mean error 3.8 vs 2.9 m in Tivat, 5.3 vs 3.6 m in Kotor). In [Overture Maps](https://overturemaps.org/) (release 2026-09-23) heights and floor counts here come only from OSM, and its Microsoft ML footprints carry none.
