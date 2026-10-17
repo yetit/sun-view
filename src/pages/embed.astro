@@ -1,0 +1,62 @@
+---
+import '@fontsource-variable/inter';
+import '../styles/global.css';
+import Meta from '../components/Meta.astro';
+const base = import.meta.env.BASE_URL;
+const demo = 'https://yetit.github.io/sun-view/';
+const example = '?embed=1&c=tivat&b=193467133&f=10&s=3&t=11&m=sun';
+const code = `<iframe id="sun-view" title="Sun & View"
+  src="${demo}${example}&lang=en"
+  style="width:100%;height:720px;border:0" loading="lazy"></iframe>
+<script>
+  // Sun & View сообщает высоту своей страницы — iframe растёт под содержимое.
+  addEventListener('message', (e) => {
+    if (e.origin !== 'https://yetit.github.io' || e.data?.type !== 'sun-view:height') return;
+    document.getElementById('sun-view').style.height = e.data.height + 'px';
+  });
+</script>`;
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <Meta
+      title="Embed — Sun & View"
+      description="Embed Sun & View on your page: a map with one building, sun hours by season and sea view, in an iframe that sizes itself. · Как встроить Sun & View на свою страницу."
+      imageAlt="Sun & View: a 3D map of Tivat with buildings coloured by hours of winter sun, and the app's title card"
+    />
+    <script is:inline>
+      const q = new URL(location.href).searchParams.get('lang');
+      document.documentElement.lang = q === 'en' || q === 'ru' ? q : navigator.language.toLowerCase().startsWith('ru') ? 'ru' : 'en';
+    </script>
+  </head>
+  <body class="doc">
+    <main class="doc-main">
+      <p class="doc-nav">
+        <a lang="ru" href={`${base}?lang=ru`}>← к карте</a><a lang="en" href={`${base}?lang=en`}>← back to the map</a>
+        <span><a lang="ru" href="?lang=en">EN</a><a lang="en" href="?lang=ru">RU</a></span>
+      </p>
+      <h1><span lang="ru">Встраивание</span><span lang="en">Embed</span></h1>
+      <p class="lead" lang="ru">Добавьте <code>embed=1</code> к любой ссылке Sun & View — останутся карта, выбранное здание и компактная панель, без шапки, поиска и переключателя города. Ссылка «Открыть в Sun & View» ведёт на полную версию с тем же состоянием.</p>
+      <p class="lead" lang="en">Add <code>embed=1</code> to any Sun & View link to keep only the map, the selected building and a compact panel, without the header, search or city switcher. The "Open in Sun & View" link leads to the full version with the same state.</p>
+
+      <h2><span lang="ru">Код</span><span lang="en">Code</span></h2>
+      <p lang="ru">Страница внутри iframe сообщает свою высоту через <code>postMessage</code> (<code>{'{'} type: 'sun-view:height', height {'}'}</code>), и скрипт подгоняет под неё iframe. Без скрипта задайте высоту вручную. Остальные параметры ссылки — как в адресной строке приложения: <code>c</code> — город, <code>b</code> — здание (OSM id), <code>f</code> — этаж, <code>s</code> — сезон, <code>t</code> — час, <code>lang</code> — язык.</p>
+      <p lang="en">The page inside the iframe reports its height with <code>postMessage</code> (<code>{'{'} type: 'sun-view:height', height {'}'}</code>), and the script resizes the iframe to fit. Without the script, set the height yourself. Other link parameters are the same as in the app's address bar: <code>c</code> city, <code>b</code> building (OSM id), <code>f</code> floor, <code>s</code> season, <code>t</code> hour, <code>lang</code> language.</p>
+      <pre class="code"><code>{code}</code></pre>
+
+      <h2><span lang="ru">Пример</span><span lang="en">Live example</span></h2>
+      <iframe id="sun-view" class="embed-demo" title="Sun & View" src={`${base}${example}`} loading="lazy"></iframe>
+      <script is:inline>
+        // Тот же обработчик, что в коде выше, но для своего origin (локально и на Pages).
+        const frame = document.getElementById('sun-view');
+        frame.src += '&lang=' + document.documentElement.lang;
+        addEventListener('message', (e) => {
+          if (e.origin !== location.origin || e.data?.type !== 'sun-view:height') return;
+          frame.style.height = e.data.height + 'px';
+          frame.dataset.sized = '1';
+        });
+      </script>
+    </main>
+  </body>
+</html>

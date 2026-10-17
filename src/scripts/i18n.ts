@@ -97,6 +97,12 @@ const ru = {
   noWebgl: 'Карте нужен WebGL, а этот браузер его не поддерживает или он выключен. Откройте страницу в свежем Chrome, Firefox или Safari.',
   mapSlow: 'Карта не загрузилась за 10 секунд. Возможно, медленная сеть или недоступен сервер тайлов.',
   retry: 'Перезагрузить',
+  openFull: 'Открыть в Sun & View ↗',
+  embedLead: 'Кликните здание на карте — покажем солнце в окнах и вид на море.',
+  mapKeys: 'Карта зданий. Enter — выбрать здание в центре, стрелки — соседнее в эту сторону, Esc — снять выбор.',
+  mapKeysShort: 'Enter — здание в центре · ←↑→↓ — соседнее · Esc — снять',
+  deselected: 'Выбор здания снят',
+  announce: (name: string, summary: string) => `${name}. ${summary}`,
   card: { sun: 'СОЛНЦЕ В ОКНАХ', sea: 'ВИД НА МОРЕ', year: 'год →', day: '↓ сутки', floor: (n: number) => `${n} этаж`, footer: 'данные: OpenStreetMap (ODbL), Copernicus DEM GLO-30, suncalc' },
 };
 
@@ -193,6 +199,12 @@ const en: Dict = {
   noWebgl: 'The map needs WebGL, which this browser does not support or has turned off. Please open the page in a recent Chrome, Firefox or Safari.',
   mapSlow: 'The map did not load within 10 seconds. The network may be slow or the tile server unavailable.',
   retry: 'Reload',
+  openFull: 'Open in Sun & View ↗',
+  embedLead: 'Click a building on the map to see the sun in its windows and the sea view.',
+  mapKeys: 'Building map. Enter selects the building in the centre, arrow keys move to the nearest one that way, Esc clears the selection.',
+  mapKeysShort: 'Enter — building in the centre · ←↑→↓ — next one · Esc — clear',
+  deselected: 'Building selection cleared',
+  announce: (name: string, summary: string) => `${name}. ${summary}`,
   card: { sun: 'SUN IN THE WINDOWS', sea: 'SEA VIEW', year: 'year →', day: '↓ day', floor: (n: number) => `floor ${n}`, footer: 'data: OpenStreetMap (ODbL), Copernicus DEM GLO-30, suncalc' },
 };
 

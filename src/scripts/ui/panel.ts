@@ -43,6 +43,31 @@ export function select(b: Bld, opts: { floor?: number; side?: number | null; dir
   applyColors();
   map.flyTo({ center: b.center, zoom: Math.max(map.getZoom(), 16.3), pitch: 58, duration: 1000, padding: sheetPadding() });
   render();
+  announce(t.announce(buildingName(b), summary()));
+}
+
+// Снять выбор (Esc на карте): убрать подсветку, слои здания и вернуть пустую панель.
+export function deselect() {
+  const b = state.current;
+  if (!b) return;
+  map.setFeatureState({ source: 'buildings', id: b.id }, { selected: false });
+  state.current = null;
+  state.side = null;
+  state.floorsOverride = null;
+  for (const id of ['floor', 'facade', 'sectors', 'sunpath', 'sunnow']) setData(id, []);
+  $('.result').hidden = true;
+  $('.empty').hidden = false;
+  applyColors();
+  updateLight();
+  syncUrl();
+  announce(t.deselected);
+}
+
+// Объявление для скринридеров: выбранное здание и сводка (отдельная aria-live-область).
+function announce(text: string) {
+  const el = $('.sr-live');
+  el.textContent = '';
+  requestAnimationFrame(() => (el.textContent = text));
 }
 
 function fillFloors(b: Bld) {

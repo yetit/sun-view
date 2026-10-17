@@ -100,6 +100,12 @@ const repo = 'https://github.com/yetit/sun-view';
         <li>Shadows on the map are an illustration (footprints projected on flat ground); sun hours come from the rays.</li>
       </ul>
 
+      <h2><span lang="ru">Клавиатура</span><span lang="en">Keyboard</span></h2>
+      <p lang="ru">Здание можно выбрать без мыши. Перейдите на карту клавишей Tab: Enter выбирает здание в центре, стрелки — ближайшее здание в эту сторону экрана, Esc снимает выбор. Выбранное здание и сводка объявляются скринридеру. Стрелки вне карты сдвигают время суток, пробел запускает прокрутку дня.</p>
+      <p lang="en">You can pick a building without a mouse. Tab to the map: Enter selects the building in the centre, arrow keys move to the nearest building in that direction on screen, Esc clears the selection. The selected building and its summary are announced to screen readers. Outside the map, arrow keys move the time of day and Space plays the day.</p>
+      <p lang="ru">Карту можно встроить на свою страницу: <a href={`${base}embed?lang=ru`}>как встроить</a>.</p>
+      <p lang="en">You can embed the map on your own page: <a href={`${base}embed?lang=en`}>how to embed</a>.</p>
+
       <h2><span lang="ru">Города</span><span lang="en">Cities</span></h2>
       <p>
         {cities.map((c, i) => <>{i > 0 && ' · '}<a href={`${base}?c=${c.id}`}><span lang="ru">{c.name}</span><span lang="en">{c.nameEn}</span></a></>)}

@@ -1,7 +1,7 @@
 // Карта MapLibre и всё, что рисуется на ней: здания, этаж, фасад, секторы моря, солнечная диаграмма.
 import { Map, NavigationControl, setWorkerUrl, type FilterSpecification } from 'maplibre-gl';
 import { dayPath, dirIndex, eye, SEASONS, STEP_MIN, type SeaDir } from '../analysis.ts';
-import { BASE, city, facadeOf, fmtH, geojson, state, world } from '../app.ts';
+import { BASE, city, embed, facadeOf, fmtH, geojson, state, world } from '../app.ts';
 import { t } from '../i18n.ts';
 import type { Bld, Facade } from '../grid.ts';
 import { buildingColor, style } from '../style.ts';
@@ -32,7 +32,7 @@ export function applyColors(scale = sunScale) {
 }
 
 // На телефоне карта под листом: центрируем выбранное в видимой части.
-export const sheetPadding = () => (matchMedia('(max-width: 720px)').matches ? { top: 40, bottom: document.querySelector<HTMLElement>('.panel')!.offsetHeight, left: 0, right: 0 } : { top: 0, bottom: 0, left: 0, right: 0 });
+export const sheetPadding = () => (!embed && matchMedia('(max-width: 720px)').matches ? { top: 40, bottom: document.querySelector<HTMLElement>('.panel')!.offsetHeight, left: 0, right: 0 } : { top: 0, bottom: 0, left: 0, right: 0 });
 
 // Здания: данные, клик и подсветка при наведении.
 export function bindBuildings(onSelect: (b: Bld) => void) {

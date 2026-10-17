@@ -12,6 +12,8 @@ export const BASE = import.meta.env.BASE_URL;
 export const params = new URL(location.href).searchParams;
 export const num = (v: string | null, d: number) => (v != null && Number.isFinite(+v) ? +v : d);
 export const city = getCity(params.get('c') ?? '') as City;
+// ?embed=1 — только карта и компактная панель для <iframe> (см. /embed).
+export const embed = params.get('embed') === '1';
 
 export const fmtH = new Intl.NumberFormat(t.locale, { maximumFractionDigits: 1 });
 export const fmtT = new Intl.DateTimeFormat(t.locale, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: city.timezone });
@@ -40,6 +42,9 @@ export function syncUrl() {
   if (mode !== 'normal') p.set('fm', String(height));
   if (current) { p.set('b', String(current.id)); p.set('f', String(floor)); if (side != null) p.set('d', `f${side}`); if (floorsOverride) p.set('n', String(floorsOverride)); }
   if (params.get('lang')) p.set('lang', params.get('lang')!);
+  // Ссылка «Открыть в Sun & View» — то же состояние без embed.
+  document.querySelector('.open-full')?.setAttribute('href', `${location.pathname}?${p}`);
+  if (embed) p.set('embed', '1');
   history.replaceState(null, '', `?${p}`);
 }
 

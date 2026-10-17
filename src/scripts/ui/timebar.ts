@@ -111,7 +111,7 @@ export function initTimebar() {
   };
   play.addEventListener('click', togglePlay);
   addEventListener('keydown', (e) => {
-    if ((e.target as HTMLElement).matches('input, select, textarea, button')) return;
+    if ((e.target as HTMLElement).matches('input, select, textarea, button, .maplibregl-canvas')) return;
     if (e.key === 'ArrowLeft') setHour(state.hour - 0.25);
     else if (e.key === 'ArrowRight') setHour(state.hour + 0.25);
     else if (e.key === ' ') { e.preventDefault(); togglePlay(); }

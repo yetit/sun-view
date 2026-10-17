@@ -12,6 +12,8 @@ import Meta from '../components/Meta.astro';
   </head>
   <body data-mode="sun" data-sheet="peek">
     <div id="map" class="map" role="region" aria-label="3D map"></div>
+    <div class="map-keys" aria-hidden="true" hidden></div>
+    <p class="sr-only sr-live" aria-live="polite"></p>
     <div class="map-fallback" role="alert" hidden><p class="map-fallback-text"></p><button class="map-fallback-retry" type="button" hidden></button></div>
     <div class="legend-box" hidden>
       <div class="legend-head"><b class="legend-title"></b><button class="legend-info" type="button" aria-describedby="legend-tip">i</button></div>
@@ -34,6 +36,7 @@ import Meta from '../components/Meta.astro';
         </div>
         <span class="progress" aria-live="polite"></span>
       </div>
+      <a class="open-full" href="./" target="_blank" rel="noopener" data-i="openFull"></a>
 
       <header class="brand">
         <h1>Sun &amp; View</h1>
@@ -72,7 +75,7 @@ import Meta from '../components/Meta.astro';
         <div class="floor-row"><label><span data-i="floor"></span> <select class="floor"></select></label><span class="eye"></span></div>
         <div class="sides-row"><span data-i="windows"></span><div class="sides"></div></div>
         <p class="now"></p>
-        <p class="summary" aria-live="polite"></p>
+        <p class="summary"></p>
 
         <h3 data-i="matrixTitle"></h3>
         <div class="matrix"></div>

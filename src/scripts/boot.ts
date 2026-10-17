@@ -1,12 +1,13 @@
 // Запуск приложения (после проверки WebGL в main.ts): подписи, город, данные → мир → воркер → карта.
 import { cities } from '../../cities.config.mjs';
-import { $, $$, ask, BASE, city, num, params, setWorld, startWorker, state, urlDir } from './app.ts';
+import { $, $$, ask, BASE, city, embed, num, params, setWorld, startWorker, state, urlDir } from './app.ts';
 import { hasData, loadCityData } from './data.ts';
 import { hideFallback, showFallback } from './fallback.ts';
 import { createWorld } from './grid.ts';
 import { cityName, lang, langHref, t } from './i18n.ts';
 import { bindBuildings, map, mapReady } from './map/layers.ts';
 import { initPanel, select } from './ui/panel.ts';
+import { initKeys } from './ui/keys.ts';
 import { initSheet } from './ui/sheet.ts';
 import { applyMode, initTimebar, setPrecomputed, updateLight } from './ui/timebar.ts';
 
@@ -26,7 +27,16 @@ document.title = `Sun & View — ${cityName(city)}`;
 const citySel = $<HTMLSelectElement>('.city');
 citySel.innerHTML = cities.filter((c) => hasData(c.id)).map((c) => `<option value="${c.id}"${c.id === city.id ? ' selected' : ''}>${cityName(c)}</option>`).join('');
 citySel.addEventListener('change', () => { const u = new URL(location.href); u.search = `?c=${citySel.value}${params.get('lang') ? `&lang=${lang}` : ''}`; location.href = u.href; });
-initSheet();
+// Встраивание: только карта и компактная панель, высоту документа сообщаем родительской странице.
+if (embed) {
+  document.body.classList.add('embed');
+  document.body.dataset.sheet = 'embed';
+  $('.lead').textContent = t.embedLead;
+  if (parent !== window) {
+    const post = () => parent.postMessage({ type: 'sun-view:height', height: document.documentElement.scrollHeight }, '*');
+    new ResizeObserver(post).observe(document.body);
+  }
+} else initSheet();
 
 // Загрузка по этапам: отмечаем пройденные в списке.
 const stages = $('.stages');
@@ -61,6 +71,7 @@ if (import.meta.env.DEV) Object.assign(window, { map, world, timing, ask }); // 
 initTimebar();
 initPanel();
 bindBuildings(select);
+initKeys();
 const known = world.blds.filter((b) => !b.assumed).length;
 $('.hint').textContent = t.count(world.blds.length, known);
 $('.accuracy').textContent = t.accuracy(Math.round((100 * known) / world.blds.length));
