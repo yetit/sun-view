@@ -55,8 +55,29 @@ export function bindBuildings(onSelect: (b: Bld) => void) {
   map.on('mouseleave', BUILDING_LAYERS, () => { unhover(); hovered = null; map.getCanvas().style.cursor = ''; });
 }
 
+// Полоса этажа — контур дома, раздвинутый на 0,4 м наружу: стены полосы не совпадают со стенами дома,
+// иначе на телефонах они мерцают и рвутся (z-fighting).
 export function drawFloor(b: Bld) {
-  setData('floor', [{ type: 'Feature', properties: { base: (state.floor - 1) * city.floorHeight, top: state.floor * city.floorHeight }, geometry: geojson.features[b.idx].geometry }]);
+  const coordinates = b.rings.map((r) => [inflate(r, 0.4).map((p) => world.proj.toLonLat(p[0], p[1]))]);
+  setData('floor', [{ type: 'Feature', properties: { base: (state.floor - 1) * city.floorHeight, top: state.floor * city.floorHeight }, geometry: { type: 'MultiPolygon', coordinates } }]);
+}
+
+// Кольцо (замкнутое, в метрах), сдвинутое наружу на d: вершина уходит на d·(n1+n2)/(1+n1·n2) —
+// так обе соседние стены сдвигаются ровно на d; на острых углах сдвиг ограничен 3d.
+function inflate(ring: [number, number][], d: number): [number, number][] {
+  const pts = ring.slice(0, -1), n = pts.length;
+  let area = 0;
+  for (let i = 0; i < n; i++) { const [x1, y1] = pts[i], [x2, y2] = pts[(i + 1) % n]; area += x1 * y2 - x2 * y1; }
+  const s = area > 0 ? 1 : -1; // против часовой стрелки наружу — справа от ребра
+  const norm = (a: [number, number], c: [number, number]) => { const dx = c[0] - a[0], dy = c[1] - a[1], l = Math.hypot(dx, dy) || 1; return [(s * dy) / l, (-s * dx) / l]; };
+  const out = pts.map((p, i) => {
+    const [ax, ay] = norm(pts[(i - 1 + n) % n], p), [bx, by] = norm(p, pts[(i + 1) % n]);
+    let ox = (d * (ax + bx)) / Math.max(0.05, 1 + ax * bx + ay * by), oy = (d * (ay + by)) / Math.max(0.05, 1 + ax * bx + ay * by);
+    const l = Math.hypot(ox, oy);
+    if (l > 3 * d) { ox *= (3 * d) / l; oy *= (3 * d) / l; }
+    return [p[0] + ox, p[1] + oy] as [number, number];
+  });
+  return [...out, out[0]];
 }
 
 // Фасад: по полоске на каждую стену фасада, от 0,3 до 1,3 м снаружи; null — убрать.
