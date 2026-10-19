@@ -20,7 +20,7 @@ import { setSeason, updateLight } from './timebar.ts';
 import { currentViewText, initView, loadView, setView } from './view.ts';
 
 let lastSeasons: Season[] = [], lastSea: SeaDir[] = [], ribbonSmall: HTMLCanvasElement | null = null;
-let ribbonReq = 0;
+let ribbonReq = 0, lastRibbon: { cols: number; rows: number; data: Uint8Array } | null = null;
 // Мир без листвы на лиственных деревьях — строится один раз, при первом выбранном здании.
 let bare: World | null = null;
 
@@ -136,7 +136,7 @@ function render() {
   syncUrl();
   loadView(b);
   const my = ++ribbonReq;
-  ask({ type: 'ribbon', idx: b.idx, floor: state.floor, side: state.side }).then((r) => { if (my === ribbonReq) ribbonSmall = drawRibbon($<HTMLCanvasElement>('.ribbon'), r); });
+  ask({ type: 'ribbon', idx: b.idx, floor: state.floor, side: state.side }).then((r) => { if (my === ribbonReq) { lastRibbon = r; paintRibbon(); } });
 }
 
 // Смена сезона: карточки и солнечная диаграмма.
@@ -166,6 +166,17 @@ function seasonsHtml() {
   }).join('');
 }
 
+// Лента года — ясное небо или с облаками (переключатель над ней, cl=1 в ссылке). Тот же canvas идёт в PNG-карточку.
+function paintRibbon() {
+  if (lastRibbon) ribbonSmall = drawRibbon($<HTMLCanvasElement>('.ribbon'), lastRibbon, state.cloudy ? world.sunshine ?? null : null);
+}
+function setSky(cloudy: boolean) {
+  state.cloudy = cloudy && !!world.sunshine;
+  $$('.sky-chip').forEach((el) => el.setAttribute('aria-checked', String((el.dataset.cl === '1') === state.cloudy)));
+  $('.ribbon-cloud').hidden = !state.cloudy;
+  paintRibbon();
+}
+
 // Сводка в панели зависит от годовой оценки — перерисовываются вместе.
 function renderBre() {
   $('.bre-box').innerHTML = breHtml();
@@ -174,6 +185,12 @@ function renderBre() {
 
 export function initPanel() {
   $('.seasons-note').hidden = !world.sunshine;
+  $('.sky-chips').hidden = !world.sunshine; // без климата переключать нечего
+  setSky(state.cloudy);
+  $('.sky-chips').addEventListener('click', (e) => {
+    const el = (e.target as Element).closest<HTMLElement>('.sky-chip');
+    if (el) { setSky(el.dataset.cl === '1'); syncUrl(); }
+  });
   initSearch(select);
   renderExamples((ex, b) => {
     if (state.season !== ex.s) setSeason(ex.s);
@@ -238,7 +255,7 @@ export function initPanel() {
     const name = cityName(city);
     const viewText = currentViewText();
     const view = viewing() && viewText ? { frame: await grabFrame(), text: viewText } : null;
-    const blob = await shareCard({ view, city: name, title: buildingName(b), summary: summary(), subtitle: `${name} · ${t.card.floor(state.floor)} · ${t.sideLabel(facadeOf() ? fName(facadeOf()!) : null)}`, seasons: lastSeasons, sea: lastSea, ribbon: ribbonSmall });
+    const blob = await shareCard({ view, city: name, title: buildingName(b), summary: summary(), subtitle: `${name} · ${t.card.floor(state.floor)} · ${t.sideLabel(facadeOf() ? fName(facadeOf()!) : null)}`, seasons: lastSeasons, sea: lastSea, ribbon: ribbonSmall, cloudy: state.cloudy });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `sun-view-${city.id}-${b.id}-${state.floor}.png`;

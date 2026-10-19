@@ -3,7 +3,7 @@ import type { SeaDir, Season } from './analysis.ts';
 import { t } from './i18n.ts';
 
 const fmt = new Intl.NumberFormat(t.locale, { maximumFractionDigits: 1 });
-export type CardData = { city: string; title: string; subtitle: string; summary: string; seasons: Season[]; sea: SeaDir[]; ribbon: HTMLCanvasElement | null; view: { frame: HTMLCanvasElement; text: string } | null };
+export type CardData = { city: string; title: string; subtitle: string; summary: string; seasons: Season[]; sea: SeaDir[]; ribbon: HTMLCanvasElement | null; cloudy?: boolean; view: { frame: HTMLCanvasElement; text: string } | null };
 
 export async function shareCard(o: CardData): Promise<Blob> {
   const W = 1200, H = 630;
@@ -33,6 +33,7 @@ export async function shareCard(o: CardData): Promise<Blob> {
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(o.ribbon, 56, 324, 660, 232);
     font(400, 12); text(t.card.year, 56 + 660, 574, '#7a746a', 'right'); text(t.card.day, 56, 574, '#7a746a');
+    if (o.cloudy) text(t.card.cloudy, 56 + 330, 574, '#7a746a', 'center');
   }
 
   if (o.view) {

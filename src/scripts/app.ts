@@ -34,13 +34,15 @@ export const state = {
   mode: pick<Mode>(params.get('m'), ['normal', 'sea', 'levels'], 'sun'), // на входе город сразу окрашен
   height: legacyFm[fm] ?? (HEIGHTS.includes(+fm) ? +fm : 5),
   floorsOverride: params.get('n') != null ? num(params.get('n'), 0) || null : null, // этажность, уточнённая пользователем
+  cloudy: params.get('cl') === '1', // лента года с облаками; по умолчанию ясное небо
 };
 
 export function syncUrl() {
-  const { current, floor, side, season, hour, mode, height, floorsOverride } = state;
+  const { current, floor, side, season, hour, mode, height, floorsOverride, cloudy } = state;
   const p = new URLSearchParams({ c: city.id, s: String(season), t: hour.toFixed(2), m: mode });
   if (mode !== 'normal') p.set('fm', String(height));
   if (current) { p.set('b', String(current.id)); p.set('f', String(floor)); if (side != null) p.set('d', `f${side}`); if (floorsOverride) p.set('n', String(floorsOverride)); }
+  if (cloudy) p.set('cl', '1');
   if (params.get('lang')) p.set('lang', params.get('lang')!);
   // Ссылка «Открыть в Sun & View» — то же состояние без embed.
   document.querySelector('.open-full')?.setAttribute('href', `${location.pathname}?${p}`);

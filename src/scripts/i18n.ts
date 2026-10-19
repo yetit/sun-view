@@ -58,6 +58,11 @@ const ru = {
   of: 'из',
   polarNight: 'полярная ночь',
   cloudy: (h: string) => `☁ ≈ ${h} ч в среднем`,
+  skyLabel: 'Небо на ленте года',
+  skyClear: 'Ясное небо',
+  skyCloudy: 'С облаками',
+  skyCloudyTitle: 'Климатическое среднее по спутнику PVGIS-SARAH3 за 2014–2023, а не прогноз погоды',
+  ribbonCloudLegend: 'С облаками: чем бледнее жёлтое, тем реже в это время года бывает прямое солнце. Цвет смешан с серым по вероятности прямого солнца в этот день (PVGIS-SARAH3, 2014–2023) — это климатическое среднее за годы, а не прогноз.',
   bare: (h: string) => `🍂 без листвы — до ${h} ч`,
   seasonsNote: 'Часы — при ясном небе. ☁ — в среднем с учётом облаков: часы при ясном небе, умноженные на вероятность прямого солнца в это время года (спутник PVGIS-SARAH3, 2014–2023). 🍂 — сколько было бы, если лиственные деревья рядом стоят без листвы (тип листвы — Copernicus): голые ветви тоже затеняют, а оливы и каменный дуб зелёные круглый год, так что это граница сверху.',
   ribbonLegend: 'Год по горизонтали, сутки по вертикали (местное время): жёлтое — солнце в окнах, серое — закрыто рельефом, домами или с другой стороны дома, тёмное — ночь.',
@@ -136,7 +141,7 @@ const ru = {
   mapKeysShort: 'Enter — здание в центре · ←↑→↓ — соседнее · Esc — снять',
   deselected: 'Выбор здания снят',
   announce: (name: string, summary: string) => `${name}. ${summary}`,
-  card: { sun: 'СОЛНЦЕ В ОКНАХ', sea: 'ВИД НА МОРЕ', view: 'ВИД ИЗ ОКНА', year: 'год →', day: '↓ сутки', floor: (n: number) => `${n} этаж`, footer: 'данные: OpenStreetMap (ODbL), Copernicus DEM GLO-30, suncalc' },
+  card: { sun: 'СОЛНЦЕ В ОКНАХ', sea: 'ВИД НА МОРЕ', view: 'ВИД ИЗ ОКНА', year: 'год →', day: '↓ сутки', cloudy: '☁ с облаками, климатическое среднее', floor: (n: number) => `${n} этаж`, footer: 'данные: OpenStreetMap (ODbL), Copernicus DEM GLO-30, suncalc' },
 };
 
 type Dict = typeof ru;
@@ -193,6 +198,11 @@ const en: Dict = {
   of: 'of',
   polarNight: 'polar night',
   cloudy: (h: string) => `☁ ≈ ${h} h on average`,
+  skyLabel: 'Sky on the year ribbon',
+  skyClear: 'Clear sky',
+  skyCloudy: 'With clouds',
+  skyCloudyTitle: 'Climate average from PVGIS-SARAH3 satellite data, 2014–2023, not a weather forecast',
+  ribbonCloudLegend: 'With clouds: the paler the yellow, the less often direct sun shows at that time of year. The colour is mixed with grey by the chance of direct sun on that day (PVGIS-SARAH3, 2014–2023); it is a climate average over years, not a forecast.',
   bare: (h: string) => `🍂 up to ${h} h with bare trees`,
   seasonsNote: 'Hours are for a clear sky. ☁ is the average with clouds: clear-sky hours times the chance of direct sun at that time of year (PVGIS-SARAH3 satellite data, 2014–2023). 🍂 is what it would be if the broadleaved trees nearby were bare (leaf type from Copernicus): bare branches still cast shade, and olives and holm oaks stay green all year, so it is an upper bound.',
   ribbonLegend: 'Year left to right, day top to bottom (local time): yellow is sun in the windows, grey is blocked by terrain, buildings or the other side of the house, dark is night.',
@@ -269,7 +279,7 @@ const en: Dict = {
   mapKeysShort: 'Enter — building in the centre · ←↑→↓ — next one · Esc — clear',
   deselected: 'Building selection cleared',
   announce: (name: string, summary: string) => `${name}. ${summary}`,
-  card: { sun: 'SUN IN THE WINDOWS', sea: 'SEA VIEW', view: 'WINDOW VIEW', year: 'year →', day: '↓ day', floor: (n: number) => `floor ${n}`, footer: 'data: OpenStreetMap (ODbL), Copernicus DEM GLO-30, suncalc' },
+  card: { sun: 'SUN IN THE WINDOWS', sea: 'SEA VIEW', view: 'WINDOW VIEW', year: 'year →', day: '↓ day', cloudy: '☁ with clouds, climate average', floor: (n: number) => `floor ${n}`, footer: 'data: OpenStreetMap (ODbL), Copernicus DEM GLO-30, suncalc' },
 };
 
 export const t: Dict = lang === 'en' ? en : ru;

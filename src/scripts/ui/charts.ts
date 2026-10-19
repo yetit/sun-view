@@ -1,5 +1,5 @@
 // Рисунки панели без состояния: роза видимости моря (SVG), лента года и панорама вида из окна (canvas).
-import { N, RIBBON_DAY_STEP, SEASONS, STEP_MIN, YEAR, type SeaDir } from '../analysis.ts';
+import { N, RIBBON_DAY_STEP, SEASONS, STEP_MIN, sunshineAt, YEAR, type SeaDir } from '../analysis.ts';
 import { fmtH, tzOffset } from '../app.ts';
 import { t } from '../i18n.ts';
 
@@ -23,8 +23,9 @@ export function roseSvg(sea: SeaDir[], sel: number) {
 }
 
 // Лента года: столбцы — дни, строки — местное время суток (0 сверху). Возвращает маленький canvas
-// с самими данными — его же кладём в PNG-карточку.
-export function drawRibbon(cv: HTMLCanvasElement, { cols, rows, data }: { cols: number; rows: number; data: Uint8Array }) {
+// с самими данными — его же кладём в PNG-карточку. sunshine — «с облаками»: клетка «солнце в окне»
+// смешивается с серым в пропорции вероятности прямого солнца в этот день (жёлтое при p = 1, серое при 0).
+export function drawRibbon(cv: HTMLCanvasElement, { cols, rows, data }: { cols: number; rows: number; data: Uint8Array }, sunshine: number[] | null = null) {
   const dpr = devicePixelRatio || 1;
   const W = cv.clientWidth, H = 180, left = 26, top = 6, bottom = 18;
   cv.width = W * dpr; cv.height = H * dpr;
@@ -36,10 +37,13 @@ export function drawRibbon(cv: HTMLCanvasElement, { cols, rows, data }: { cols: 
   const img = small.getContext('2d')!.createImageData(cols, rows);
   const palette = [[31, 42, 68], [167, 174, 187], [255, 194, 51]];
   for (let c = 0; c < cols; c++) {
-    const shift = Math.round((tzOffset(new Date(Date.UTC(YEAR, 0, 1 + c * RIBBON_DAY_STEP))) * 60) / STEP_MIN);
+    const day = new Date(Date.UTC(YEAR, 0, 1 + c * RIBBON_DAY_STEP));
+    const shift = Math.round((tzOffset(day) * 60) / STEP_MIN);
+    const p = sunshine ? sunshineAt(sunshine, day) : 1;
+    const sun = palette[2].map((v, k) => Math.round(palette[1][k] + (v - palette[1][k]) * p));
     for (let i = 0; i < rows; i++) {
       const row = (((i + shift) % N) + N) % N;
-      const [r, g, b] = palette[data[i * cols + c]];
+      const [r, g, b] = data[i * cols + c] === 2 ? sun : palette[data[i * cols + c]];
       const k = (row * cols + c) * 4;
       img.data[k] = r; img.data[k + 1] = g; img.data[k + 2] = b; img.data[k + 3] = 255;
     }

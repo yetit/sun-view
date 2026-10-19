@@ -165,3 +165,35 @@ test('сезоны: среднее с облаками на каждой кар�
     await expect(page).not.toHaveURL(/b=193467074/);
   }
 });
+
+test('лента года: «С облаками» бледнит солнце в окнах, состояние в ссылке (cl=1) и восстанавливается по ней', async ({ page }) => {
+  // Доля «солнечных» пикселей ленты: насыщенно-жёлтые клетки.
+  const yellow = () => page.locator('.ribbon').evaluate((cv: HTMLCanvasElement) => {
+    const d = cv.getContext('2d')!.getImageData(0, 0, cv.width, cv.height).data;
+    let n = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i] > 230 && d[i + 1] > 170 && d[i + 2] < 90) n++;
+    return n;
+  });
+  const drawn = () => expect.poll(() => page.locator('.ribbon').evaluate((cv: HTMLCanvasElement) => cv.width), { timeout: 30_000 }).toBeGreaterThan(300);
+  await open(page, `?c=bergen&b=289528809&f=13&s=1&lang=en`);
+  await drawn();
+  const chips = page.locator('.sky-chip');
+  await expect(chips).toHaveText(['Clear sky', 'With clouds']);
+  await expect(chips.first()).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('.ribbon-cloud')).toBeHidden();
+  const clear = await yellow();
+  expect(clear).toBeGreaterThan(1000);
+  await chips.nth(1).click();
+  await expect(chips.nth(1)).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('.ribbon-cloud')).toContainText('not a forecast');
+  expect(page.url()).toContain('cl=1');
+  expect(await yellow()).toBeLessThan(clear / 4); // в Бергене прямое солнце бывает в 16–49 % дней месяца
+  // По ссылке — сразу с облаками.
+  await open(page, `?c=bergen&b=289528809&f=13&s=1&cl=1&lang=en`);
+  await drawn();
+  await expect(chips.nth(1)).toHaveAttribute('aria-checked', 'true');
+  expect(await yellow()).toBeLessThan(clear / 4);
+  await chips.first().click();
+  await expect.poll(() => page.url()).not.toContain('cl=1');
+  expect(await yellow()).toBe(clear);
+});
