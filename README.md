@@ -24,6 +24,26 @@
 - **Keyboard.** Tab to the map. Enter selects the building in the centre, arrow keys move to the nearest building in that direction on screen, Esc clears the selection. The selection and its summary are announced to screen readers.
 - **Embed.** Add `embed=1` to any link to get only the map, the building and a compact panel for an `<iframe>`. The iframe can size itself through `postMessage`. Ready-made code is on the [embed page](https://yetit.github.io/sun-view/embed/?lang=en) and below.
 
+## How it compares
+
+Checked on 2026-10-19 against the products' own sites. Most sunlight tools answer "where is the sun" or "how long does the sun hit this address"; none of the ones below answers "can this window see the sea", and only three model the neighbours and terrain for a specific floor.
+
+| Tool | Neighbours and terrain | Floor, facade | Sea view | Score vs a guideline | Price |
+| --- | --- | --- | --- | --- | --- |
+| **Sun & View** | 6 m roof raster from OSM, trees, terrain up to 15 km | floors × facades matrix | 8 directions and per facade, with distance | BRE 209 annual score | free, open source, no server |
+| [Shadowmap](https://shadowmap.org/pricing) | global 3D buildings, terrain, trees; better buildings in DE, NL, CH, Vienna, Tokyo | floors on facades (Home tier), first-person view | — | — | free; Explorer €2.50/mo; Home €10/mo |
+| [Sunlight Checker](https://sunlightchecker.remosia.biz/en/) (Remosia) | real heights from PLATEAU, ray casting; Japan only | floor picker; window direction in Pro | — | — | free; Pro ¥300/mo; iOS |
+| [Sunworth](https://sunworth.app/) | terrain and footprints for a 20–200 m patch; sources not stated | not stated | — | — | not stated |
+| [Coffee in the Sun](https://coffeeinthesun.app/use-cases/real-estate/) | OSM footprints and heights (±1 floor); no trees | side of the building | — | — | free; Pro for the full year |
+| [Sunmap](https://sunmap.ru/) (Russia) | obstacles drawn by the agent by hand | windows and facades set by hand | — | — | plans for agents and developers, on request |
+| [Will It Be Bright](https://willitbebright.com/) | obstruction and tree level chosen by hand | orientation and floor | — | — | Chrome extension $4.99 |
+| [SunCheck](https://suncheckapp.com/) | not stated | window direction, "high floor" modifier | — | — | free |
+| [Sun Seeker](https://apps.apple.com/app/id330247123) | — (AR sun path over the camera) | — | — | — | ~$10 one-off, iOS |
+| [Google Earth Viewshed](https://support.google.com/earth/answer/3064261) | terrain and 3D buildings | observer height set by hand | viewshed, "not scientific precision" | — | free, manual |
+| [UpToWhere](https://uptowhere.com/about) | Copernicus GLO-30 surface; buildings are not obstacles | observer height | lists "sea view" as a use case | — | free |
+
+What this project does that the others don't: the sea view per facade and floor, the annual score against a published guideline, the floors × facades matrix that picks the best flat in a building, and a method that is open and checked against PVGIS and a national terrain model. What the others do better: Shadowmap covers the whole world with a polished 3D view, Sunlight Checker has official building models with real heights, Sunmap and Will It Be Bright produce agent-branded reports. Sun & View covers only the cities in its config, and its floor counts are only as good as OpenStreetMap: known for 14% of buildings in Tivat.
+
 ## Cities
 
 | City | Why | Buildings | Floor count in OSM |

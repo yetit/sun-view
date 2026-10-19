@@ -1,10 +1,30 @@
-<!-- DRAFT for dev.to. Not published. Numbers are from the README, docs/horizon-check.md and my own run of the core on the data in main 63b6d1f, 2026-10-18. Contents: data, rays, horizon validation, facades and the matrix, the BRE annual window score, trees and clouds, the window view, Bergen, performance, what didn't work. -->
+<!-- DRAFT for dev.to. Not published. Numbers are from the README, docs/horizon-check.md and my own run of the core on the data in main 63b6d1f, 2026-10-18. Contents: how it compares to other tools, data, rays, horizon validation, facades and the matrix, the BRE annual window score, trees and clouds, the window view, Bergen, performance, what didn't work. -->
 
 # How much sun reaches a window? Ray-marching open terrain data in the browser
 
 When you look at a flat by the sea, everyone asks the same two questions: will it get sun in winter, and can you see the sea? The developer says yes to both. I wanted to check for myself, with no developer and no server: click a building on a 3D map, pick a floor and a side, and within tens of milliseconds see the hours of direct sun per season and in which directions the water is visible.
 
 The result is [Sun & View](https://yetit.github.io/sun-view/): Tivat, Kotor and Herceg Novi in Montenegro and Bergen in Norway, built on open data and computed entirely in the browser. For a window it gives an annual score against the UK BRE guideline and shows the view from it. Here is how it works, how I checked that it doesn't lie, and what didn't work.
+
+## How it compares
+
+Checked on 2026-10-19 against the products' own sites. Most sunlight tools answer "where is the sun" or "how long does the sun hit this address"; none of the ones below answers "can this window see the sea", and only three model the neighbours and terrain for a specific floor.
+
+| Tool | Neighbours and terrain | Floor, facade | Sea view | Score vs a guideline | Price |
+| --- | --- | --- | --- | --- | --- |
+| **Sun & View** | 6 m roof raster from OSM, trees, terrain up to 15 km | floors × facades matrix | 8 directions and per facade, with distance | BRE 209 annual score | free, open source, no server |
+| [Shadowmap](https://shadowmap.org/pricing) | global 3D buildings, terrain, trees; better buildings in DE, NL, CH, Vienna, Tokyo | floors on facades (Home tier), first-person view | — | — | free; Explorer €2.50/mo; Home €10/mo |
+| [Sunlight Checker](https://sunlightchecker.remosia.biz/en/) (Remosia) | real heights from PLATEAU, ray casting; Japan only | floor picker; window direction in Pro | — | — | free; Pro ¥300/mo; iOS |
+| [Sunworth](https://sunworth.app/) | terrain and footprints for a 20–200 m patch; sources not stated | not stated | — | — | not stated |
+| [Coffee in the Sun](https://coffeeinthesun.app/use-cases/real-estate/) | OSM footprints and heights (±1 floor); no trees | side of the building | — | — | free; Pro for the full year |
+| [Sunmap](https://sunmap.ru/) (Russia) | obstacles drawn by the agent by hand | windows and facades set by hand | — | — | plans for agents and developers, on request |
+| [Will It Be Bright](https://willitbebright.com/) | obstruction and tree level chosen by hand | orientation and floor | — | — | Chrome extension $4.99 |
+| [SunCheck](https://suncheckapp.com/) | not stated | window direction, "high floor" modifier | — | — | free |
+| [Sun Seeker](https://apps.apple.com/app/id330247123) | — (AR sun path over the camera) | — | — | — | ~$10 one-off, iOS |
+| [Google Earth Viewshed](https://support.google.com/earth/answer/3064261) | terrain and 3D buildings | observer height set by hand | viewshed, "not scientific precision" | — | free, manual |
+| [UpToWhere](https://uptowhere.com/about) | Copernicus GLO-30 surface; buildings are not obstacles | observer height | lists "sea view" as a use case | — | free |
+
+What this project does that the others don't: the sea view per facade and floor, the annual score against a published guideline, the floors × facades matrix that picks the best flat in a building, and a method that is open and checked against PVGIS and a national terrain model. What the others do better: Shadowmap covers the whole world with a polished 3D view, Sunlight Checker has official building models with real heights, Sunmap and Will It Be Bright produce agent-branded reports. Sun & View covers only the cities in its config, and its floor counts are only as good as OpenStreetMap: known for 14% of buildings in Tivat.
 
 ## Data
 
