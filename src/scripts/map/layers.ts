@@ -60,7 +60,7 @@ export function bindBuildings(onSelect: (b: Bld) => void) {
 }
 
 // Полоса этажа — контур дома, раздвинутый на 0,4 м наружу: стены полосы не совпадают со стенами дома,
-// иначе на телефонах они мерцают и рвутся (z-fighting).
+// иначе они мерцают и рвутся (z-fighting).
 // Камера перед фасадом: стоит снаружи по нормали стены и смотрит на неё (азимут — против нормали), наклон 58°,
 // зум по размеру дома — чтобы влезли и ближайшие соседи. prefers-reduced-motion — сразу, без анимации.
 export function lookAtFacade(b: Bld, f: Facade) {
@@ -72,7 +72,9 @@ export function lookAtFacade(b: Bld, f: Facade) {
 
 export function drawFloor(b: Bld) {
   const coordinates = b.rings.map((r) => [inflate(r, 0.4).map((p) => world.proj.toLonLat(p[0], p[1]))]);
-  setData('floor', [{ type: 'Feature', properties: { base: (state.floor - 1) * city.floorHeight, top: state.floor * city.floorHeight }, geometry: { type: 'MultiPolygon', coordinates } }]);
+  // Верх полосы на высоте крыши (верхний этаж) — то же мерцание уже на крыше: поднимаем его на 0,2 м над ней.
+  const top = state.floor * city.floorHeight;
+  setData('floor', [{ type: 'Feature', properties: { base: (state.floor - 1) * city.floorHeight, top: Math.abs(top - b.h) < 0.3 ? b.h + 0.2 : top }, geometry: { type: 'MultiPolygon', coordinates } }]);
 }
 
 // Кольцо (замкнутое, в метрах), сдвинутое наружу на d: вершина уходит на d·(n1+n2)/(1+n1·n2) —
