@@ -13,6 +13,10 @@ setWorkerUrl(`${BASE}maplibre/maplibre-gl-worker.mjs`);
 // В dev буфер сохраняется, чтобы снимать картинки (OG, README) из canvas.
 export const map = new Map({ container: 'map', style, ...city.camera, maxPitch: 75, attributionControl: { compact: true }, canvasContextAttributes: { preserveDrawingBuffer: import.meta.env.DEV } });
 map.addControl(new NavigationControl({ visualizePitch: true }), 'top-left');
+// Азимут карты в атрибуте контейнера — для проверок (E2E) без доступа к объекту карты.
+const markBearing = () => (map.getContainer().dataset.bearing = map.getBearing().toFixed(1));
+map.on('moveend', markBearing);
+markBearing();
 // Событие load может прийти раньше, чем загрузятся данные, — ловим его сразу.
 export const mapReady = new Promise<void>((r) => map.once('load', () => r()));
 // 3D-рельеф — после первого простоя карты: первые кадры с ним на слабом GPU (и на SwiftShader в Lighthouse)
@@ -57,6 +61,15 @@ export function bindBuildings(onSelect: (b: Bld) => void) {
 
 // Полоса этажа — контур дома, раздвинутый на 0,4 м наружу: стены полосы не совпадают со стенами дома,
 // иначе на телефонах они мерцают и рвутся (z-fighting).
+// Камера перед фасадом: стоит снаружи по нормали стены и смотрит на неё (азимут — против нормали), наклон 58°,
+// зум по размеру дома — чтобы влезли и ближайшие соседи. prefers-reduced-motion — сразу, без анимации.
+export function lookAtFacade(b: Bld, f: Facade) {
+  const bearing = ((f.normal * 180) / Math.PI + 180) % 360;
+  const zoom = Math.min(17.5, Math.max(15.5, 17.3 - Math.log2(Math.max(1, b.radius / 20))));
+  const duration = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1000;
+  map.easeTo({ center: b.center, bearing, pitch: 58, zoom, duration, padding: sheetPadding() });
+}
+
 export function drawFloor(b: Bld) {
   const coordinates = b.rings.map((r) => [inflate(r, 0.4).map((p) => world.proj.toLonLat(p[0], p[1]))]);
   setData('floor', [{ type: 'Feature', properties: { base: (state.floor - 1) * city.floorHeight, top: state.floor * city.floorHeight }, geometry: { type: 'MultiPolygon', coordinates } }]);

@@ -21,6 +21,7 @@
 - **Reliability label.** Each building gets high, medium or low reliability with the reasons: floor count estimated, steep slope, trees taller than the building next to it.
 - **Compare and share.** Pin up to four flats side by side, download a PNG card, or share the URL. The URL keeps the city, building, floor, side, season and time.
 - **Where floor counts are missing.** The "Floors" map mode colours buildings that have no floor count in OSM by how many neighbours' sun or sea view depends on it. The same list is ready to survey: [docs/levels-todo](docs/levels-todo/). See [Help fill in floor counts](#help-fill-in-floor-counts).
+- **Camera to the facade.** Picking a facade (chip, matrix cell, rose) smoothly turns the map to face that wall from outside; “All” leaves the map as it is. On the first visit a hint shows how to rotate the map: right-click drag or Ctrl + drag, two fingers on a phone.
 - **Keyboard.** Tab to the map. Enter selects the building in the centre, arrow keys move to the nearest building in that direction on screen, Esc clears the selection. The selection and its summary are announced to screen readers.
 - **Embed.** Add `embed=1` to any link to get only the map, the building and a compact panel for an `<iframe>`. The iframe can size itself through `postMessage`. Ready-made code is on the [embed page](https://yetit.github.io/sun-view/embed/?lang=en) and below.
 

@@ -312,6 +312,10 @@ html[lang='ru'] [lang='en'], html[lang='en'] [lang='ru'] { display: none; }
 
 /* --- Клавиатура на карте --- */
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Подсказка о повороте — справа от кнопок навигации MapLibre (у них 29 px + отступ 10 px). */
+.rotate-hint { position: fixed; top: 10px; left: 52px; z-index: 3; max-width: max(160px, min(320px, calc(100vw - var(--panel) - 330px))); padding: 7px 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.7); background: var(--glass); box-shadow: var(--shadow); font-size: 12.5px; text-align: left; color: var(--ink); }
+.rotate-hint[hidden] { display: none; }
+@media (max-width: 720px) { .rotate-hint { top: auto; bottom: calc(50vh + 12px); left: 12px; max-width: calc(100vw - 24px); } }
 #map .maplibregl-canvas:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
 .map-keys { position: fixed; left: 50%; top: 16px; transform: translateX(calc(-50% - var(--panel) / 2)); z-index: 3; padding: 6px 12px; border-radius: 999px; background: rgba(31, 29, 26, 0.86); color: #fff; font-size: 12.5px; white-space: nowrap; pointer-events: none; }
 

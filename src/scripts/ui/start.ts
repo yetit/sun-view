@@ -6,6 +6,7 @@ import { hideFallback, showFallback } from '../fallback.ts';
 import type { World } from '../grid.ts';
 import { t } from '../i18n.ts';
 import { bindBuildings, map, mapReady } from '../map/layers.ts';
+import { initRotateHint } from './hint.ts';
 import { initKeys } from './keys.ts';
 import { initPanel, select } from './panel.ts';
 import { applyMode, initTimebar, setPrecomputed, updateLight } from './timebar.ts';
@@ -19,11 +20,15 @@ export async function start(world: World, data: CityData, mark: (k: string) => v
   hideFallback();
   mark('map');
   if (import.meta.env.DEV) Object.assign(window, { map, world, timing, ask }); // для проверки и замеров из консоли
+  // Двигал ли пользователь карту до восстановления состояния из ссылки: тогда к фасаду её не разворачиваем.
+  let moved = false;
+  map.once('movestart', (e) => { if ((e as { originalEvent?: Event }).originalEvent) moved = true; });
 
   initTimebar();
   initPanel();
   bindBuildings(select);
   initKeys();
+  initRotateHint();
   const known = world.blds.filter((b) => !b.assumed).length;
   $('.hint').textContent = t.count(world.blds.length, known);
   $('.accuracy').textContent = t.accuracy(Math.round((100 * known) / world.blds.length));
@@ -34,5 +39,5 @@ export async function start(world: World, data: CityData, mark: (k: string) => v
   mark('painted');
   map.on('moveend', () => !state.current && updateLight()); // тени вокруг центра карты
   const b = world.blds.find((x) => x.id === num(params.get('b'), -1));
-  if (b) select(b, { floor: num(params.get('f'), 0) || undefined, side: state.side, dir: urlDir, floors: state.floorsOverride });
+  if (b) select(b, { floor: num(params.get('f'), 0) || undefined, side: state.side, dir: urlDir, floors: state.floorsOverride, face: !moved });
 }

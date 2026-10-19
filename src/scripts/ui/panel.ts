@@ -4,7 +4,7 @@ import { dirBearing, dirIndex, eye, eyeHeight, reliability, SEASONS, seaRose, se
 import { $, $$, ask, city, currentFacades, facadeOf, fmtH, fmtT, geojson, state, syncUrl, world } from '../app.ts';
 import { bareWorld, facades, nearestFacade, type Bld, type World } from '../grid.ts';
 import { buildingName, cityName, summaryText, t } from '../i18n.ts';
-import { applyColors, drawFacade, drawFloor, drawSectors, drawSunPath, map, setData, sheetPadding } from '../map/layers.ts';
+import { applyColors, drawFacade, drawFloor, drawSectors, drawSunPath, lookAtFacade, map, setData, sheetPadding } from '../map/layers.ts';
 import { grabFrame, viewing } from '../map/window.ts';
 import { loadLevels } from '../data.ts';
 import { shareCard } from '../share.ts';
@@ -24,7 +24,8 @@ let ribbonReq = 0, lastRibbon: { cols: number; rows: number; data: Uint8Array } 
 // Мир без листвы на лиственных деревьях — строится один раз, при первом выбранном здании.
 let bare: World | null = null;
 
-export function select(b: Bld, opts: { floor?: number; side?: number | null; dir?: number | null; floors?: number | null } = {}) {
+// face: false — не разворачивать карту к фасаду (ссылка открыта, а пользователь уже двигал карту).
+export function select(b: Bld, opts: { floor?: number; side?: number | null; dir?: number | null; floors?: number | null; face?: boolean } = {}) {
   if (state.current) map.setFeatureState({ source: 'buildings', id: state.current.id }, { selected: false });
   setView(false);
   state.current = b;
@@ -48,7 +49,9 @@ export function select(b: Bld, opts: { floor?: number; side?: number | null; dir
   result.classList.add('show');
   setSheet('half', true);
   applyColors();
-  map.flyTo({ center: b.center, zoom: Math.max(map.getZoom(), 16.3), pitch: 58, duration: 1000, padding: sheetPadding() });
+  const f = facadeOf();
+  if (f && opts.face !== false) lookAtFacade(b, f);
+  else map.flyTo({ center: b.center, zoom: Math.max(map.getZoom(), 16.3), pitch: 58, duration: 1000, padding: sheetPadding() });
   render();
   announce(t.announce(buildingName(b), summary()));
 }
@@ -177,6 +180,12 @@ function setSky(cloudy: boolean) {
   paintRibbon();
 }
 
+// Выбран фасад — развернуть карту к нему; «Все» и вид из окна (у него своя камера) — не трогать.
+function faceSide() {
+  const f = facadeOf();
+  if (state.current && f && !viewing()) lookAtFacade(state.current, f);
+}
+
 // Сводка в панели зависит от годовой оценки — перерисовываются вместе.
 function renderBre() {
   $('.bre-box').innerHTML = breHtml();
@@ -203,7 +212,7 @@ export function initPanel() {
   floorSel.addEventListener('change', () => { state.floor = +floorSel.value; render(); });
   $('.sides').addEventListener('click', (e) => {
     const btn = (e.target as Element).closest<HTMLElement>('.side');
-    if (btn) { state.side = +btn.dataset.c! < 0 ? null : +btn.dataset.c!; render(); }
+    if (btn) { state.side = +btn.dataset.c! < 0 ? null : +btn.dataset.c!; render(); faceSide(); }
   });
   $('.matrix').addEventListener('click', (e) => {
     const cell = (e.target as Element).closest<HTMLElement>('.cell');
@@ -212,6 +221,7 @@ export function initPanel() {
     state.side = +cell.dataset.c!;
     floorSel.value = String(state.floor);
     render();
+    faceSide();
   });
   // Наведение на фасад в матрице или в ряду кнопок — подсветить его стену на карте.
   for (const box of [$('.matrix'), $('.sides')]) {
@@ -224,7 +234,7 @@ export function initPanel() {
   const pickSide = (e: Event) => {
     const p = (e.target as Element).closest('path');
     const side = state.current && p ? nearestFacade(currentFacades(), dirBearing(+p.getAttribute('data-side')!)) : -1;
-    if (side >= 0) { state.side = side; render(); }
+    if (side >= 0) { state.side = side; render(); faceSide(); }
   };
   $('.rose').addEventListener('click', pickSide);
   $('.rose').addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), pickSide(e)));

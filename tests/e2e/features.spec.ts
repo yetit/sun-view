@@ -113,6 +113,7 @@ test('встраивание: компактная страница и iframe с
   await expect(full).toBeVisible();
   expect(await full.getAttribute('href')).not.toContain('embed');
   expect((await page.locator('#map').boundingBox())!.height).toBeGreaterThan(300);
+  await expect(page.locator('.rotate-hint')).toBeHidden(); // подсказка о повороте — не во встраивании
 
   await page.goto(`embed?lang=en&v=${Date.now()}`);
   const frame = page.locator('#sun-view');
@@ -196,4 +197,54 @@ test('лента года: «С облаками» бледнит солнце �
   await chips.first().click();
   await expect.poll(() => page.url()).not.toContain('cl=1');
   expect(await yellow()).toBe(clear);
+});
+
+// Азимут карты из data-bearing (#map) и ожидаемый — камера снаружи смотрит на стену: нормаль фасада + 180°.
+const bearing = (page: Page) => page.locator('#map').evaluate((el) => +(el as HTMLElement).dataset.bearing!);
+const near = (a: number, b: number) => Math.abs(((a - b + 540) % 360) - 180) <= 2;
+const facing = async (page: Page, c: number) => (+(await page.locator(`.side[data-c="${c}"] small`).textContent())!.replace(/\D/g, '') + 180) % 360;
+
+test('камера к фасаду: выбор фасада разворачивает карту к стене, «Все» не крутит, ссылка с фасадом открывается развёрнутой', async ({ page }) => {
+  await open(page, `?c=tivat&b=${B}&f=10&lang=en`);
+  await expect(page.locator('.side')).not.toHaveCount(0);
+  const want = await facing(page, 2);
+  await page.locator('.side[data-c="2"]').click();
+  await expect.poll(async () => near(await bearing(page), want), { timeout: 10_000 }).toBe(true);
+  await page.locator('.side[data-c="-1"]').click(); // «Все»
+  await page.waitForTimeout(1500);
+  expect(near(await bearing(page), want)).toBe(true);
+  // Клетка матрицы — тоже выбор фасада.
+  const cell = page.locator('.matrix .cell[data-c="0"]').first();
+  await cell.click();
+  const want0 = await facing(page, 0);
+  await expect.poll(async () => near(await bearing(page), want0), { timeout: 10_000 }).toBe(true);
+
+  await open(page, `?c=tivat&b=${B}&f=10&d=f3&lang=en`);
+  const want3 = await facing(page, 3);
+  await expect.poll(async () => near(await bearing(page), want3), { timeout: 10_000 }).toBe(true);
+});
+
+test('подсказка о повороте: видна при первом заходе, скрывается после поворота или клика и больше не показывается', async ({ page }) => {
+  await open(page, '?c=tivat&lang=en');
+  const hint = page.locator('.rotate-hint');
+  await expect(hint).toBeVisible();
+  await expect(hint).toContainText('Rotate the map');
+  // Поворот правой кнопкой мыши.
+  const box = (await page.locator('#map').boundingBox())!;
+  const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
+  await page.mouse.move(x, y);
+  await page.mouse.down({ button: 'right' });
+  await page.mouse.move(x + 160, y, { steps: 12 });
+  await page.mouse.up({ button: 'right' });
+  await expect(hint).toBeHidden();
+  await open(page, '?c=tivat&lang=en');
+  await expect(hint).toBeHidden();
+  // Сброс — и скрытие кликом.
+  await page.evaluate(() => localStorage.clear());
+  await open(page, '?c=tivat&lang=en');
+  await expect(hint).toBeVisible();
+  await hint.click();
+  await expect(hint).toBeHidden();
+  await open(page, '?c=tivat&lang=en');
+  await expect(hint).toBeHidden();
 });
