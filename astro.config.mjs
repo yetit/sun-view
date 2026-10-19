@@ -7,5 +7,9 @@ export default defineConfig({
   base: (process.env.BASE_PATH ?? '/').replace(/\/?$/, '/'), // со слешем в конце: BASE_URL + 'file'
   server: { port: 4325 },
   devToolbar: { enabled: false },
-  vite: { optimizeDeps: { include: ['maplibre-gl', 'suncalc'] } },
+  vite: {
+    optimizeDeps: { include: ['maplibre-gl', 'suncalc'] },
+    // Бандл MapLibre ~1 МБ, грузится отложенно и дальше не делится — порог предупреждения выше него.
+    build: { chunkSizeWarningLimit: 1200 },
+  },
 });
