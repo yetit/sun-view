@@ -217,6 +217,7 @@ npm run dev        # http://localhost:4325
 npm test           # ray-core tests
 npm run check      # types
 npm run size       # size budgets after a build: start JS, map chunk, worker, data per city
+npm run demo:full  # 2.5-minute walkthrough video with captions, 1920×1080 → docs/demo-full.mp4 (--lang en for English); needs astro preview on 4326
 npm run test:e2e   # Playwright against the production build: smoke for every city, matrix, compare, PNG, URL state, language, embed, keyboard
 ```
 

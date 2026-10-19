@@ -217,6 +217,7 @@ npm run dev        # http://localhost:4325
 npm test           # тесты ядра
 npm run check      # типы
 npm run size       # бюджеты размера после сборки: стартовый JS, чанк карты, воркер, данные городов
+npm run demo:full  # демо-видео всех возможностей с подписями, 2,5 мин, 1920×1080 → docs/demo-full.mp4 (--lang en — по-английски); нужен astro preview на 4326
 npm run test:e2e   # Playwright на продакшен-сборке: smoke по городам, матрица, сравнение, PNG, ссылка, язык, встраивание, клавиатура
 ```
 

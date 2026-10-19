@@ -9,3 +9,6 @@ public/maplibre/
 test-results/
 playwright-report/
 .lighthouseci/
+
+# Демо-видео (npm run demo:full) — больше 10 МБ, в git не храним
+docs/demo-full*.mp4
