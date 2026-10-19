@@ -34,6 +34,8 @@ const CAPTIONS = {
     keys: 'Клавиатура: Tab — на карту, Enter выбирает дом в центре, стрелки — соседний дом в эту сторону',
     embed: 'Встраивание: карта с одним домом в iframe на любом сайте, высота подстраивается сама',
     final: 'Открытые данные · расчёт в браузере · без сервера',
+    loading: 'загружаем город…',
+    kotor: 'Котор', bergen: 'Берген',
   },
   en: {
     open: 'Tivat: every building is coloured by hours of winter sun in its windows. Under the scale: how much of it remains with clouds on average',
@@ -51,48 +53,103 @@ const CAPTIONS = {
     keys: 'Keyboard: Tab to the map, Enter selects the building in the centre, arrows move to the next one that way',
     embed: 'Embedding: a map with one building in an iframe on any site, sizing itself',
     final: 'Open data · computed in the browser · no server',
+    loading: 'loading the city…',
+    kotor: 'Kotor', bergen: 'Bergen',
   },
 }[lang];
 
 const dir = mkdtempSync(join(tmpdir(), 'sv-demo-'));
 const browser = await chromium.launch({ args: ['--use-angle=metal', '--ignore-gpu-blocklist', '--enable-gpu'] });
 const context = await browser.newContext({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1, recordVideo: { dir, size: { width: 1920, height: 1080 } }, acceptDownloads: true });
-const t0 = Date.now();
 // Плашка подписи и полноэкранный слой (картинка PNG, финал) — на каждой загруженной странице.
 await context.addInitScript(() => {
+  // Заставка города — сразу при создании документа, до первой отрисовки: иначе мелькает пустой скелетон.
+  const early = sessionStorage.getItem('demo-splash');
+  if (early) {
+    const f = document.createElement('div');
+    f.id = 'demo-full';
+    f.setAttribute('style', "position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:28px;background:#fcfaf6;pointer-events:none;font:600 64px/1.2 'Inter Variable',system-ui,sans-serif;color:#1f1d1a");
+    f.innerHTML = early;
+    // Скрипт идёт до того, как появился <html>: вставляем, как только корень создан.
+    const put = () => !!document.documentElement && (document.documentElement.append(f), true);
+    if (!put()) { const mo = new MutationObserver(() => put() && mo.disconnect()); mo.observe(document, { childList: true }); }
+  }
   addEventListener('DOMContentLoaded', () => {
     const st = document.createElement('style');
-    st.textContent = `#demo-cap{position:fixed;left:50%;bottom:36px;transform:translateX(-50%);z-index:9999;max-width:1500px;padding:18px 30px;border-radius:16px;background:rgba(24,22,20,.86);color:#fff;font:500 30px/1.3 'Inter Variable',system-ui,sans-serif;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3);transition:opacity .35s;pointer-events:none}
-#demo-cap:empty{opacity:0}#demo-full{position:fixed;inset:0;z-index:9998;display:none;align-items:center;justify-content:center;flex-direction:column;gap:28px;background:#fcfaf6;font:600 64px/1.2 'Inter Variable',system-ui,sans-serif;color:#1f1d1a}
+    st.textContent = `#demo-cap{position:fixed;left:50%;bottom:128px;transform:translateX(-50%);z-index:9999;max-width:1500px;padding:18px 30px;border-radius:16px;background:rgba(24,22,20,.86);color:#fff;font:500 30px/1.3 'Inter Variable',system-ui,sans-serif;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3);transition:opacity .35s;pointer-events:none}
+#demo-cap:empty{opacity:0}#demo-full{position:fixed;inset:0;z-index:9998;display:none;align-items:center;justify-content:center;flex-direction:column;gap:28px;background:#fcfaf6;pointer-events:none;font:600 64px/1.2 'Inter Variable',system-ui,sans-serif;color:#1f1d1a}
 #demo-full img{max-width:86vw;max-height:78vh;border-radius:16px;box-shadow:0 20px 60px rgba(60,40,10,.25)}#demo-full small{font-size:34px;font-weight:500;color:#6f695f}`;
     document.head.append(st);
     const cap = document.createElement('div'); cap.id = 'demo-cap'; document.body.append(cap);
-    const full = document.createElement('div'); full.id = 'demo-full'; document.body.append(full);
+    // Заставка города (уже стоит с создания документа) или пустой слой для PNG и финала.
+    if (!document.getElementById('demo-full')) { const full = document.createElement('div'); full.id = 'demo-full'; document.body.append(full); }
   });
 });
 
+// Прогрев HTTP-кэша контекста: Котор и Берген открываются заранее в отдельной вкладке (её видео в ролик не идёт),
+// иначе при смене города заставка стоит 10–15 с, пока грузятся тайлы и данные.
+{
+  const warm = await context.newPage();
+  for (const c of ['kotor', 'bergen', 'tivat']) {
+    await warm.goto(`${base}?c=${c}&lang=${lang}`);
+    await warm.waitForFunction(() => performance.getEntriesByName('sv:painted').length > 0, null, { timeout: 90_000 });
+    await warm.waitForTimeout(2000);
+  }
+  await warm.close();
+}
 const page = await context.newPage();
+const t0 = Date.now(); // начало видео этой вкладки
 const wait = (s: number) => page.waitForTimeout(s * 1000);
 const painted = (p: Page = page) => p.waitForFunction(() => performance.getEntriesByName('sv:painted').length > 0, null, { timeout: 90_000 });
 const caption = (text: string) => page.evaluate((s) => { document.getElementById('demo-cap')!.textContent = s; }, text);
 const scrollTo = (sel: string) => page.locator(sel).first().evaluate((el) => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
 const url = (q: string) => `${base}${q}&lang=${lang}`;
+// Медленный поворот карты правой кнопкой. События мыши шлёт сама страница по кадрам (requestAnimationFrame):
+// page.mouse.move при записи 1080p идёт ~0,3 с на шаг и поворот растягивается в разы. MapLibre: ~0,8° на пиксель.
+async function rotate(px: number, seconds: number) {
+  await page.evaluate(([px, ms]) => new Promise<void>((done) => {
+    const canvas = document.querySelector<HTMLCanvasElement>('.maplibregl-canvas')!, r = canvas.getBoundingClientRect();
+    const [x, y] = [r.left + r.width * 0.55, r.top + r.height * 0.45];
+    const ev = (type: string, el: EventTarget, dx: number) => el.dispatchEvent(new MouseEvent(type, { clientX: x + dx, clientY: y, button: 2, buttons: type === 'mouseup' ? 0 : 2, bubbles: true }));
+    ev('mousedown', canvas, 0);
+    const t0 = performance.now();
+    const step = () => {
+      const k = Math.min(1, (performance.now() - t0) / ms);
+      ev('mousemove', canvas, px * k);
+      if (k < 1) requestAnimationFrame(step); else { ev('mouseup', canvas, px); done(); }
+    };
+    requestAnimationFrame(step);
+  }), [px, seconds * 1000] as const);
+}
+// Смена города под заставкой: название на весь экран, пока город грузится и дорисовываются тайлы.
+async function switchCity(id: string, name: string, then: () => Promise<void> = async () => {}) {
+  const html = `<div>${name}</div><small style="font-size:34px;font-weight:500;color:#6f695f">${CAPTIONS.loading}</small>`; // стили инлайном: ранняя заставка — до стилей страницы
+  await page.evaluate((h) => { sessionStorage.setItem('demo-splash', h); const f = document.getElementById('demo-full')!; f.innerHTML = h; f.style.display = 'flex'; }, html);
+  await page.locator('.city').selectOption(id);
+  await page.waitForURL(new RegExp(`c=${id}`));
+  await painted();
+  await then();
+  await wait(1.5);
+  await page.evaluate(() => { sessionStorage.removeItem('demo-splash'); document.getElementById('demo-full')!.style.display = 'none'; });
+}
 let start = 0; // момент первой подписи — до него в ролике загрузка, её отрезаем
 
 // 1. Открытие Тивата.
 await page.goto(url('?c=tivat&s=3&t=11&m=sun&fm=5'));
 await painted();
-await wait(3);
+await wait(2.5);
 start = Date.now();
 await caption(CAPTIONS.open);
-await wait(8);
+await wait(1);
+await rotate(14, 4); // ~11° — видно, что город трёхмерный
+await wait(0.5);
 
 // 2. Режимы карты и высота окна.
-await page.locator('.rotate-hint').click().catch(() => {});
+if (await page.locator('.rotate-hint').isVisible()) await page.locator('.rotate-hint').click(); // поворот её обычно уже снял
 await caption(CAPTIONS.modes);
-for (const m of ['sea', 'levels', 'sun']) { await page.locator(`.mode-chip[data-mode="${m}"]`).click(); await wait(2.6); }
+for (const m of ['sea', 'levels', 'sun']) { await page.locator(`.mode-chip[data-mode="${m}"]`).click(); await wait(3.2); }
 await page.locator('.floor-mode').selectOption('10');
-await wait(2.6);
+await wait(3);
 
 // 3. Пример «Верхний этаж у моря».
 await caption(CAPTIONS.example);
@@ -146,7 +203,9 @@ await caption(CAPTIONS.view);
 await scrollTo('.view-row');
 await wait(1);
 await page.locator('.view-btn').click();
-await wait(7);
+await wait(3);
+await rotate(-8, 4); // несколько градусов — видно, что это 3D-вид
+await wait(1);
 await page.locator('.view-exit').click();
 await wait(2.5);
 
@@ -185,14 +244,14 @@ await page.locator('.search-results button').first().waitFor({ timeout: 10_000 }
 await wait(2);
 await page.locator('.search').press('Enter');
 await wait(3);
-for (const c of ['kotor', 'bergen']) {
-  await page.locator('.city').selectOption(c);
-  await page.waitForURL(new RegExp(`c=${c}`));
-  await page.waitForLoadState('domcontentloaded');
-  await caption(CAPTIONS.search); // подпись — сразу, пока город грузится
-  await painted();
-  await wait(4.5);
-}
+// Котор — летом и ближе к старому городу (зимой он почти весь в тени гор): через пример «Верхний этаж у моря».
+await switchCity('kotor', CAPTIONS.kotor);
+await caption(CAPTIONS.search);
+await page.locator('.example').first().click();
+await wait(5.5);
+await switchCity('bergen', CAPTIONS.bergen, async () => { await page.locator('.chip').nth(1).click(); });
+await caption(CAPTIONS.search);
+await wait(4);
 
 // 12. Клавиатура.
 await caption(CAPTIONS.keys);
