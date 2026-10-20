@@ -275,3 +275,21 @@ test('после застройки (пилот, ДУП Мрчевац): пер�
   await open(page, `?c=tivat&b=${B}&f=10&lang=en`);
   await expect(box).toBeHidden();
 });
+
+test('панель: после примера выбран лучший фасад, действия сразу под сводкой, пояснения свёрнуты', async ({ page }) => {
+  await open(page, '?c=tivat&lang=en');
+  await page.locator('.example').first().click();
+  await expect(page.locator('.side[aria-pressed="true"]')).not.toHaveText('All', { timeout: 30_000 });
+  await expect(page).toHaveURL(/d=f\d/);
+  await expect(page.locator('.bre')).not.toContainText('best facade'); // выбран конкретный фасад
+  await expect(page.locator('.view-btn')).toBeEnabled();
+  // Кнопки — сразу за сводкой, до матрицы.
+  const order = await page.evaluate(() => ['.summary', '.actions', '.matrix'].map((s) => document.querySelector(s)!.getBoundingClientRect().top));
+  expect(order[0] < order[1] && order[1] < order[2]).toBe(true);
+  await expect(page.locator('details.more').first()).not.toHaveAttribute('open', '');
+  await expect(page.locator('details.more').first()).toContainText('How to read');
+  // Ссылка без фасада остаётся «здание целиком».
+  await open(page, `?c=tivat&b=${B}&f=10&lang=en`);
+  await expect(page.locator('.bre')).toContainText('best facade', { timeout: 30_000 });
+  await expect(page.locator('.side[aria-pressed="true"]')).toHaveText('All');
+});

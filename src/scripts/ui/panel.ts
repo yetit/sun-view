@@ -25,6 +25,7 @@ let ribbonReq = 0, lastRibbon: { cols: number; rows: number; data: Uint8Array } 
 let bare: World | null = null;
 // «После застройки»: тот же мир плюс планируемые объёмы (data/<id>/planned.geojson), строится при первом включении.
 let after = false, built: World | null = null;
+let autoSide = false; // выбрать лучший фасад, когда посчитается матрица
 const cur = () => (after && world.planned ? (built ??= plannedWorld(world, world.planned)) : world);
 
 // face: false — не разворачивать карту к фасаду (ссылка открыта, а пользователь уже двигал карту).
@@ -41,7 +42,10 @@ export function select(b: Bld, opts: { floor?: number; side?: number | null; dir
   fillFloors(b);
   fillSides();
   resetBetter();
-  loadMatrix(b, renderBre);
+  // Фасад не задан ни ссылкой, ни примером — когда посчитается матрица, берём лучший фасад этажа (как в оценке BRE).
+  // Если пользователь успел выбрать фасад сам (в том числе «Все»), автоматика не вмешивается.
+  autoSide = state.side == null && opts.side === undefined && opts.dir == null;
+  loadMatrix(b, () => (autoSide && state.current === b ? pickBest() : renderBre()));
   $('.b-name').textContent = buildingName(b);
   $('.loading').hidden = true;
   $('.empty').hidden = true;
@@ -226,6 +230,13 @@ function faceSide() {
 }
 
 // Сводка в панели зависит от годовой оценки — перерисовываются вместе.
+// Лучший фасад этажа — тот, что называет оценка BRE для здания целиком; камера не крутится, это не выбор пользователя.
+function pickBest() {
+  autoSide = false;
+  const r = breNow();
+  if (r && currentFacades()[r.c]) { state.side = r.c; render(); } else renderBre();
+}
+
 function renderBre() {
   $('.bre-box').innerHTML = breHtml();
   $('.summary').textContent = summary();
@@ -256,11 +267,12 @@ export function initPanel() {
   floorSel.addEventListener('change', () => { state.floor = +floorSel.value; render(); });
   $('.sides').addEventListener('click', (e) => {
     const btn = (e.target as Element).closest<HTMLElement>('.side');
-    if (btn) { state.side = +btn.dataset.c! < 0 ? null : +btn.dataset.c!; render(); faceSide(); }
+    if (btn) { autoSide = false; state.side = +btn.dataset.c! < 0 ? null : +btn.dataset.c!; render(); faceSide(); }
   });
   $('.matrix').addEventListener('click', (e) => {
     const cell = (e.target as Element).closest<HTMLElement>('.cell');
     if (!cell) return;
+    autoSide = false;
     state.floor = +cell.dataset.f!;
     state.side = +cell.dataset.c!;
     floorSel.value = String(state.floor);
@@ -278,7 +290,7 @@ export function initPanel() {
   const pickSide = (e: Event) => {
     const p = (e.target as Element).closest('path');
     const side = state.current && p ? nearestFacade(currentFacades(), dirBearing(+p.getAttribute('data-side')!)) : -1;
-    if (side >= 0) { state.side = side; render(); faceSide(); }
+    if (side >= 0) { autoSide = false; state.side = side; render(); faceSide(); }
   };
   $('.rose').addEventListener('click', pickSide);
   $('.rose').addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), pickSide(e)));

@@ -87,29 +87,29 @@ import Meta from '../components/Meta.astro';
         <p class="legend climate-line" data-i-title="climateTitle" hidden></p>
         <div class="plan-box" hidden><div class="plan-chips" role="radiogroup" data-i-aria="planLabel"><button type="button" class="plan-chip" role="radio" data-pl="0" data-i="planToday"></button><button type="button" class="plan-chip" role="radio" data-pl="1" data-i="planAfter"></button></div><p class="plan-diff"></p><p class="legend plan-source"></p></div>
         <p class="summary"></p>
+        <!-- Действия — сразу под сводкой, а не в конце длинной панели. -->
+        <div class="actions"><button class="view-btn" type="button" aria-pressed="false" data-i="viewOpen"></button><button class="better-btn" type="button" data-i="betterBtn" data-i-title="betterTitle"></button><button class="pin-btn" type="button" data-i="addCompare"></button><button class="share-btn" type="button" data-i="downloadPng"></button></div>
+        <p class="better-out" aria-live="polite"></p>
 
         <h3 data-i="matrixTitle"></h3>
         <div class="matrix"></div>
-        <p class="legend" data-i="matrixLegend"></p>
+        <details class="more"><summary data-i="howToRead"></summary><p class="legend" data-i="matrixLegend"></p></details>
 
         <h3 data-i="sunTitle"></h3>
         <div class="bre-box"></div>
         <div class="seasons"></div>
-        <p class="legend seasons-note" data-i="seasonsNote" hidden></p>
+        <details class="more seasons-note" hidden><summary data-i="howToRead"></summary><p class="legend" data-i="seasonsNote"></p></details>
         <div class="sky-chips" role="radiogroup" data-i-aria="skyLabel" hidden><button type="button" class="sky-chip" role="radio" data-cl="0" data-i="skyClear"></button><button type="button" class="sky-chip" role="radio" data-cl="1" data-i="skyCloudy" data-i-title="skyCloudyTitle"></button></div>
         <canvas class="ribbon" role="img" data-i-aria="ribbonLegend"></canvas>
-        <p class="legend" data-i="ribbonLegend"></p>
-        <p class="legend ribbon-cloud" data-i="ribbonCloudLegend" hidden></p>
+        <details class="more"><summary data-i="howToRead"></summary><p class="legend" data-i="ribbonLegend"></p><p class="legend ribbon-cloud" data-i="ribbonCloudLegend" hidden></p></details>
 
         <h3 data-i="seaTitle"></h3>
         <div class="rose"></div>
-        <p class="legend" data-i="roseLegend"></p>
-        <div class="view-row"><button class="view-btn" type="button" aria-pressed="false" data-i="viewOpen"></button><span class="view-stat"></span></div>
+        <details class="more"><summary data-i="howToRead"></summary><p class="legend" data-i="roseLegend"></p></details>
+        <p class="view-stat"></p>
         <canvas class="view-pano" role="img" hidden></canvas>
         <p class="legend view-legend" data-i="viewLegend" hidden></p>
 
-        <div class="better-row"><button class="better-btn" type="button" data-i="betterBtn" data-i-title="betterTitle"></button><span class="better-out" aria-live="polite"></span></div>
-        <div class="actions"><button class="pin-btn" type="button" data-i="addCompare"></button><button class="share-btn" type="button" data-i="downloadPng"></button></div>
       </div>
 
       <div class="compare" hidden>
