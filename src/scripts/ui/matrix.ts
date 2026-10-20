@@ -18,7 +18,7 @@ export function loadMatrix(b: Bld, onReady: () => void) {
   box.innerHTML = `<p class="legend">${fs.length ? t.matrixLoading : t.matrixNone}</p>`;
   if (!fs.length) return;
   const my = ++matrixReq;
-  ask({ type: 'matrix', idx: b.idx, floors: b.floors }).then((m) => {
+  ask({ type: 'matrix', idx: b.idx, floors: b.floors, after: state.after }).then((m) => {
     if (my !== matrixReq) return;
     box.innerHTML = matrixHtml(fs, m);
     matrix = m;

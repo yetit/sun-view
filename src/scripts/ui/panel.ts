@@ -1,6 +1,6 @@
 // Правая панель (на телефоне — лист): выбор здания, этаж и фасад, сезоны, сводка и связка частей панели.
 // Матрица и BRE — matrix.ts, рисунки — charts.ts, вид из окна — view.ts, сравнение, поиск, примеры — отдельные модули.
-import { dirBearing, dirIndex, eye, eyeHeight, reliability, SEASONS, seaRose, seasonCalc, seasonClimate, sunshineAt, type SeaDir, type Season } from '../analysis.ts';
+import { annualSun, dirBearing, dirIndex, eye, eyeHeight, reliability, SEASONS, seaRose, seasonCalc, seasonClimate, sunshineAt, type SeaDir, type Season } from '../analysis.ts';
 import { $, $$, ask, city, currentFacades, embed, facadeOf, fmtH, fmtT, geojson, num, state, syncUrl, world } from '../app.ts';
 import { bareWorld, facades, nearestFacade, plannedWorld, type Bld, type World } from '../grid.ts';
 import { buildingName, cityName, summaryText, t } from '../i18n.ts';
@@ -24,9 +24,9 @@ let ribbonReq = 0, lastRibbon: { cols: number; rows: number; data: Uint8Array } 
 // Мир без листвы на лиственных деревьях — строится один раз, при первом выбранном здании.
 let bare: World | null = null;
 // «После застройки»: тот же мир плюс планируемые объёмы (data/<id>/planned.geojson), строится при первом включении.
-let after = false, built: World | null = null;
+let built: World | null = null;
 let autoSide = false; // выбрать лучший фасад, когда посчитается матрица
-const cur = () => (after && world.planned ? (built ??= plannedWorld(world, world.planned)) : world);
+const cur = () => (state.after && world.planned ? (built ??= plannedWorld(world, world.planned)) : world);
 
 // face: false — не разворачивать карту к фасаду (ссылка открыта, а пользователь уже двигал карту);
 // push: false — не добавлять запись в историю (восстановление из ссылки, кнопка «Назад»).
@@ -159,7 +159,7 @@ function render() {
   syncUrl();
   loadView(b);
   const my = ++ribbonReq;
-  ask({ type: 'ribbon', idx: b.idx, floor: state.floor, side: state.side }).then((r) => { if (my === ribbonReq) { lastRibbon = r; paintRibbon(); } });
+  ask({ type: 'ribbon', idx: b.idx, floor: state.floor, side: state.side, after: state.after }).then((r) => { if (my === ribbonReq) { lastRibbon = r; paintRibbon(); } });
 }
 
 // Смена сезона: карточки и солнечная диаграмма.
@@ -176,20 +176,26 @@ function planBox(b: Bld) {
   const box = $('.plan-box'), pl = world.planned;
   const near = !!pl && pl.features.some((f) => { const [x, y] = world.proj.toXY(...(f.geometry.coordinates[0][0] as [number, number])); return Math.hypot(x - b.xy[0], y - b.xy[1]) < 500; });
   box.hidden = !near;
-  if (!near) { if (after) setAfter(false); return; }
-  $$('.plan-chip').forEach((el) => el.setAttribute('aria-checked', String((el.dataset.pl === '1') === after)));
+  if (!near) { if (state.after) setAfter(false); return; }
+  $$('.plan-chip').forEach((el) => el.setAttribute('aria-checked', String((el.dataset.pl === '1') === state.after)));
   const p = pl!.features[0].properties;
   $('.plan-source').innerHTML = t.planSource(p.plan, p.date, pl!.features.length, p.source);
-  if (!after) { $('.plan-diff').textContent = t.planHint; return; }
+  if (!state.after) { $('.plan-diff').textContent = t.planHint; return; }
   const e = eye(world, b, state.floor, facadeOf());
   const diffs = SEASONS.map((_, i) => seasonCalc(cur(), b, e, i).sun - seasonCalc(world, b, e, i).sun);
   const sun = diffs.map((d, i) => (Math.abs(d) >= 0.05 ? `${t.seasons[i].toLowerCase()} ${d < 0 ? '−' : '+'}${fmtH.format(Math.abs(Math.round(d * 10) / 10))} ${t.h}` : '')).filter(Boolean);
   const before = seaRose(world, b, state.floor), lost = lastSea.map((s, i) => (before[i].dist != null && s.dist == null ? t.dirs[i] : '')).filter(Boolean);
-  $('.plan-diff').textContent = t.planDiff(sun.length ? sun.join(', ') : t.planSunSame, lost.length ? t.planSeaLost(lost.join(', ')) : t.planSeaSame);
+  // Годовая оценка выбранного окна сегодня и после (для здания целиком — без неё: там лучший фасад может смениться).
+  const f = facadeOf(), bre = f ? [annualSun(world, b, e).year, annualSun(cur(), b, e).year] : null;
+  const parts = [sun.length ? sun.join(', ') : t.planSunSame, lost.length ? t.planSeaLost(lost.join(', ')) : t.planSeaSame];
+  if (bre && bre[0] !== bre[1]) parts.push(t.planBre(bre[0], bre[1]));
+  $('.plan-diff').textContent = t.planDiff(parts.join('; '));
 }
+// Матрица, оценка BRE, лента года и вид из окна считаются в воркере — переспрашиваем их с новым миром.
 function setAfter(on: boolean) {
-  after = on && !!world.planned;
-  map.setLayoutProperty('planned-volume', 'visibility', after ? 'visible' : 'none');
+  state.after = on && !!world.planned;
+  map.setLayoutProperty('planned-volume', 'visibility', state.after ? 'visible' : 'none');
+  if (state.current) loadMatrix(state.current, renderBre);
   render();
 }
 
@@ -264,6 +270,7 @@ export function initPanel() {
   $('.seasons-note').hidden = !world.sunshine;
   $('.sky-chips').hidden = !world.sunshine; // без климата переключать нечего
   if (world.planned) setData('planned', world.planned.features);
+  if (state.after) map.setLayoutProperty('planned-volume', 'visibility', 'visible'); // ссылка с pl=1
   $('.plan-chips').addEventListener('click', (e) => {
     const el = (e.target as Element).closest<HTMLElement>('.plan-chip');
     if (el) setAfter(el.dataset.pl === '1');

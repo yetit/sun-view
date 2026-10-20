@@ -18,7 +18,7 @@ export function loadView(b: Bld) {
   if (!f) { setView(false); return; }
   if (viewing()) enterView(b, state.floor, f);
   const my = ++viewReq;
-  ask({ type: 'view', idx: b.idx, floor: state.floor, side: state.side }).then((v) => {
+  ask({ type: 'view', idx: b.idx, floor: state.floor, side: state.side, after: state.after }).then((v) => {
     if (my !== viewReq) return;
     viewText = t.viewStat(Math.round(100 * v.sea), Math.round(100 * v.sky));
     $('.view-stat').textContent = $('.view-badge-stat').textContent = viewText;

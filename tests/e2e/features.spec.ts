@@ -269,8 +269,16 @@ test('после застройки (пилот, ДУП Мрчевац): пер�
   await page.locator('.plan-chip[data-pl="1"]').click();
   await expect(page.locator('.plan-diff')).toContainText(/After planned building: .*winter −[\d.]+ h/);
   expect(await winter()).toBeLessThan(before);
+  // Матрица и оценка тоже пересчитаны, состояние — в ссылке.
+  await page.locator('.side[data-c="1"]').click(); // ЮВ, 133°: оценка сегодня 57, после застройки 35
+  await expect(page.locator('.plan-diff')).toContainText('window score 57 → 35 of 100');
+  await expect(page.locator('.bre strong')).toHaveText('35of 100', { timeout: 30_000 });
+  await expect(page).toHaveURL(/pl=1/);
+  await open(page, '?c=tivat&b=1422729342&f=1&d=f1&s=3&pl=1&lang=en');
+  await expect(page.locator('.plan-chip[data-pl="1"]')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('.bre strong')).toHaveText('35of 100', { timeout: 30_000 });
   await page.locator('.plan-chip[data-pl="0"]').click();
-  expect(await winter()).toBe(before);
+  await expect(page.locator('.bre strong')).toHaveText('57of 100', { timeout: 30_000 });
   // Дом далеко от участков плана — переключателя нет.
   await open(page, `?c=tivat&b=${B}&f=10&lang=en`);
   await expect(box).toBeHidden();
