@@ -81,10 +81,15 @@ export const heatRisk = (lateHours: number) => (lateHours >= 3 ? 'high' : lateHo
 export type Season = { name: string; short: string; sun: number; daylight: number; sunrise: Date | null; sunset: Date | null };
 
 // Часы солнца в окнах и часы, когда солнце в принципе перед фасадом (для здания целиком — весь день).
+// Любой день (сутки UTC): часы солнца в окне, день перед фасадом, восход и закат, первое и последнее солнце в окне.
+export type Day = { sun: number; daylight: number; sunrise: Date | null; sunset: Date | null; firstLit: Date | null; lastLit: Date | null };
+export function dayCalc(w: World, b: Bld, e: Eye, date: Date): Day {
+  const path = dayPath(w, b, e, date), day = path.filter((s) => s.facing), lit = day.filter((s) => s.lit);
+  return { sun: (lit.length * STEP_MIN) / 60, daylight: (day.length * STEP_MIN) / 60, sunrise: path[0]?.t ?? null, sunset: path.at(-1)?.t ?? null, firstLit: lit[0]?.t ?? null, lastLit: lit.at(-1)?.t ?? null };
+}
 export function seasonCalc(w: World, b: Bld, e: Eye, i: number): Season {
-  const path = dayPath(w, b, e, SEASONS[i].date);
-  const day = path.filter((s) => s.facing);
-  return { ...SEASONS[i], sun: (day.filter((s) => s.lit).length * STEP_MIN) / 60, daylight: (day.length * STEP_MIN) / 60, sunrise: path[0]?.t ?? null, sunset: path.at(-1)?.t ?? null };
+  const d = dayCalc(w, b, e, SEASONS[i].date);
+  return { ...SEASONS[i], sun: d.sun, daylight: d.daylight, sunrise: d.sunrise, sunset: d.sunset };
 }
 
 // Лента года: столбец — каждый 5-й день, строка — 10 минут суток (UTC). 0 ночь, 1 тень/не перед фасадом, 2 солнце.
@@ -271,11 +276,11 @@ export const HEIGHTS = [2, 5, 10];
 export const floorAt = (w: { city: City }, h: number) => Math.max(1, Math.round(h / w.city.floorHeight + 0.5));
 const floorFor = (w: World, b: Bld, h: number) => Math.min(b.floors, floorAt(w, h));
 
-// Часы солнца в окнах (здание целиком) для зданий from..to.
-export function massSun(w: World, season: number, h: number, from: number, to: number, out: Float32Array) {
+// Часы солнца в окнах (здание целиком) для зданий from..to в день date.
+export function massSun(w: World, date: Date, h: number, from: number, to: number, out: Float32Array) {
   for (let i = from; i < to; i++) {
     const b = w.blds[i];
-    out[i] = seasonCalc(w, b, eye(w, b, floorFor(w, b, h), null), season).sun;
+    out[i] = dayCalc(w, b, eye(w, b, floorFor(w, b, h), null), date).sun;
   }
 }
 // Сколько румбов с морем.

@@ -1,6 +1,6 @@
 // Таймбар: сезон, время суток, воспроизведение, режимы карты (солнце/море) и легенда.
-import { eye, facing, floorAt, HEIGHTS, SEASONS, STEP_MIN, sunAt, sunshineAt } from '../analysis.ts';
-import { $, $$, ask, city, facadeOf, fmtH, fmtT, sliderTime, state, syncUrl, world } from '../app.ts';
+import { eye, facing, floorAt, HEIGHTS, STEP_MIN, sunAt, sunshineAt, YEAR } from '../analysis.ts';
+import { $, $$, ask, city, dayDate, dayKey, facadeOf, fmtH, fmtT, sliderTime, state, syncUrl, world } from '../app.ts';
 import { loadLevels } from '../data.ts';
 import { blocked } from '../grid.ts';
 import { t } from '../i18n.ts';
@@ -51,17 +51,22 @@ async function layerValues(key: string, progress: HTMLElement): Promise<ArrayLik
   if (cache.has(key)) return cache.get(key)!;
   const [type, a, b] = key.split(':');
   const my = modeReq;
-  const res = await ask(type === 'sun' ? { type, season: +a, h: +b } : { type, h: +a }, (p, n) => (progress.textContent = `${p} / ${n}`));
+  // Свой день (ключ sun:ММ-ДД:h) в предрасчёте не лежит — считает воркер.
+  const day = a.includes('-') ? Date.UTC(YEAR, +a.slice(0, 2) - 1, +a.slice(3)) : null;
+  const res = await ask(type === 'sun' ? (day != null ? { type, day, h: +b } : { type, season: +a, h: +b }) : { type, h: +a }, (p, n) => (progress.textContent = `${p} / ${n}`));
   progress.textContent = '';
   cache.set(key, res.data);
   return my === modeReq ? res.data : null;
 }
 
 // Слой «Солнце» для сезона и высоты окна (часы по зданиям) — для поиска «солнечнее рядом».
-export const sunLayer = (season: number, h: number) => layerValues(`sun:${season}:${h}`, $('.progress'));
+export const sunLayer = (h: number) => layerValues(sunKey(h), $('.progress'));
+
+// Ключ слоя «Солнце» для текущего дня: сезон из предрасчёта или свой день.
+const sunKey = (h: number) => `sun:${state.day ? dayKey(state.day) : state.season}:${h}`;
 
 export async function applyMode() {
-  const { mode, height, season } = state;
+  const { mode, height } = state;
   showLegend();
   $$('.mode-chip').forEach((c) => c.setAttribute('aria-checked', String(c.dataset.mode === mode)));
   applyColors();
@@ -70,7 +75,7 @@ export async function applyMode() {
   // Облака на дату одинаковы для всех домов города — цвета не меняют, поэтому только подпись под шкалой.
   const cloud = $('.legend-cloud');
   cloud.hidden = mode !== 'sun' || !world.sunshine;
-  if (!cloud.hidden) cloud.textContent = t.legendCloud(Math.round(100 * sunshineAt(world.sunshine!, SEASONS[season].date)));
+  if (!cloud.hidden) cloud.textContent = t.legendCloud(Math.round(100 * sunshineAt(world.sunshine!, dayDate())));
   if (mode === 'normal') { $('.progress').textContent = ''; return; }
   if (mode === 'levels') {
     $('.legend-note').textContent = t.legendLevelsNote;
@@ -88,7 +93,7 @@ export async function applyMode() {
   $('.legend-note').textContent = [sun ? t.legendQuantiles : '', low.some(Boolean) ? t.legendLow(floor) : ''].filter(Boolean).join('. ');
   if (!sun) ['0', '2', '≥ 4'].forEach((s, i) => ($(['.legend-min', '.legend-mid', '.legend-max'][i]).textContent = s));
   ++modeReq;
-  const arr = await layerValues(sun ? `sun:${season}:${height}` : `sea:${height}`, $('.progress'));
+  const arr = await layerValues(sun ? sunKey(height) : `sea:${height}`, $('.progress'));
   if (!arr) return;
   world.blds.forEach((b, i) => map.setFeatureState({ source: 'buildings', id: b.id }, { v: arr[i], low: low[i] }));
   if (!sun) return;
@@ -111,8 +116,16 @@ export function initTimebar() {
   chips.forEach((chip, i) => {
     chip.textContent = t.seasons[i];
     chip.title = t.seasonsFull[i];
-    chip.classList.toggle('active', i === state.season);
+    chip.classList.toggle('active', !state.day && i === state.season);
     chip.addEventListener('click', () => setSeason(i));
+  });
+  // Любой день года: год в поле — расчётный, выбирают месяц и число.
+  const dayInput = $<HTMLInputElement>('.day');
+  dayInput.min = `${YEAR}-01-01`; dayInput.max = `${YEAR}-12-31`;
+  if (state.day) dayInput.value = `${YEAR}-${dayKey(state.day)}`;
+  dayInput.addEventListener('change', () => {
+    const m = dayInput.value.match(/^\d{4}-(\d{2})-(\d{2})$/);
+    setDay(m ? new Date(Date.UTC(YEAR, +m[1] - 1, +m[2])) : null);
   });
 
   // Сутки за ~12 секунд, по кругу.
@@ -158,7 +171,14 @@ export function initTimebar() {
 
 export function setSeason(i: number) {
   state.season = i;
-  $$('.chip').forEach((c, j) => c.classList.toggle('active', j === i));
+  setDay(null);
+}
+
+// Свой день вместо сезона (null — вернуться к сезону): чипы гаснут, поле даты показывает день.
+export function setDay(d: Date | null) {
+  state.day = d;
+  $$('.chip').forEach((c, j) => c.classList.toggle('active', !d && j === state.season));
+  $<HTMLInputElement>('.day').value = d ? `${YEAR}-${dayKey(d)}` : '';
   refreshSeason();
   updateLight(); syncUrl();
   if (state.mode === 'sun') applyMode();

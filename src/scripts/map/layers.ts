@@ -1,7 +1,7 @@
 // Карта MapLibre и всё, что рисуется на ней: здания, этаж, фасад, секторы моря, солнечная диаграмма.
 import { Map, NavigationControl, setWorkerUrl, type FilterSpecification } from 'maplibre-gl';
 import { dayPath, dirIndex, eye, SEASONS, STEP_MIN, type SeaDir } from '../analysis.ts';
-import { BASE, city, embed, facadeOf, fmtH, geojson, state, world } from '../app.ts';
+import { BASE, city, embed, facadeOf, fmtH, geojson, state, world, dayDate } from '../app.ts';
 import { t } from '../i18n.ts';
 import type { Bld, Facade } from '../grid.ts';
 import { buildingColor, style } from '../style.ts';
@@ -146,7 +146,7 @@ export function drawSunPath() {
   const ring: [number, number][] = [];
   for (let i = 0; i <= 72; i++) ring.push(offset(b.center, (i * Math.PI) / 36, R_PATH));
   const features: any[] = [{ type: 'Feature', properties: { kind: 'ring' }, geometry: { type: 'LineString', coordinates: ring } }];
-  const path = dayPath(world, b, eye(world, b, state.floor, facadeOf()), SEASONS[state.season].date);
+  const path = dayPath(world, b, eye(world, b, state.floor, facadeOf()), dayDate());
   for (let i = 0; i + 1 < path.length; i++) {
     if (path[i + 1].t.getTime() - path[i].t.getTime() > STEP_MIN * 60000 * 1.5) continue;
     const s = path[i].lit ? 'lit' : path[i].facing ? 'shade' : 'back';

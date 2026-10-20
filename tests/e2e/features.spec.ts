@@ -379,3 +379,23 @@ test('телефон: вкладки панели показывают разд�
   await expect(page.locator('.seasons')).toBeVisible();
   await expect(page.locator('.rose')).toBeVisible();
 });
+
+test('любой день года: дата в ссылке (day=MM-DD), карточка дня над сезонами, чип сезона сбрасывает день', async ({ page }) => {
+  await open(page, `?c=tivat&b=${B}&f=10&d=f2&day=11-01&lang=en`);
+  const card = page.locator('.seasons .day-card');
+  await expect(card.locator('b')).toHaveText('November 1');
+  await expect(card).toContainText(/[\d.]+ h/);
+  await expect(card).toContainText(/sun in the window \d+:\d\d–\d+:\d\d|no sun in the window/);
+  await expect(page.locator('.day')).toHaveValue(/-11-01$/);
+  await expect(page.locator('.chip.active')).toHaveCount(0);
+  // Своя дата из поля — в карточке и в ссылке.
+  await page.locator('.day').fill('2026-05-15');
+  await page.locator('.day').dispatchEvent('change');
+  await expect(card.locator('b')).toHaveText('May 15');
+  await expect(page).toHaveURL(/day=05-15/);
+  // Чип сезона возвращает сезоны: карточки дня нет, day из ссылки ушёл.
+  await page.locator('.chip').nth(1).click();
+  await expect(page.locator('.chip').nth(1)).toHaveClass(/active/);
+  await expect(card).toHaveCount(0);
+  await expect(page).not.toHaveURL(/day=/);
+});

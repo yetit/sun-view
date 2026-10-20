@@ -1,7 +1,7 @@
 // Правая панель (на телефоне — лист): выбор здания, этаж и фасад, сезоны, сводка и связка частей панели.
 // Матрица и BRE — matrix.ts, рисунки — charts.ts, вид из окна — view.ts, сравнение, поиск, примеры — отдельные модули.
-import { annualSun, dirBearing, dirIndex, eye, heatRisk, lateSun, roofEye, eyeHeight, reliability, SEASONS, seaRose, seasonCalc, seasonClimate, sunshineAt, type SeaDir, type Season } from '../analysis.ts';
-import { $, $$, ask, city, currentFacades, embed, facadeOf, fmtH, fmtT, geojson, num, state, syncUrl, tzOffset, world } from '../app.ts';
+import { annualSun, dayCalc, dirBearing, dirIndex, eye, heatRisk, lateSun, roofEye, eyeHeight, reliability, SEASONS, seaRose, seasonCalc, seasonClimate, sunshineAt, type SeaDir, type Season } from '../analysis.ts';
+import { $, $$, ask, city, currentFacades, dayDate, embed, facadeOf, fmtDay, fmtH, fmtT, geojson, num, state, syncUrl, tzOffset, world } from '../app.ts';
 import { bareWorld, facades, inRing, nearestFacade, plannedWorld, type Bld, type World } from '../grid.ts';
 import { buildingName, cityName, summaryText, t } from '../i18n.ts';
 import { applyColors, drawFacade, drawFloor, drawSectors, drawSunPath, enableTerrain, lookAtFacade, map, setData, sheetPadding } from '../map/layers.ts';
@@ -171,6 +171,7 @@ export function refreshSeason() {
   drawSunPath();
   $('.seasons').innerHTML = seasonsHtml();
   climateLine();
+  paintRibbon(); // метка своего дня на ленте
 }
 
 // Переключатель «Сегодня / После застройки»: только у домов в 500 м от планируемых объёмов (дальше лучи
@@ -227,9 +228,9 @@ function climateLine() {
   const el = $('.climate-line'), f = facadeOf(), c = world.climate;
   el.hidden = !f || !c;
   if (!f || !c) return;
-  const k = seasonClimate(c, SEASONS[state.season].date), t0 = Math.round(k.t);
+  const k = seasonClimate(c, dayDate()), t0 = Math.round(k.t);
   const windward = Math.cos(f.normal - dirBearing(k.dir)) >= Math.SQRT1_2; // нормаль фасада в пределах 45° от ветра
-  el.textContent = t.climateLine(t.seasonsFull[state.season], `${t0 > 0 ? '+' : ''}${t0}`, t.dirs[k.dir], fmtH.format(Math.round(k.speed * 10) / 10), windward);
+  el.textContent = t.climateLine(t.when(state.day ? fmtDay.format(state.day) : null, state.season), `${t0 > 0 ? '+' : ''}${t0}`, t.dirs[k.dir], fmtH.format(Math.round(k.speed * 10) / 10), windward);
 }
 
 function summary() {
@@ -240,7 +241,7 @@ function summary() {
 function seasonsHtml() {
   const e = eye(world, state.current!, state.floor, facadeOf());
   lastSeasons = SEASONS.map((_, i) => seasonCalc(cur(), state.current!, e, i));
-  return lastSeasons.map((s, i) => {
+  return dayCard(e) + lastSeasons.map((s, i) => {
     const times = s.sunrise && s.sunset ? `${fmtT.format(s.sunrise)}–${fmtT.format(s.sunset)}` : t.polarNight;
     const pct = s.daylight ? Math.round((100 * s.sun) / s.daylight) : 0;
     // С облаками — часы при ясном небе × вероятность прямого солнца в этот день года.
@@ -248,13 +249,24 @@ function seasonsHtml() {
     // Весной и зимой лиственные деревья могут стоять голыми — верхняя граница, если она другая.
     const nb = i === 0 || i === 3 ? fmtH.format(seasonCalc((bare ??= bareWorld(world)), state.current!, e, i).sun) : null;
     const leafless = nb && nb !== fmtH.format(s.sun) ? `<small class="bare">${t.bare(nb)}</small>` : '';
-    return `<button type="button" class="card${i === state.season ? ' current' : ''}" data-s="${i}" style="--pct:${pct}%" title="${t.seasonsFull[i]}"><b>${t.seasons[i]}</b><strong>${fmtH.format(s.sun)} ${t.h}</strong><small>${t.of} ${fmtH.format(s.daylight)} · ${times}</small>${cloud}${leafless}<i></i></button>`;
+    return `<button type="button" class="card${i === state.season && !state.day ? ' current' : ''}" data-s="${i}" style="--pct:${pct}%" title="${t.seasonsFull[i]}"><b>${t.seasons[i]}</b><strong>${fmtH.format(s.sun)} ${t.h}</strong><small>${t.of} ${fmtH.format(s.daylight)} · ${times}</small>${cloud}${leafless}<i></i></button>`;
   }).join('');
+}
+
+// Свой день (выбран в таймбаре) — карточка над сезонами: часы солнца, день, когда солнце в окне, среднее с облаками.
+function dayCard(e: ReturnType<typeof eye>) {
+  if (!state.day) return '';
+  const d = dayCalc(cur(), state.current!, e, state.day);
+  const times = d.sunrise && d.sunset ? `${fmtT.format(d.sunrise)}–${fmtT.format(d.sunset)}` : t.polarNight;
+  const lit = d.firstLit && d.lastLit ? t.sunWindow(fmtT.format(d.firstLit), fmtT.format(d.lastLit)) : t.noSunWindow;
+  const cloud = world.sunshine && d.sun ? `<small class="cloud">${t.cloudy(fmtH.format(d.sun * sunshineAt(world.sunshine, state.day)))}</small>` : '';
+  const pct = d.daylight ? Math.round((100 * d.sun) / d.daylight) : 0;
+  return `<div class="card current day-card" style="--pct:${pct}%"><b>${fmtDay.format(state.day)}</b><strong>${fmtH.format(d.sun)} ${t.h}</strong><small>${t.of} ${fmtH.format(d.daylight)} · ${times}</small><small>${lit}</small>${cloud}<i></i></div>`;
 }
 
 // Лента года — ясное небо или с облаками (переключатель над ней, cl=1 в ссылке). Тот же canvas идёт в PNG-карточку.
 function paintRibbon() {
-  if (lastRibbon) ribbonSmall = drawRibbon($<HTMLCanvasElement>('.ribbon'), lastRibbon, state.cloudy ? world.sunshine ?? null : null);
+  if (lastRibbon) ribbonSmall = drawRibbon($<HTMLCanvasElement>('.ribbon'), lastRibbon, state.cloudy ? world.sunshine ?? null : null, state.day);
 }
 function setSky(cloudy: boolean) {
   state.cloudy = cloudy && !!world.sunshine;

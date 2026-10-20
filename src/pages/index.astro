@@ -46,6 +46,7 @@ const ids = cities.map((c) => c.id), base = import.meta.env.BASE_URL;
           <button class="chip" type="button"></button><button class="chip" type="button"></button><button class="chip" type="button"></button><button class="chip" type="button"></button>
         </div>
         <label class="time"><button class="play" type="button" aria-pressed="false" data-i-title="play">▶</button><input class="hour" type="range" min="4" max="22" step="0.1667" value="11" data-i-aria="hourAria" /><span class="clock">11:00</span></label>
+        <input class="day" type="date" data-i-aria="dayAria" data-i-title="dayTitle" />
         <div class="modes" role="radiogroup" data-i-aria="map">
           <button class="mode-chip" type="button" role="radio" data-mode="normal"></button><button class="mode-chip" type="button" role="radio" data-mode="sun"></button><button class="mode-chip" type="button" role="radio" data-mode="sea"></button><button class="mode-chip" type="button" role="radio" data-mode="levels"></button>
           <select class="floor-mode" data-i-aria="heightAria"></select>

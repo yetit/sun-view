@@ -145,6 +145,7 @@ body.embed .first-frame { display: none; }
 .card .cloud { color: var(--ink); }
 .card i { position: absolute; left: 0; bottom: 0; height: 3px; width: var(--pct); background: var(--sun); transition: width 0.6s ease; }
 .card.current { outline: 2px solid var(--sun); outline-offset: -2px; }
+.day-card { grid-column: 1 / -1; }
 .ribbon { width: 100%; height: 180px; margin-top: 10px; border-radius: 8px; display: block; }
 
 /* Роза: видно — штриховка и «∿ км», не видно — светлый сектор и прочерк. */
@@ -245,6 +246,8 @@ body.embed .tab { display: block !important; }
 body[data-mode='normal'] .floor-mode, body[data-mode='levels'] .floor-mode { display: none; }
 .time { display: flex; align-items: center; gap: 8px; }
 .time input { width: 150px; accent-color: var(--accent); }
+.day { font: inherit; font-size: 12.5px; padding: 3px 6px; border-radius: 8px; border: 1px solid #cfc8bb; background: #fff; color: var(--ink); }
+.timebar.night .day { color-scheme: dark; background: #39405a; color: #e6e9f2; border-color: #59607a; }
 .clock { font-weight: 600; min-width: 42px; }
 .play { width: 28px; height: 28px; border-radius: 50%; border: 0; background: var(--ink); color: #fff; font-size: 11px; display: grid; place-items: center; }
 .timebar.night .play { background: #fff; color: var(--ink); }
@@ -286,8 +289,9 @@ body[data-mode='normal'] .floor-mode, body[data-mode='levels'] .floor-mode { dis
   }
   .timebar.night { background: #262c3e; }
   .chips { width: 100%; justify-content: space-between; }
-  .time { flex: 1; }
-  .time input { width: auto; flex: 1; }
+  .time { flex: 1 1 0; min-width: 0; } /* дата — в той же строке, что ползунок */
+  .time input { width: auto; flex: 1; min-width: 0; }
+  .day { flex: none; padding: 3px 4px; }
   /* Ряд режимов в одну строку (свёрнутый лист — 160 px): чипы компактнее, на узком экране ряд листается вбок. */
   .modes { padding-left: 0; border-left: 0; gap: 2px; overflow-x: auto; scrollbar-width: none; }
   .mode-chip { padding: 5px 6px; font-size: 13.5px; white-space: nowrap; }

@@ -2,7 +2,7 @@
 // и матрица «этажи × фасады» с годовой оценкой окон по BRE.
 import { unpackBuildings, type BuildingsMeta } from './buildings-bin.ts';
 import { createWorld, facades, plannedWorld, type Canopy, type World } from './grid.ts';
-import { eye, facadeMatrix, massSea, massSun, windowView, yearRibbon } from './analysis.ts';
+import { eye, facadeMatrix, massSea, massSun, SEASONS, windowView, yearRibbon } from './analysis.ts';
 
 let w: World, wp: World | null = null; // wp — мир с планируемыми объёмами, строится по первому запросу «после застройки»
 const pick = (after?: boolean) => (after && w.planned ? (wp ??= plannedWorld(w, w.planned)) : w);
@@ -10,7 +10,7 @@ const CHUNK = 150;
 
 export type Req =
   | { type: 'init'; id: number; city: any; bldMeta: BuildingsMeta; bldBuf: ArrayBuffer; canopy: Canopy | null; demMeta: any; demBuf: ArrayBuffer; sunshine: number[] | null; planned: { features: any[] } | null }
-  | { type: 'sun'; id: number; season: number; h: number }
+  | { type: 'sun'; id: number; season?: number; day?: number; h: number } // day — свой день (мс UTC) вместо сезона
   | { type: 'sea'; id: number; h: number }
   | { type: 'ribbon'; id: number; idx: number; floor: number; side: number | null; after?: boolean } // side — номер фасада
   | { type: 'view'; id: number; idx: number; floor: number; side: number; after?: boolean }
@@ -38,7 +38,7 @@ self.onmessage = async ({ data: m }: MessageEvent<Req>) => {
   const n = w.blds.length;
   const out = m.type === 'sun' ? new Float32Array(n) : new Uint8Array(n);
   for (let i = 0; i < n; i += CHUNK) {
-    if (m.type === 'sun') massSun(w, m.season, m.h, i, Math.min(i + CHUNK, n), out as Float32Array);
+    if (m.type === 'sun') massSun(w, m.day != null ? new Date(m.day) : SEASONS[m.season!].date, m.h, i, Math.min(i + CHUNK, n), out as Float32Array);
     else massSea(w, m.h, i, Math.min(i + CHUNK, n), out as Uint8Array);
     self.postMessage({ id: m.id, progress: Math.min(i + CHUNK, n), total: n });
     await new Promise((r) => setTimeout(r)); // дать очереди сообщений продвинуться

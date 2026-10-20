@@ -4,7 +4,7 @@
 // Запуск: node scripts/precompute.ts <id> (Node ≥ 22.18, типы снимаются сам Node).
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { getCity } from '../cities.config.mjs';
-import { eye, HEIGHTS, massSea, massSun, seaRose, seasonCalc, STEP_MIN } from '../src/scripts/analysis.ts';
+import { eye, HEIGHTS, massSea, massSun, seaRose, seasonCalc, SEASONS, STEP_MIN } from '../src/scripts/analysis.ts';
 import { unpackBuildings } from '../src/scripts/buildings-bin.ts';
 import { createWorld, makeCanopy, type City } from '../src/scripts/grid.ts';
 
@@ -24,7 +24,7 @@ const out: Uint8Array[] = [];
 const t0 = Date.now();
 for (let s = 0; s < 4; s++) for (const h of HEIGHTS) {
   const a = new Float32Array(n);
-  massSun(w, s, h, 0, n, a);
+  massSun(w, SEASONS[s].date, h, 0, n, a);
   out.push(Uint8Array.from(a, (v) => Math.round((v * 60) / STEP_MIN)));
   layers.push(`sun:${s}:${h}`);
 }

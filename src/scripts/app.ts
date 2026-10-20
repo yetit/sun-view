@@ -1,6 +1,6 @@
 // Общее состояние приложения: город и параметры из URL, мир, воркер, форматтеры.
 import { getCity } from '../../cities.config.mjs';
-import { HEIGHTS, SEASONS } from './analysis.ts';
+import { HEIGHTS, SEASONS, YEAR } from './analysis.ts';
 import { facades, type Bld, type City, type Facade, type World } from './grid.ts';
 import type { Mode } from './style.ts';
 import { t } from './i18n.ts';
@@ -16,6 +16,7 @@ export const city = getCity(params.get('c') ?? '') as City;
 export const embed = params.get('embed') === '1';
 
 export const fmtH = new Intl.NumberFormat(t.locale, { maximumFractionDigits: 1 });
+export const fmtDay = new Intl.DateTimeFormat(t.locale, { day: 'numeric', month: 'long', timeZone: 'UTC' }); // свой день: «1 ноября»
 export const fmtT = new Intl.DateTimeFormat(t.locale, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: city.timezone });
 
 // fm — высота окна на картах, м; старые ссылки с этажами 1/mid/top — на ближайшую высоту.
@@ -25,6 +26,14 @@ const fm = params.get('fm') ?? '';
 const d = params.get('d');
 export const urlDir = d != null && /^[0-7]$/.test(d) ? +d : null;
 const pick = <T extends string>(v: string | null, ok: readonly T[], d: T) => (ok.includes(v as T) ? (v as T) : d);
+// Свой день: ММ-ДД в ссылке ↔ полночь UTC этого дня в расчётном году (солнце от года к году почти не меняется).
+export const dayKey = (d: Date) => `${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+export function parseDay(v: string | null): Date | null {
+  const m = v?.match(/^(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  const d = new Date(Date.UTC(YEAR, +m[1] - 1, +m[2]));
+  return d.getUTCMonth() === +m[1] - 1 ? d : null; // 02-30 и т.п. — нет такого дня
+}
 export const state = {
   current: null as Bld | null,
   floor: 1,
@@ -36,14 +45,16 @@ export const state = {
   floorsOverride: params.get('n') != null ? num(params.get('n'), 0) || null : null, // этажность, уточнённая пользователем
   cloudy: params.get('cl') === '1', // лента года с облаками; по умолчанию ясное небо
   after: params.get('pl') === '1', // «После застройки»: панель дома с планируемыми объёмами (pl=1)
+  day: parseDay(params.get('day')), // свой день вместо сезона (day=ММ-ДД), null — сезон
 };
 
 export function syncUrl() {
-  const { current, floor, side, season, hour, mode, height, floorsOverride, cloudy, after } = state;
+  const { current, floor, side, season, hour, mode, height, floorsOverride, cloudy, after, day } = state;
   const p = new URLSearchParams({ c: city.id, s: String(season), t: hour.toFixed(2), m: mode });
   if (mode !== 'normal') p.set('fm', String(height));
   if (current) { p.set('b', String(current.id)); p.set('f', String(floor)); if (side != null) p.set('d', `f${side}`); if (floorsOverride) p.set('n', String(floorsOverride)); }
   if (cloudy) p.set('cl', '1');
+  if (day) p.set('day', dayKey(day));
   if (after && current) p.set('pl', '1');
   if (params.get('lang')) p.set('lang', params.get('lang')!);
   // Ссылка «Открыть в Sun & View» — то же состояние без embed.
@@ -61,7 +72,9 @@ export function tzOffset(d: Date) {
   const at = (tz: string) => new Date(d.toLocaleString('en-US', { timeZone: tz })).getTime();
   return (at(city.timezone) - at('UTC')) / 36e5;
 }
-export const sliderTime = () => new Date(SEASONS[state.season].date.getTime() + (state.hour - tzOffset(SEASONS[state.season].date)) * 36e5);
+// Дата расчёта: свой день, если выбран, иначе дата сезона.
+export const dayDate = () => state.day ?? SEASONS[state.season].date;
+export const sliderTime = () => new Date(dayDate().getTime() + (state.hour - tzOffset(dayDate())) * 36e5);
 
 // Мир и исходный GeoJSON зданий — после загрузки данных.
 export let world: World;

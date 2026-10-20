@@ -25,7 +25,8 @@ export function roseSvg(sea: SeaDir[], sel: number) {
 // Лента года: столбцы — дни, строки — местное время суток (0 сверху). Возвращает маленький canvas
 // с самими данными — его же кладём в PNG-карточку. sunshine — «с облаками»: клетка «солнце в окне»
 // смешивается с серым в пропорции вероятности прямого солнца в этот день (жёлтое при p = 1, серое при 0).
-export function drawRibbon(cv: HTMLCanvasElement, { cols, rows, data }: { cols: number; rows: number; data: Uint8Array }, sunshine: number[] | null = null) {
+// mark — свой день: сплошная линия поверх пунктиров сезонов.
+export function drawRibbon(cv: HTMLCanvasElement, { cols, rows, data }: { cols: number; rows: number; data: Uint8Array }, sunshine: number[] | null = null, mark: Date | null = null) {
   const dpr = devicePixelRatio || 1;
   const W = cv.clientWidth, H = 180, left = 26, top = 6, bottom = 18;
   cv.width = W * dpr; cv.height = H * dpr;
@@ -61,6 +62,11 @@ export function drawRibbon(cv: HTMLCanvasElement, { cols, rows, data }: { cols: 
   ctx.setLineDash([3, 3]);
   for (const s of SEASONS) {
     const x = left + (pw * ((s.date.getTime() - Date.UTC(YEAR, 0, 1)) / 864e5)) / 365;
+    ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + ph); ctx.stroke();
+  }
+  if (mark) {
+    const x = left + (pw * ((mark.getTime() - Date.UTC(YEAR, 0, 1)) / 864e5)) / 365;
+    ctx.setLineDash([]); ctx.strokeStyle = '#ff7a1a'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + ph); ctx.stroke();
   }
   return small;
