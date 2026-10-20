@@ -279,9 +279,19 @@ test('после застройки (пилот, ДУП Мрчевац): пер�
   await expect(page.locator('.bre strong')).toHaveText('35of 100', { timeout: 30_000 });
   await page.locator('.plan-chip[data-pl="0"]').click();
   await expect(page.locator('.bre strong')).toHaveText('57of 100', { timeout: 30_000 });
-  // Дом далеко от участков плана — переключателя нет.
-  await open(page, `?c=tivat&b=${B}&f=10&lang=en`);
+  // Дом далеко от участков обоих планов — переключателя нет.
+  await open(page, '?c=tivat&b=193876434&f=4&lang=en');
   await expect(box).toBeHidden();
+});
+
+test('после застройки, ДУП «Тиват Центр»: у дома рядом с участком 97C источник — план центра, зимой солнца меньше', async ({ page }) => {
+  await open(page, '?c=tivat&b=193467352&f=1&s=3&lang=en'); // в 24 м от объёма 97C (P+4+Pk)
+  await expect(page.locator('.plan-box')).toBeVisible();
+  await expect(page.locator('.plan-source')).toContainText('DUP Tivat Centar');
+  await expect(page.locator('.plan-source')).toContainText('2018-06-12');
+  await expect(page.locator('.plan-source')).toContainText('building line');
+  await page.locator('.plan-chip[data-pl="1"]').click();
+  await expect(page.locator('.plan-diff')).toContainText(/After planned building: .*winter −[\d.]+ h/);
 });
 
 test('панель: после примера выбран лучший фасад, действия сразу под сводкой, пояснения свёрнуты', async ({ page }) => {

@@ -1,7 +1,7 @@
 {
  "type": "FeatureCollection",
  "name": "planned",
- "source": "DUP Mrčevac (Tivat, 2013): UP corner points from «Tabele koordinata tačaka», rings read from «Plan parcelacije», MGI 1901 / Balkans zone 6 (EPSG:3908) → WGS 84; parameters from «Separat SSG izgradnja»",
+ "source": "DUP Mrčevac (Tivat, 2013): UP corner points from «Tabele koordinata tačaka», rings read from «Plan parcelacije», MGI 1901 / Balkans zone 6 (EPSG:3908) → WGS 84; parameters from «Separat SSG izgradnja»; DUP Tivat Centar (Tivat, 2018): building lines and floors from sheet «08b Parcelacija i regulacija sa koordinatama GL i RL», georeferenced by UP points of sheet 08a (EPSG:3908 → WGS 84)",
  "features": [
   {
    "type": "Feature",
@@ -19,7 +19,8 @@
     "parcel_m2": 2523,
     "parcel_m2_check": 2521.6,
     "max_footprint_m2": 757,
-    "envelope_m2": 1518.8
+    "envelope_m2": 1518.8,
+    "rule": "inset5"
    },
    "geometry": {
     "type": "Polygon",
@@ -81,7 +82,8 @@
     "parcel_m2": 1274,
     "parcel_m2_check": 1273.6,
     "max_footprint_m2": 382,
-    "envelope_m2": 655.0
+    "envelope_m2": 655.0,
+    "rule": "inset5"
    },
    "geometry": {
     "type": "Polygon",
@@ -155,7 +157,8 @@
     "parcel_m2": 1465,
     "parcel_m2_check": 1465.7,
     "max_footprint_m2": 439,
-    "envelope_m2": 799.5
+    "envelope_m2": 799.5,
+    "rule": "inset5"
    },
    "geometry": {
     "type": "Polygon",
@@ -253,7 +256,8 @@
     "parcel_m2": 2525,
     "parcel_m2_check": 2523.9,
     "max_footprint_m2": 757,
-    "envelope_m2": 1547.6
+    "envelope_m2": 1547.6,
+    "rule": "inset5"
    },
    "geometry": {
     "type": "Polygon",
@@ -343,7 +347,8 @@
     "parcel_m2": 3101,
     "parcel_m2_check": 3102.8,
     "max_footprint_m2": 930,
-    "envelope_m2": 1971.5
+    "envelope_m2": 1971.5,
+    "rule": "inset5"
    },
    "geometry": {
     "type": "Polygon",
@@ -457,7 +462,8 @@
     "parcel_m2": 5410,
     "parcel_m2_check": 5410.9,
     "max_footprint_m2": 1623,
-    "envelope_m2": 3878.1
+    "envelope_m2": 3878.1,
+    "rule": "inset5"
    },
    "geometry": {
     "type": "Polygon",
@@ -551,7 +557,8 @@
     "parcel_m2": 6969,
     "parcel_m2_check": 6984.9,
     "max_footprint_m2": 2091,
-    "envelope_m2": 5292.1
+    "envelope_m2": 5292.1,
+    "rule": "inset5"
    },
    "geometry": {
     "type": "Polygon",
@@ -623,6 +630,366 @@
       ]
      ]
     ]
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       18.6976203,
+       42.4331592
+      ],
+      [
+       18.6978393,
+       42.4331521
+      ],
+      [
+       18.6978156,
+       42.4327744
+      ],
+      [
+       18.6975966,
+       42.4327819
+      ],
+      [
+       18.6976203,
+       42.4331592
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "up": "UP-10",
+    "floors": "S+P+1+Pk",
+    "levels": 3,
+    "height": 9,
+    "plan": "DUP Tivat Centar, Opština Tivat",
+    "decision": "Odluka br. 0304-350-160 od 12.06.2018, «Sl. list CG – opštinski propisi» br. 21/18",
+    "date": "2018-06-12",
+    "source": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/08b.Parcelacija%20i%20regulacija%20sa%20koordinatama%20GL%20i%20RL.pdf",
+    "georef": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/08a.Parcelacija%20i%20regulacija%20sa%20koordinatama%20UP.pdf",
+    "table": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/Tekst%20%20Tivat%20Centar21.06.2018%20T.pdf",
+    "rule": "gl",
+    "note": "Новый объём на участке, не застроенном в 2018 г. («novi objekti na neizgrađenim parcelama», Tabela 1): строительная линия GL1, точки 88–91; высота — этажи над землёй × 3 м, мансарда (Pk) — как этаж.",
+    "envelope_m2": 757.0,
+    "bgp_m2": 3024,
+    "osm_overlap": 0.13
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       18.6968522,
+       42.4306704
+      ],
+      [
+       18.6968464,
+       42.4307032
+      ],
+      [
+       18.6968286,
+       42.4307251
+      ],
+      [
+       18.6967725,
+       42.4307711
+      ],
+      [
+       18.6967556,
+       42.43078
+      ],
+      [
+       18.6967371,
+       42.4307824
+      ],
+      [
+       18.6967102,
+       42.4307742
+      ],
+      [
+       18.696453,
+       42.4306041
+      ],
+      [
+       18.696431,
+       42.430573
+      ],
+      [
+       18.6964326,
+       42.4305387
+      ],
+      [
+       18.6965013,
+       42.4304217
+      ],
+      [
+       18.6965216,
+       42.4304014
+      ],
+      [
+       18.6965467,
+       42.4303887
+      ],
+      [
+       18.6965766,
+       42.4303835
+      ],
+      [
+       18.6966106,
+       42.430386
+      ],
+      [
+       18.69677,
+       42.4304371
+      ],
+      [
+       18.6967949,
+       42.4304499
+      ],
+      [
+       18.69681,
+       42.4304639
+      ],
+      [
+       18.6968205,
+       42.4304844
+      ],
+      [
+       18.6968522,
+       42.4306704
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "up": "UP-134",
+    "floors": "P+2",
+    "levels": 3,
+    "height": 9,
+    "plan": "DUP Tivat Centar, Opština Tivat",
+    "decision": "Odluka br. 0304-350-160 od 12.06.2018, «Sl. list CG – opštinski propisi» br. 21/18",
+    "date": "2018-06-12",
+    "source": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/08b.Parcelacija%20i%20regulacija%20sa%20koordinatama%20GL%20i%20RL.pdf",
+    "georef": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/08a.Parcelacija%20i%20regulacija%20sa%20koordinatama%20UP.pdf",
+    "table": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/Tekst%20%20Tivat%20Centar21.06.2018%20T.pdf",
+    "rule": "gl",
+    "note": "Новый объём на участке, не застроенном в 2018 г. («novi objekti na neizgrađenim parcelama», Tabela 1): строительная линия совпадает с границей участка (точки 32–55); высота — этажи над землёй × 3 м, мансарда (Pk) — как этаж.",
+    "envelope_m2": 1041.2,
+    "bgp_m2": 2080,
+    "osm_overlap": 0.0
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       18.6963845,
+       42.4303094
+      ],
+      [
+       18.6963022,
+       42.4304539
+      ],
+      [
+       18.6961532,
+       42.4304053
+      ],
+      [
+       18.696136,
+       42.4303914
+      ],
+      [
+       18.6961312,
+       42.4303773
+      ],
+      [
+       18.6961346,
+       42.4303632
+      ],
+      [
+       18.6961997,
+       42.4302477
+      ],
+      [
+       18.6963845,
+       42.4303094
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "up": "UP-134b",
+    "floors": "P+3+Pk",
+    "levels": 5,
+    "height": 15,
+    "plan": "DUP Tivat Centar, Opština Tivat",
+    "decision": "Odluka br. 0304-350-160 od 12.06.2018, «Sl. list CG – opštinski propisi» br. 21/18",
+    "date": "2018-06-12",
+    "source": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/08b.Parcelacija%20i%20regulacija%20sa%20koordinatama%20GL%20i%20RL.pdf",
+    "georef": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/08a.Parcelacija%20i%20regulacija%20sa%20koordinatama%20UP.pdf",
+    "table": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/Tekst%20%20Tivat%20Centar21.06.2018%20T.pdf",
+    "rule": "gl",
+    "note": "Новый объём на участке, не застроенном в 2018 г. («novi objekti na neizgrađenim parcelama», Tabela 1): строительная линия совпадает с границей участка; высота — этажи над землёй × 3 м, мансарда (Pk) — как этаж.",
+    "envelope_m2": 288.3,
+    "bgp_m2": 840,
+    "osm_overlap": 0.24
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       18.6991926,
+       42.4293185
+      ],
+      [
+       18.6991917,
+       42.4293309
+      ],
+      [
+       18.6997538,
+       42.4293131
+      ],
+      [
+       18.6998554,
+       42.4293803
+      ],
+      [
+       18.6998788,
+       42.4297141
+      ],
+      [
+       18.6998688,
+       42.4297209
+      ],
+      [
+       18.699731,
+       42.4297257
+      ],
+      [
+       18.6997337,
+       42.4298196
+      ],
+      [
+       18.6997369,
+       42.4298297
+      ],
+      [
+       18.6998763,
+       42.4298219
+      ],
+      [
+       18.6998874,
+       42.4298278
+      ],
+      [
+       18.6999151,
+       42.4301783
+      ],
+      [
+       18.6998428,
+       42.4302381
+      ],
+      [
+       18.6999444,
+       42.4302368
+      ],
+      [
+       18.6999464,
+       42.43019
+      ],
+      [
+       18.6999361,
+       42.4300952
+      ],
+      [
+       18.6999388,
+       42.4300761
+      ],
+      [
+       18.6999228,
+       42.4298939
+      ],
+      [
+       18.6999255,
+       42.4298744
+      ],
+      [
+       18.6999171,
+       42.4298051
+      ],
+      [
+       18.6999147,
+       42.4297106
+      ],
+      [
+       18.6999105,
+       42.4297045
+      ],
+      [
+       18.699909,
+       42.4296223
+      ],
+      [
+       18.6999038,
+       42.4296038
+      ],
+      [
+       18.6999072,
+       42.4295968
+      ],
+      [
+       18.6998848,
+       42.4293137
+      ],
+      [
+       18.6998881,
+       42.4293067
+      ],
+      [
+       18.69987,
+       42.4292939
+      ],
+      [
+       18.699208,
+       42.4293177
+      ],
+      [
+       18.6991926,
+       42.4293185
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "up": "UP-97C",
+    "floors": "P+4+Pk",
+    "levels": 6,
+    "height": 18,
+    "plan": "DUP Tivat Centar, Opština Tivat",
+    "decision": "Odluka br. 0304-350-160 od 12.06.2018, «Sl. list CG – opštinski propisi» br. 21/18",
+    "date": "2018-06-12",
+    "source": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/08b.Parcelacija%20i%20regulacija%20sa%20koordinatama%20GL%20i%20RL.pdf",
+    "georef": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/08a.Parcelacija%20i%20regulacija%20sa%20koordinatama%20UP.pdf",
+    "table": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/Tekst%20%20Tivat%20Centar21.06.2018%20T.pdf",
+    "rule": "gl",
+    "note": "Новый объём на участке, не застроенном в 2018 г. («novi objekti na neizgrađenim parcelama», Tabela 1): заштрихованный объём B–C на листе за вычетом домов OSM (часть B уже стоит); высота — этажи над землёй × 3 м, мансарда (Pk) — как этаж.",
+    "envelope_m2": 538.8,
+    "bgp_m2": 8642,
+    "osm_overlap": 0.0
    }
   }
  ]

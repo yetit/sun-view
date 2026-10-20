@@ -185,8 +185,10 @@ function planBox(b: Bld) {
   box.hidden = !near || inside;
   if (box.hidden) { if (state.after) setAfter(false); return; }
   $$('.plan-chip').forEach((el) => el.setAttribute('aria-checked', String((el.dataset.pl === '1') === state.after)));
-  const p = pl!.features[0].properties;
-  $('.plan-source').innerHTML = t.planSource(p.plan, p.date, pl!.features.length, p.source);
+  // Источник — план ближайшего объёма (их два: Мрчевац и центр), правило объёма у каждого своё.
+  const d = (f: any) => { const [x, y] = ring(f)[0]; return Math.hypot(x - b.xy[0], y - b.xy[1]); };
+  const p = pl!.features.reduce((a, f) => (d(f) < d(a) ? f : a)).properties;
+  $('.plan-source').innerHTML = t.planSource(p.plan, p.date, pl!.features.filter((f) => f.properties.plan === p.plan).length, p.source, t.planRule[p.rule as 'inset5' | 'gl']);
   if (!state.after) { $('.plan-diff').textContent = t.planHint; return; }
   const e = eye(world, b, state.floor, facadeOf());
   const diffs = SEASONS.map((_, i) => seasonCalc(cur(), b, e, i).sun - seasonCalc(world, b, e, i).sun);
