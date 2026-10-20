@@ -279,6 +279,14 @@ function renderBre() {
 }
 
 export function initPanel() {
+  // Вкладки (видны только на телефоне): какой раздел панели показан.
+  $('.result').dataset.tab = 'sun';
+  $('.tabs').addEventListener('click', (e) => {
+    const el = (e.target as Element).closest<HTMLElement>('[data-tab]');
+    if (!el) return;
+    $('.result').dataset.tab = el.dataset.tab!;
+    $$('.tabs [role=tab]').forEach((x) => x.setAttribute('aria-selected', String(x === el)));
+  });
   // «Назад» / «Вперёд»: дом, этаж и фасад — из адреса записи; нет дома — снять выбор.
   addEventListener('popstate', () => {
     const q = new URL(location.href).searchParams, d = q.get('d');

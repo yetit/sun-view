@@ -294,8 +294,9 @@ test('панель: после примера выбран лучший фаса
   // Кнопки — сразу за сводкой, до матрицы.
   const order = await page.evaluate(() => ['.summary', '.actions', '.matrix'].map((s) => document.querySelector(s)!.getBoundingClientRect().top));
   expect(order[0] < order[1] && order[1] < order[2]).toBe(true);
-  await expect(page.locator('details.more').first()).not.toHaveAttribute('open', '');
-  await expect(page.locator('details.more').first()).toContainText('How to read');
+  const howTo = page.locator('.tab[data-tab="flat"] details.more'); // пояснение к матрице
+  await expect(howTo).not.toHaveAttribute('open', '');
+  await expect(howTo).toContainText('How to read');
   // Ссылка без фасада остаётся «здание целиком».
   await open(page, `?c=tivat&b=${B}&f=10&lang=en`);
   await expect(page.locator('.bre')).toContainText('best facade', { timeout: 30_000 });
@@ -359,4 +360,22 @@ test('сравнение между городами: квартиры из Ти
   await expect(page.locator('.result')).toBeVisible({ timeout: 60_000 });
   await page.locator('.compare-rows tr').first().locator('.x').click();
   await expect(page.locator('.compare-rows tr')).toHaveCount(1);
+});
+
+test('телефон: вкладки панели показывают разделы по одному, на десктопе вкладок нет', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await open(page, `?c=tivat&b=${B}&f=10&lang=en`);
+  const tabs = page.locator('.tabs [role=tab]');
+  await expect(tabs).toHaveText(['Sun', 'Sea', 'Floors & facades']);
+  await expect(page.locator('.seasons')).toBeVisible();
+  await expect(page.locator('.rose')).toBeHidden();
+  await tabs.nth(1).click();
+  await expect(page.locator('.rose')).toBeVisible();
+  await expect(page.locator('.seasons')).toBeHidden();
+  await tabs.nth(2).click();
+  await expect(page.locator('.matrix')).toBeVisible();
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await expect(page.locator('.tabs')).toBeHidden();
+  await expect(page.locator('.seasons')).toBeVisible();
+  await expect(page.locator('.rose')).toBeVisible();
 });

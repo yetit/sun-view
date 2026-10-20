@@ -92,26 +92,32 @@ import Meta from '../components/Meta.astro';
         <div class="actions"><button class="view-btn" type="button" aria-pressed="false" data-i="viewOpen"></button><button class="better-btn" type="button" data-i="betterBtn" data-i-title="betterTitle"></button><button class="pin-btn" type="button" data-i="addCompare"></button><button class="share-btn" type="button" data-i="downloadPng"></button></div>
         <p class="better-out" aria-live="polite"></p>
 
-        <h3 data-i="matrixTitle"></h3>
-        <div class="matrix"></div>
-        <details class="more"><summary data-i="howToRead"></summary><p class="legend" data-i="matrixLegend"></p></details>
-
-        <h3 data-i="sunTitle"></h3>
-        <div class="bre-box"></div>
-        <div class="seasons"></div>
-        <p class="heat-line" data-i-title="heatTitle"></p>
-        <p class="roof-line" data-i-title="roofTitle" hidden></p>
-        <details class="more seasons-note" hidden><summary data-i="howToRead"></summary><p class="legend" data-i="seasonsNote"></p></details>
-        <div class="sky-chips" role="radiogroup" data-i-aria="skyLabel" hidden><button type="button" class="sky-chip" role="radio" data-cl="0" data-i="skyClear"></button><button type="button" class="sky-chip" role="radio" data-cl="1" data-i="skyCloudy" data-i-title="skyCloudyTitle"></button></div>
-        <canvas class="ribbon" role="img" data-i-aria="ribbonLegend"></canvas>
-        <details class="more"><summary data-i="howToRead"></summary><p class="legend" data-i="ribbonLegend"></p><p class="legend ribbon-cloud" data-i="ribbonCloudLegend" hidden></p></details>
-
-        <h3 data-i="seaTitle"></h3>
-        <div class="rose"></div>
-        <details class="more"><summary data-i="howToRead"></summary><p class="legend" data-i="roseLegend"></p></details>
-        <p class="view-stat"></p>
-        <canvas class="view-pano" role="img" hidden></canvas>
-        <p class="legend view-legend" data-i="viewLegend" hidden></p>
+        <!-- На телефоне — вкладки (разделы ниже показываются по одному), на десктопе видны все разделы. -->
+        <div class="tabs" role="tablist"><button type="button" role="tab" data-tab="sun" aria-selected="true" data-i="tabSun"></button><button type="button" role="tab" data-tab="sea" aria-selected="false" data-i="tabSea"></button><button type="button" role="tab" data-tab="flat" aria-selected="false" data-i="tabFlat"></button></div>
+        <section class="tab" data-tab="sun">
+          <h3 data-i="sunTitle"></h3>
+          <div class="bre-box"></div>
+          <div class="seasons"></div>
+          <p class="heat-line" data-i-title="heatTitle"></p>
+          <p class="roof-line" data-i-title="roofTitle" hidden></p>
+          <details class="more seasons-note" hidden><summary data-i="howToRead"></summary><p class="legend" data-i="seasonsNote"></p></details>
+          <div class="sky-chips" role="radiogroup" data-i-aria="skyLabel" hidden><button type="button" class="sky-chip" role="radio" data-cl="0" data-i="skyClear"></button><button type="button" class="sky-chip" role="radio" data-cl="1" data-i="skyCloudy" data-i-title="skyCloudyTitle"></button></div>
+          <canvas class="ribbon" role="img" data-i-aria="ribbonLegend"></canvas>
+          <details class="more"><summary data-i="howToRead"></summary><p class="legend" data-i="ribbonLegend"></p><p class="legend ribbon-cloud" data-i="ribbonCloudLegend" hidden></p></details>
+        </section>
+        <section class="tab" data-tab="sea">
+          <h3 data-i="seaTitle"></h3>
+          <div class="rose"></div>
+          <details class="more"><summary data-i="howToRead"></summary><p class="legend" data-i="roseLegend"></p></details>
+          <p class="view-stat"></p>
+          <canvas class="view-pano" role="img" hidden></canvas>
+          <p class="legend view-legend" data-i="viewLegend" hidden></p>
+        </section>
+        <section class="tab" data-tab="flat">
+          <h3 data-i="matrixTitle"></h3>
+          <div class="matrix"></div>
+          <details class="more"><summary data-i="howToRead"></summary><p class="legend" data-i="matrixLegend"></p></details>
+        </section>
 
       </div>
 
