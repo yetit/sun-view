@@ -329,3 +329,17 @@ test('история: «Назад» возвращает к прежнему д
   await page.goForward();
   await expect(page).toHaveURL(new RegExp(`b=${first}`));
 });
+
+test('перегрев летом: западный фасад — заметный риск, северный — низкий', async ({ page }) => {
+  await open(page, `?c=tivat&b=${B}&f=10&d=f3&lang=en`); // запад, 272°
+  await expect(page.locator('.heat-line')).toContainText(/In summer the window gets [\d.]+ h of sun after 15:00, with \+\d+°.*noticeable overheating risk/);
+  await page.locator('.side[data-c="0"]').click(); // север
+  await expect(page.locator('.heat-line')).toContainText(/low|moderate/);
+});
+
+test('терраса на крыше: строка только у верхнего этажа', async ({ page }) => {
+  await open(page, `?c=tivat&b=${B}&f=10&lang=en`);
+  await expect(page.locator('.roof-line')).toContainText(/On the roof .*: [\d.]+ h of sun in winter, [\d.]+ h in spring, [\d.]+ h in summer/);
+  await page.locator('.floor').selectOption('3');
+  await expect(page.locator('.roof-line')).toBeHidden();
+});

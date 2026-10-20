@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { annualSun, bestCell, breCell, eye, seasonClimate, sunshineAt, facadeMatrix, seaRose, seasonCalc, floorAt, reliability, sunYear, verdict, windowView, yearRibbon } from '../src/scripts/analysis.ts';
+import { annualSun, bestCell, breCell, eye, heatRisk, lateSun, seasonClimate, sunshineAt, facadeMatrix, seaRose, seasonCalc, floorAt, reliability, sunYear, verdict, windowView, yearRibbon } from '../src/scripts/analysis.ts';
 import { bareWorld, blocked, facades } from '../src/scripts/grid.ts';
 import { makeWorld, rect } from './world.ts';
 
@@ -191,4 +191,16 @@ test('seasonClimate: температура между серединами ме
   assert.equal(c.dir, 2); // 12 часов с востока против 10 с юга
   assert.ok(Math.abs(c.share - 12 / 22) < 1e-9);
   assert.equal(c.speed, 3);
+});
+
+test('lateSun: западный фасад летом получает солнце после 15:00, восточный — нет', () => {
+  const w = makeWorld();
+  const b = w.blds[0], fs = facades(w, b); // С, В, Ю, З
+  const june = new Date(Date.UTC(2026, 5, 21));
+  const west = lateSun(w, b, eye(w, b, 3, fs[3]), june, 15, 1), east = lateSun(w, b, eye(w, b, 3, fs[1]), june, 15, 1);
+  assert.ok(west > 3, `запад ${west}`);
+  assert.equal(east, 0);
+  assert.equal(heatRisk(west), 'high');
+  assert.equal(heatRisk(0.5), 'low');
+  assert.equal(heatRisk(1.5), 'mid');
 });

@@ -50,6 +50,8 @@ export type Eye = { x: number; y: number; z: number; normal: number | null };
 export function eye(w: World, b: Bld, floor: number, f: Facade | null): Eye {
   return { x: f ? f.x : b.xy[0], y: f ? f.y : b.xy[1], z: eyeHeight(w, b, floor), normal: f ? f.normal : null };
 }
+// Точка на крыше (терраса): 1,5 м над кровлей в центре контура, без фасада — солнце с любой стороны.
+export const roofEye = (b: Bld): Eye => ({ x: b.xy[0], y: b.xy[1], z: b.ground + b.h + 1.5, normal: null });
 // Солнце перед фасадом (в полусфере его нормали)?
 export const facing = (e: Eye, bearing: number) => e.normal == null || Math.cos(bearing - e.normal) > 0;
 
@@ -67,6 +69,14 @@ export function dayPath(w: World, b: Bld, e: Eye, date: Date): Sample[] {
   }
   return out;
 }
+
+// Позднее солнце: часы прямого солнца в окне с fromHour местного времени до заката в день date (сутки UTC).
+// tz — смещение местного времени от UTC в часах на эту дату. Для риска перегрева летом.
+export function lateSun(w: World, b: Bld, e: Eye, date: Date, fromHour: number, tz: number) {
+  return (dayPath(w, b, e, date).filter((s) => s.lit && (s.t.getUTCHours() + s.t.getUTCMinutes() / 60 + tz + 24) % 24 >= fromHour).length * STEP_MIN) / 60;
+}
+// Риск перегрева по позднему летнему солнцу — наши пороги: от 3 ч — заметный, от 1 ч — умеренный.
+export const heatRisk = (lateHours: number) => (lateHours >= 3 ? 'high' : lateHours >= 1 ? 'mid' : 'low');
 
 export type Season = { name: string; short: string; sun: number; daylight: number; sunrise: Date | null; sunset: Date | null };
 

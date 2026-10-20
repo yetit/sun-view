@@ -1,7 +1,7 @@
 // Правая панель (на телефоне — лист): выбор здания, этаж и фасад, сезоны, сводка и связка частей панели.
 // Матрица и BRE — matrix.ts, рисунки — charts.ts, вид из окна — view.ts, сравнение, поиск, примеры — отдельные модули.
-import { annualSun, dirBearing, dirIndex, eye, eyeHeight, reliability, SEASONS, seaRose, seasonCalc, seasonClimate, sunshineAt, type SeaDir, type Season } from '../analysis.ts';
-import { $, $$, ask, city, currentFacades, embed, facadeOf, fmtH, fmtT, geojson, num, state, syncUrl, world } from '../app.ts';
+import { annualSun, dirBearing, dirIndex, eye, heatRisk, lateSun, roofEye, eyeHeight, reliability, SEASONS, seaRose, seasonCalc, seasonClimate, sunshineAt, type SeaDir, type Season } from '../analysis.ts';
+import { $, $$, ask, city, currentFacades, embed, facadeOf, fmtH, fmtT, geojson, num, state, syncUrl, tzOffset, world } from '../app.ts';
 import { bareWorld, facades, nearestFacade, plannedWorld, type Bld, type World } from '../grid.ts';
 import { buildingName, cityName, summaryText, t } from '../i18n.ts';
 import { applyColors, drawFacade, drawFloor, drawSectors, drawSunPath, lookAtFacade, map, setData, sheetPadding } from '../map/layers.ts';
@@ -149,6 +149,8 @@ function render() {
   $('.eye').textContent = t.eye(fmtH.format(eyeHeight(world, b, state.floor)));
   $('.seasons').innerHTML = seasonsHtml();
   climateLine();
+  heatLine(b);
+  roofLine(b);
   lastSea = seaRose(cur(), b, state.floor);
   planBox(b);
   renderBre();
@@ -197,6 +199,23 @@ function setAfter(on: boolean) {
   map.setLayoutProperty('planned-volume', 'visibility', state.after ? 'visible' : 'none');
   if (state.current) loadMatrix(state.current, renderBre);
   render();
+}
+
+// Терраса на крыше — для верхнего этажа: солнце зимой, весной и летом в точке над кровлей.
+function roofLine(b: Bld) {
+  const el = $('.roof-line');
+  el.hidden = state.floor !== b.floors;
+  if (el.hidden) return;
+  const e = roofEye(b), h = (s: number) => fmtH.format(Math.round(seasonCalc(cur(), b, e, s).sun * 10) / 10);
+  el.textContent = t.roof(h(3), h(0), h(1));
+}
+
+// Перегрев летом: солнце в окне после 15:00 в день летнего солнцестояния (при ясном небе) и дневная температура города.
+function heatLine(b: Bld) {
+  const d = SEASONS[1].date, e = eye(world, b, state.floor, facadeOf());
+  const h = lateSun(cur(), b, e, d, 15, tzOffset(d)), c = world.climate ? Math.round(seasonClimate(world.climate, d).t) : null;
+  $('.heat-line').dataset.risk = heatRisk(h);
+  $('.heat-line').textContent = t.heat(fmtH.format(Math.round(h * 10) / 10), c == null ? null : `${c > 0 ? '+' : ''}${c}`, t.heatRisk[heatRisk(h)]);
 }
 
 // Строка климата под фасадами: только для выбранного фасада и если у города есть температура и ветер.

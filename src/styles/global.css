@@ -185,6 +185,11 @@ body.viewing .legend-box { display: none; }
 .sky-chips[hidden] { display: none; }
 .sky-chip, .plan-chip { padding: 4px 10px; border-radius: 999px; border: 1px solid #cfc8bb; background: #fff; font-size: 12.5px; font-weight: 500; }
 .sky-chip[aria-checked='true'], .plan-chip[aria-checked='true'] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.heat-line { margin: 8px 0 0; font-size: 13px; }
+.roof-line { margin: 6px 0 0; font-size: 13px; }
+.roof-line::before { content: '☀ '; }
+.heat-line::before { content: '🌡 '; }
+.heat-line[data-risk='high'] { color: #b8331f; font-weight: 500; }
 .plan-box { margin: 10px 0; padding: 10px 12px; border-radius: 10px; background: #f1edf9; }
 .plan-box[hidden] { display: none; }
 .plan-chips { display: flex; gap: 4px; }
