@@ -4,7 +4,7 @@ import { annualSun, dirBearing, dirIndex, eye, heatRisk, lateSun, roofEye, eyeHe
 import { $, $$, ask, city, currentFacades, embed, facadeOf, fmtH, fmtT, geojson, num, state, syncUrl, tzOffset, world } from '../app.ts';
 import { bareWorld, facades, inRing, nearestFacade, plannedWorld, type Bld, type World } from '../grid.ts';
 import { buildingName, cityName, summaryText, t } from '../i18n.ts';
-import { applyColors, drawFacade, drawFloor, drawSectors, drawSunPath, lookAtFacade, map, setData, sheetPadding } from '../map/layers.ts';
+import { applyColors, drawFacade, drawFloor, drawSectors, drawSunPath, enableTerrain, lookAtFacade, map, setData, sheetPadding } from '../map/layers.ts';
 import { grabFrame, viewing } from '../map/window.ts';
 import { loadLevels } from '../data.ts';
 import { shareCard } from '../share.ts';
@@ -39,6 +39,7 @@ export function select(b: Bld, opts: { floor?: number; side?: number | null; dir
   state.floorsOverride = null;
   if (opts.floors && b.assumed) overrideFloors(b, opts.floors);
   map.setFeatureState({ source: 'buildings', id: b.id }, { selected: true });
+  enableTerrain(); // выбран дом — рельеф нужен уже сейчас (на программном WebGL он ещё не включён)
   state.floor = Math.min(b.floors, Math.max(1, opts.floor ?? Math.ceil(b.floors / 2)));
   const side = opts.dir != null ? facadeByDir(world, b, opts.dir) : opts.side;
   state.side = side != null && side >= 0 && side < facades(world, b).length ? side : null;

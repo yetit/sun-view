@@ -22,6 +22,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* #map, а не .map: в сборке maplibre-gl.css грузится позже и его .maplibregl-map { position: relative } перебивает класс */
 #map { position: fixed; inset: 0; right: var(--panel); }
+/* Первый кадр поверх карты, пока она грузится: те же размеры, клики проходят насквозь. */
+.first-frame { position: fixed; inset: 0; right: var(--panel); width: calc(100% - var(--panel)); height: 100%; object-fit: cover; pointer-events: none; transition: opacity 0.6s; }
+.first-frame.gone { opacity: 0; }
+body.embed .first-frame { display: none; }
 
 /* --- Панель --- */
 .panel {
@@ -263,6 +267,7 @@ body[data-mode='normal'] .floor-mode, body[data-mode='levels'] .floor-mode { dis
 .sheet-handle { display: none; }
 @media (max-width: 720px) {
   :root { --panel: 100vw; }
+  .first-frame { right: 0; width: 100%; }
   #map { right: 0; }
   .panel {
     top: auto; height: 50vh; padding: 0 16px calc(16px + env(safe-area-inset-bottom));

@@ -19,9 +19,16 @@ map.on('moveend', markBearing);
 markBearing();
 // Событие load может прийти раньше, чем загрузятся данные, — ловим его сразу.
 export const mapReady = new Promise<void>((r) => map.once('load', () => r()));
-// 3D-рельеф — после первого простоя карты: первые кадры с ним на слабом GPU (и на SwiftShader в Lighthouse)
-// держат главный поток секундами, а город виден и без него.
-map.once('idle', () => (globalThis.requestIdleCallback ?? setTimeout)(() => map.setTerrain({ source: 'dem', exaggeration: 1 })));
+// 3D-рельеф. С GPU — после первого простоя карты. На программном WebGL (SwiftShader, llvmpipe — нет GPU или
+// он в чёрном списке браузера) перестройка сцены под рельеф держит главный поток по 3–4 с, поэтому там рельеф
+// включается по первому действию: клик, жест, колесо, клавиша или выбор дома (enableTerrain из панели).
+export const enableTerrain = () => { if (!map.getTerrain()) map.setTerrain({ source: 'dem', exaggeration: 1 }); };
+const software = (() => {
+  const gl = map.getCanvas().getContext('webgl2'), ext = gl?.getExtension('WEBGL_debug_renderer_info');
+  return /swiftshader|llvmpipe|software|basic render/i.test(ext ? String(gl!.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : '');
+})();
+if (software) for (const ev of ['mousedown', 'touchstart', 'wheel', 'keydown']) map.getCanvasContainer().addEventListener(ev, enableTerrain, { once: true, passive: true });
+else map.once('idle', () => (globalThis.requestIdleCallback ?? setTimeout)(enableTerrain));
 const BUILDING_LAYERS = ['buildings', 'buildings-assumed'];
 
 // Точка на расстоянии dist (м) по азимуту bearing (рад) от lngLat.

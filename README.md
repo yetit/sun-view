@@ -125,6 +125,8 @@ Checked and left as is: the example calculations at start take 29 ms under the 4
 
 What remains in TBT is the first MapLibre frames on SwiftShader: shader compilation and the page's first WebGL context run on the CPU, and the main thread waits for them in synchronous GL calls. Terrain is the most expensive part, so 3D terrain is switched on after the map first goes idle (`map/layers.ts`): the longest task (3.4 s) is gone, and evaluating the map chunk dropped from 6.1 to 1.8 s. Locally, same Lighthouse 12.6.1, two runs each: Performance 60–62 → 62–66, TBT 2.4–5.4 → 1.3–2.5 s, Speed Index 9.0–9.6 → 8.2–8.4 s. The city shows at once and the mountains rise a moment later. On a device with a GPU the same frames take tens of milliseconds.
 
+Next step (2026-10-21). Runs swung between 38 and 74: switching terrain on after idle sometimes landed in the Lighthouse trace as three 3–4 s tasks and sometimes did not. In the bad runs the LCP element was the cloud line under the legend scale, which only appears after the map, at 20 s. Now with software WebGL (SwiftShader or llvmpipe, which is how Lighthouse and GPU-less browsers render) terrain switches on at the first user action or building selection; with a GPU it still comes after idle. The cloud line is now shorter than the legend title. While the map loads, a static frame of the city shows under it (`npm run first-frame` → `public/first/<city>.jpg`, 58–142 KB). Three runs in a row: Performance 63, 63, 63 (was 38, 38, 74), LCP 1.8 s (was 20.3 s), TBT 3.8–4.2 s, Speed Index 6.5–7.1 s (was 7.2–7.3); accessibility, best practices and SEO 1.0.
+
 ### Binary building format
 
 Buildings used to ship as GeoJSON inside a JS module. Now each city has `buildings.bin` with `buildings.meta.json`, loaded with `fetch` (`src/scripts/buildings-bin.ts`).
@@ -223,6 +225,7 @@ npm run dev        # http://localhost:4325
 npm test           # ray-core tests
 npm run check      # types
 npm run size       # size budgets after a build: start JS, map chunk, worker, data per city
+npm run first-frame # static first frame per city → public/first/ (needs astro preview on 4326)
 npm run demo:full  # 2.5-minute walkthrough video with captions, 1920×1080 → docs/demo-full.mp4 (--lang en for English); needs astro preview on 4326
 npm run test:e2e   # Playwright against the production build: smoke for every city, matrix, compare, PNG, URL state, language, embed, keyboard
 ```

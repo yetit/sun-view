@@ -3,6 +3,8 @@ import '@fontsource-variable/inter';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '../styles/global.css';
 import Meta from '../components/Meta.astro';
+import { cities } from '../../cities.config.mjs';
+const ids = cities.map((c) => c.id), base = import.meta.env.BASE_URL;
 ---
 
 <!doctype html>
@@ -16,6 +18,13 @@ import Meta from '../components/Meta.astro';
   </head>
   <body data-mode="sun" data-sheet="peek">
     <div id="map" class="map" role="region" aria-label="3D map"></div>
+    <!-- Статичный первый кадр города (scripts/first-frame.ts): виден, пока грузится WebGL, ui/start.ts убирает его. -->
+    <img class="first-frame" alt="" decoding="async" fetchpriority="high" hidden />
+    <script is:inline define:vars={{ ids, base }}>
+      const c = new URL(location.href).searchParams.get('c'), img = document.querySelector('.first-frame');
+      img.src = `${base}first/${ids.includes(c) ? c : ids[0]}.jpg`;
+      img.hidden = false;
+    </script>
     <button class="rotate-hint" type="button" hidden></button>
     <div class="map-keys" aria-hidden="true" hidden></div>
     <div class="view-badge" hidden><span class="view-badge-stat"></span><button class="view-exit" type="button" data-i="viewClose"></button></div>
@@ -79,7 +88,7 @@ import Meta from '../components/Meta.astro';
           <p data-i="assumedNote"></p>
           <p class="levels-impact" hidden></p>
           <div><input class="assumed-input" type="number" min="1" max="60" step="1" inputmode="numeric" data-i-aria="floor" /><button class="assumed-apply" type="button" data-i="assumedApply"></button></div>
-          <a class="osm-edit" target="_blank" rel="noopener" data-i-title="osmEditTitle"></a>
+          <a class="osm-edit" href="https://www.openstreetmap.org/" target="_blank" rel="noopener" data-i-title="osmEditTitle"></a>
           <a class="levels-help" href="https://github.com/yetit/sun-view#help-fill-in-floor-counts" target="_blank" rel="noopener" data-i="levelsHelp"></a>
         </div>
         <div class="floor-row"><label><span data-i="floor"></span> <select class="floor"></select></label><span class="eye"></span></div>

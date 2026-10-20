@@ -19,6 +19,9 @@ export async function start(world: World, data: CityData, mark: (k: string) => v
   clearTimeout(slow);
   hideFallback();
   mark('map');
+  // Карта готова — убрать статичный первый кадр (плавно, затем из DOM).
+  const first = document.querySelector<HTMLImageElement>('.first-frame');
+  if (first) { first.classList.add('gone'); setTimeout(() => first.remove(), 700); }
   if (import.meta.env.DEV) Object.assign(window, { map, world, timing, ask }); // для проверки и замеров из консоли
   // Двигал ли пользователь карту до восстановления состояния из ссылки: тогда к фасаду её не разворачиваем.
   let moved = false;
