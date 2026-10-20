@@ -1,0 +1,477 @@
+{
+ "type": "FeatureCollection",
+ "name": "planned",
+ "source": "DUP Mrčevac (Tivat, 2013): UP corner points from «Tabele koordinata tačaka», rings read from «Plan parcelacije», MGI 1901 / Balkans zone 6 (EPSG:3908) → WGS 84; parameters from «Separat SSG izgradnja»",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "up": "UP-285",
+    "floors": "P+4+Pk",
+    "levels": 6,
+    "height": 20,
+    "parcel_m2": 1274,
+    "parcel_m2_check": 1273.6,
+    "max_footprint_m2": 382,
+    "envelope_m2": 655.0,
+    "plan": "DUP Mrčevac, Opština Tivat",
+    "decision": "Odluka br. 0304-90 od 20.06.2013, «Sl. list CG» br. 20/13",
+    "date": "2013-06-20",
+    "source": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2011/DETALJNI%20URBANISTICKI%20PLAN%20MRCEVAC/Usvojeni%20DUP%20Mrcevac2013/Prilozi%20plana/8.%20Tabele%20koordinata%20tacaka%20DUP%20Mrcevac.pdf",
+    "graphic": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2011/DETALJNI%20URBANISTICKI%20PLAN%20MRCEVAC/Usvojeni%20DUP%20Mrcevac2013/Graficki%20prilozi/07-MRCEVAC%20-%20PLAN%20PARCELACIJE.pdf",
+    "note": "Предельный объём по плану: УП с отступом 5 м от границ, высота до 20 м (P+4+Pk). Сам дом займёт не больше max_footprint_m2."
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       18.719551,
+       42.4186164
+      ],
+      [
+       18.7196085,
+       42.4186578
+      ],
+      [
+       18.7197888,
+       42.4187798
+      ],
+      [
+       18.7198272,
+       42.41875
+      ],
+      [
+       18.7198342,
+       42.4187199
+      ],
+      [
+       18.7198901,
+       42.4186758
+      ],
+      [
+       18.7199204,
+       42.4186516
+      ],
+      [
+       18.7200032,
+       42.4185847
+      ],
+      [
+       18.719864,
+       42.4185149
+      ],
+      [
+       18.7198379,
+       42.4185009
+      ],
+      [
+       18.7197506,
+       42.4184617
+      ],
+      [
+       18.719551,
+       42.4186164
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "up": "UP-286",
+    "floors": "P+4+Pk",
+    "levels": 6,
+    "height": 20,
+    "parcel_m2": 1465,
+    "parcel_m2_check": 1465.7,
+    "max_footprint_m2": 439,
+    "envelope_m2": 799.5,
+    "plan": "DUP Mrčevac, Opština Tivat",
+    "decision": "Odluka br. 0304-90 od 20.06.2013, «Sl. list CG» br. 20/13",
+    "date": "2013-06-20",
+    "source": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2011/DETALJNI%20URBANISTICKI%20PLAN%20MRCEVAC/Usvojeni%20DUP%20Mrcevac2013/Prilozi%20plana/8.%20Tabele%20koordinata%20tacaka%20DUP%20Mrcevac.pdf",
+    "graphic": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2011/DETALJNI%20URBANISTICKI%20PLAN%20MRCEVAC/Usvojeni%20DUP%20Mrcevac2013/Graficki%20prilozi/07-MRCEVAC%20-%20PLAN%20PARCELACIJE.pdf",
+    "note": "Предельный объём по плану: УП с отступом 5 м от границ, высота до 20 м (P+4+Pk). Сам дом займёт не больше max_footprint_m2."
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       18.7198785,
+       42.4188406
+      ],
+      [
+       18.7200001,
+       42.418923
+      ],
+      [
+       18.7200984,
+       42.4189917
+      ],
+      [
+       18.7202082,
+       42.4189242
+      ],
+      [
+       18.7202469,
+       42.4189001
+      ],
+      [
+       18.7203002,
+       42.4188674
+      ],
+      [
+       18.7203357,
+       42.4188467
+      ],
+      [
+       18.7203603,
+       42.4188324
+      ],
+      [
+       18.7202707,
+       42.418761
+      ],
+      [
+       18.7202468,
+       42.4187396
+      ],
+      [
+       18.7202242,
+       42.4187213
+      ],
+      [
+       18.720199,
+       42.4187017
+      ],
+      [
+       18.7201086,
+       42.4186328
+      ],
+      [
+       18.7200097,
+       42.4187127
+      ],
+      [
+       18.7199789,
+       42.4187373
+      ],
+      [
+       18.7199478,
+       42.4187618
+      ],
+      [
+       18.7199407,
+       42.4187923
+      ],
+      [
+       18.7198785,
+       42.4188406
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "up": "UP-287",
+    "floors": "P+4+Pk",
+    "levels": 6,
+    "height": 20,
+    "parcel_m2": 2525,
+    "parcel_m2_check": 2523.9,
+    "max_footprint_m2": 757,
+    "envelope_m2": 1547.6,
+    "plan": "DUP Mrčevac, Opština Tivat",
+    "decision": "Odluka br. 0304-90 od 20.06.2013, «Sl. list CG» br. 20/13",
+    "date": "2013-06-20",
+    "source": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2011/DETALJNI%20URBANISTICKI%20PLAN%20MRCEVAC/Usvojeni%20DUP%20Mrcevac2013/Prilozi%20plana/8.%20Tabele%20koordinata%20tacaka%20DUP%20Mrcevac.pdf",
+    "graphic": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2011/DETALJNI%20URBANISTICKI%20PLAN%20MRCEVAC/Usvojeni%20DUP%20Mrcevac2013/Graficki%20prilozi/07-MRCEVAC%20-%20PLAN%20PARCELACIJE.pdf",
+    "note": "Предельный объём по плану: УП с отступом 5 м от границ, высота до 20 м (P+4+Pk). Сам дом займёт не больше max_footprint_m2."
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       18.7199994,
+       42.4184741
+      ],
+      [
+       18.7201149,
+       42.418532
+      ],
+      [
+       18.7201467,
+       42.4185327
+      ],
+      [
+       18.7202864,
+       42.4186392
+      ],
+      [
+       18.7203129,
+       42.4186597
+      ],
+      [
+       18.7203384,
+       42.4186804
+      ],
+      [
+       18.7203621,
+       42.4187015
+      ],
+      [
+       18.7204173,
+       42.4187456
+      ],
+      [
+       18.7205233,
+       42.4185699
+      ],
+      [
+       18.7206556,
+       42.4184827
+      ],
+      [
+       18.7203463,
+       42.4181811
+      ],
+      [
+       18.7202121,
+       42.4182998
+      ],
+      [
+       18.7201558,
+       42.4183438
+      ],
+      [
+       18.7201115,
+       42.4183844
+      ],
+      [
+       18.7200273,
+       42.4184566
+      ],
+      [
+       18.7199994,
+       42.4184741
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "up": "UP-288",
+    "floors": "P+4+Pk",
+    "levels": 6,
+    "height": 20,
+    "parcel_m2": 3101,
+    "parcel_m2_check": 3102.8,
+    "max_footprint_m2": 930,
+    "envelope_m2": 1971.5,
+    "plan": "DUP Mrčevac, Opština Tivat",
+    "decision": "Odluka br. 0304-90 od 20.06.2013, «Sl. list CG» br. 20/13",
+    "date": "2013-06-20",
+    "source": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2011/DETALJNI%20URBANISTICKI%20PLAN%20MRCEVAC/Usvojeni%20DUP%20Mrcevac2013/Prilozi%20plana/8.%20Tabele%20koordinata%20tacaka%20DUP%20Mrcevac.pdf",
+    "graphic": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2011/DETALJNI%20URBANISTICKI%20PLAN%20MRCEVAC/Usvojeni%20DUP%20Mrcevac2013/Graficki%20prilozi/07-MRCEVAC%20-%20PLAN%20PARCELACIJE.pdf",
+    "note": "Предельный объём по плану: УП с отступом 5 м от границ, высота до 20 м (P+4+Pk). Сам дом займёт не больше max_footprint_m2."
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       18.7201856,
+       42.4190551
+      ],
+      [
+       18.7202798,
+       42.4191259
+      ],
+      [
+       18.7203211,
+       42.4190952
+      ],
+      [
+       18.7204508,
+       42.4191902
+      ],
+      [
+       18.7204047,
+       42.4192244
+      ],
+      [
+       18.7204551,
+       42.419266
+      ],
+      [
+       18.7209882,
+       42.4189674
+      ],
+      [
+       18.7209198,
+       42.4188951
+      ],
+      [
+       18.7208546,
+       42.4188158
+      ],
+      [
+       18.7207345,
+       42.4187315
+      ],
+      [
+       18.7207318,
+       42.4186981
+      ],
+      [
+       18.7206741,
+       42.4186689
+      ],
+      [
+       18.7205978,
+       42.418667
+      ],
+      [
+       18.7205417,
+       42.41876
+      ],
+      [
+       18.7205826,
+       42.4188161
+      ],
+      [
+       18.7204878,
+       42.4188732
+      ],
+      [
+       18.7204372,
+       42.4189021
+      ],
+      [
+       18.7204109,
+       42.4189174
+      ],
+      [
+       18.7203766,
+       42.4189375
+      ],
+      [
+       18.720325,
+       42.4189691
+      ],
+      [
+       18.7202964,
+       42.4189874
+      ],
+      [
+       18.7201856,
+       42.4190551
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "up": "UP-289",
+    "floors": "P+4+Pk",
+    "levels": 6,
+    "height": 20,
+    "parcel_m2": 5410,
+    "parcel_m2_check": 5410.9,
+    "max_footprint_m2": 1623,
+    "envelope_m2": 3878.1,
+    "plan": "DUP Mrčevac, Opština Tivat",
+    "decision": "Odluka br. 0304-90 od 20.06.2013, «Sl. list CG» br. 20/13",
+    "date": "2013-06-20",
+    "source": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2011/DETALJNI%20URBANISTICKI%20PLAN%20MRCEVAC/Usvojeni%20DUP%20Mrcevac2013/Prilozi%20plana/8.%20Tabele%20koordinata%20tacaka%20DUP%20Mrcevac.pdf",
+    "graphic": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2011/DETALJNI%20URBANISTICKI%20PLAN%20MRCEVAC/Usvojeni%20DUP%20Mrcevac2013/Graficki%20prilozi/07-MRCEVAC%20-%20PLAN%20PARCELACIJE.pdf",
+    "note": "Предельный объём по плану: УП с отступом 5 м от границ, высота до 20 м (P+4+Pk). Сам дом займёт не больше max_footprint_m2."
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       18.7205348,
+       42.4193342
+      ],
+      [
+       18.7206329,
+       42.4194208
+      ],
+      [
+       18.7207632,
+       42.41954
+      ],
+      [
+       18.7208024,
+       42.4195786
+      ],
+      [
+       18.721439,
+       42.4196491
+      ],
+      [
+       18.7216786,
+       42.4196342
+      ],
+      [
+       18.721796,
+       42.4196296
+      ],
+      [
+       18.721864,
+       42.4196034
+      ],
+      [
+       18.7218036,
+       42.4195523
+      ],
+      [
+       18.7217707,
+       42.4195351
+      ],
+      [
+       18.7216891,
+       42.4195487
+      ],
+      [
+       18.7215452,
+       42.4193896
+      ],
+      [
+       18.7214448,
+       42.4192844
+      ],
+      [
+       18.7213623,
+       42.419183
+      ],
+      [
+       18.7212526,
+       42.4191896
+      ],
+      [
+       18.7210642,
+       42.4190377
+      ],
+      [
+       18.7205348,
+       42.4193342
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}

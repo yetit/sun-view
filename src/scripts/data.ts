@@ -3,12 +3,12 @@
 import { unpackBuildings, type BuildingsMeta } from './buildings-bin.ts';
 import { makeCanopy, type Canopy, type Climate } from './grid.ts';
 
-const urls = import.meta.glob<string>('../../data/*/{buildings.bin,buildings.meta.json,canopy.bin,canopy.json,dem.bin,dem.json,precomputed.bin,precomputed.json,climate.json,levels.json}', { query: '?url', import: 'default' });
+const urls = import.meta.glob<string>('../../data/*/{buildings.bin,buildings.meta.json,canopy.bin,canopy.json,dem.bin,dem.json,precomputed.bin,precomputed.json,climate.json,planned.geojson,levels.json}', { query: '?url', import: 'default' });
 
 // precomputed — карты солнца/моря для всех зданий из scripts/precompute.ts (если есть);
 // sunshine — вероятность прямого солнца по месяцам из scripts/fetch-climate.mjs (если есть), climate — температура и ветер оттуда же.
 export type CityData = {
-  geojson: any; bldMeta: BuildingsMeta; bldBuf: ArrayBuffer; canopy: Canopy | null; demMeta: any; demBuf: ArrayBuffer; precomputed: Map<string, Uint8Array> | null; sunshine: number[] | null; climate: Climate | null;
+  geojson: any; bldMeta: BuildingsMeta; bldBuf: ArrayBuffer; canopy: Canopy | null; demMeta: any; demBuf: ArrayBuffer; precomputed: Map<string, Uint8Array> | null; sunshine: number[] | null; climate: Climate | null; planned: { features: any[] } | null;
 };
 
 export const hasData = (id: string) => `../../data/${id}/buildings.bin` in urls;
@@ -17,8 +17,8 @@ export async function loadCityData(id: string): Promise<CityData> {
   const get = async (name: string) => { const u = urls[`../../data/${id}/${name}`]; return u ? fetch(await u()) : null; };
   const json = (name: string) => get(name).then((r) => r?.json() ?? null);
   const bin = (name: string) => get(name).then((r) => r?.arrayBuffer() ?? null);
-  const [bldMeta, bldBuf, canMeta, canBuf, demMeta, demBuf, preMeta, preBuf, climate] = await Promise.all([
-    json('buildings.meta.json'), bin('buildings.bin'), json('canopy.json'), bin('canopy.bin'), json('dem.json'), bin('dem.bin'), json('precomputed.json'), bin('precomputed.bin'), json('climate.json'),
+  const [bldMeta, bldBuf, canMeta, canBuf, demMeta, demBuf, preMeta, preBuf, climate, planned] = await Promise.all([
+    json('buildings.meta.json'), bin('buildings.bin'), json('canopy.json'), bin('canopy.bin'), json('dem.json'), bin('dem.bin'), json('precomputed.json'), bin('precomputed.bin'), json('climate.json'), json('planned.geojson'),
   ]);
   const geojson = unpackBuildings(bldMeta, bldBuf!);
   let precomputed: Map<string, Uint8Array> | null = null;
@@ -26,7 +26,7 @@ export async function loadCityData(id: string): Promise<CityData> {
     const n = preMeta.buildings;
     precomputed = new Map(preMeta.layers.map((k: string, i: number) => [k, new Uint8Array(preBuf, i * n, n)]));
   } else if (preMeta) console.warn(`${id}: предрасчёт на ${preMeta.buildings} зданий, а в данных ${bldMeta.n} — считаем в воркере`);
-  return { geojson, bldMeta, bldBuf: bldBuf!, canopy: canMeta && canBuf ? makeCanopy(canMeta, canBuf) : null, demMeta, demBuf: demBuf!, precomputed, sunshine: climate?.sunshine ?? null, climate: climate?.tday ? { tday: climate.tday, wind: climate.wind, windSpeed: climate.windSpeed } : null };
+  return { geojson, bldMeta, bldBuf: bldBuf!, canopy: canMeta && canBuf ? makeCanopy(canMeta, canBuf) : null, demMeta, demBuf: demBuf!, precomputed, sunshine: climate?.sunshine ?? null, climate: climate?.tday ? { tday: climate.tday, wind: climate.wind, windSpeed: climate.windSpeed } : null, planned };
 }
 
 // Где не хватает этажности (scripts/levels-todo.mjs): OSM id → [соседей с изменившимся ответом,

@@ -172,6 +172,12 @@ The data lives in `data/<city>/` and is committed. The site calls no APIs at run
 
 **Licence.** The code is under the [MIT licence](LICENSE). The data keeps its sources' terms: OpenStreetMap-derived files, including the precomputed maps and the survey lists, are under ODbL 1.0, and the terrain is under the Copernicus DEM licence. The details per file are in [DATA-LICENSE.md](DATA-LICENSE.md).
 
+## After planned building (pilot)
+
+Near plots where the zoning plan allows building, the panel has a “Today / After planned building” switch. It recomputes sun by season and the sea view with the planned volumes and states the difference, e.g. “winter −3 h; sea view unchanged”. The volumes are purple on the map and the plots are outlined with a dashed line.
+
+**This is a pilot on one area.** Five plots of the medium-density zone of the DUP “Mrčevac” (Tivat, 2013) are digitised: the plot inset by 5 m and up to 20 m high, which is the largest volume the plan allows, not a design; a building may cover up to 30% of the plot. The source, the adoption date and how the digitising was checked are in [docs/plans-sources.md](docs/plans-sources.md), along with what turned up for Kotor and Bergen. The BRE score, matrix and year ribbon reflect today's buildings.
+
 ## Limitations
 
 - **Floor counts are known for only 14% of buildings in Tivat and 3% in Kotor.** The rest get a default by OSM tag and footprint: sheds, garages, carports, containers, roofs, ruins, construction sites and footprints under 40 m² get 1 floor, everything else 2. They are drawn semi-transparent, and the panel lets you correct the count. Open height layers do not help here: [GHS-BUILT-H](https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_H_GLOBE_R2023A/) (JRC, 100 m, CC BY 4.0) correlates weakly with known OSM heights in these towns (r = 0.22 in Tivat, 0.30 in Kotor) and errs more than the 2-floor constant (mean error 3.8 vs 2.9 m in Tivat, 5.3 vs 3.6 m in Kotor). Overture Maps does not help either ([docs/overture-check.md](docs/overture-check.md)): in release 2026-09-23.1 it has floor counts for 494 buildings in Tivat and 112 in Kotor, all of them from OSM (493 of 493 and 112 of 112 identical, r = 1.0); the 3,130 and 3,542 buildings without floors in OSM have none in Overture either.

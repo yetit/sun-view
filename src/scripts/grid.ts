@@ -116,7 +116,7 @@ const canopyAt = (t: Canopy, lon: number, lat: number) => {
 
 // Растр препятствий: абсолютная отметка верха и индекс здания (+1) в каждой ячейке; деревья — TREE, лиственные — BROAD.
 export const BCELL = 6; // м
-export const TREE = 0xffff, BROAD = 0xfffe;
+export const TREE = 0xffff, BROAD = 0xfffe, PLANNED = 0xfffd;
 export type Roofs = { x0: number; y0: number; cols: number; rows: number; z: Float32Array; idx: Uint16Array };
 
 export function inRing(x: number, y: number, ring: [number, number][]): boolean {
@@ -166,7 +166,26 @@ function roofAt(roofs: Roofs, x: number, y: number): [number, number] {
 // sunshine — вероятность прямого солнца по месяцам (data/<id>/climate.json), если есть: с ней годовая оценка — по вероятным часам.
 // climate — дневная температура и ветер по месяцам (тот же файл), для строки климата в панели.
 export type Climate = { tday: number[]; wind: number[][]; windSpeed: number[] };
-export type World = { city: City; proj: Proj; dem: Dem; roofs: Roofs; blds: Bld[]; sunshine?: number[] | null; climate?: Climate | null };
+export type World = { city: City; proj: Proj; dem: Dem; roofs: Roofs; blds: Bld[]; sunshine?: number[] | null; climate?: Climate | null; planned?: { features: any[] } | null };
+
+// Тот же мир плюс планируемые объёмы (data/<id>/planned.geojson): контур × высота над землёй, PLANNED в растре.
+// Деревья под ними уходят, существующий дом остаётся, если он выше.
+export function plannedWorld(w: World, planned: { features: any[] }): World {
+  const z = w.roofs.z.slice(), idx = w.roofs.idx.slice(), { x0, y0, cols, rows } = w.roofs;
+  for (const f of planned.features) for (const ring of polyRings(f.geometry)) {
+    const r = ring.map((p) => w.proj.toXY(p[0], p[1]));
+    const xs = r.map((p) => p[0]), ys = r.map((p) => p[1]);
+    const c0 = Math.max(0, Math.floor((Math.min(...xs) - x0) / BCELL)), c1 = Math.min(cols - 1, Math.floor((Math.max(...xs) - x0) / BCELL));
+    const r0 = Math.max(0, Math.floor((Math.min(...ys) - y0) / BCELL)), r1 = Math.min(rows - 1, Math.floor((Math.max(...ys) - y0) / BCELL));
+    for (let rr = r0; rr <= r1; rr++) for (let c = c0; c <= c1; c++) {
+      const x = x0 + (c + 0.5) * BCELL, y = y0 + (rr + 0.5) * BCELL;
+      if (!inRing(x, y, r)) continue;
+      const k = rr * cols + c, top = (demAt(w.dem, ...w.proj.toLonLat(x, y)) ?? 0) + f.properties.height;
+      if (top > z[k] || idx[k] === TREE || idx[k] === BROAD) { z[k] = top; idx[k] = PLANNED; } // деревья на участке под стройку уходят
+    }
+  }
+  return { ...w, roofs: { ...w.roofs, z, idx } };
+}
 
 // Тот же мир, но лиственные деревья без листвы — для верхней оценки солнца весной и зимой.
 // Голые ветви тоже дают тень, поэтому это граница сверху, а не прогноз. Пустая ячейка — z = 0.

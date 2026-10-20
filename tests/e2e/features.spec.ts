@@ -256,3 +256,22 @@ test('климат города у выбранного фасада: темпе
   await expect(page.locator('.climate-line')).toContainText(/City climate around the June solstice: \+\d+° .* wind mostly from the [NESW]{1,2}, [\d.]+ m\/s/);
   await expect(page.locator('.climate-line')).toContainText('Not the microclimate');
 });
+
+test('после застройки (пилот, ДУП Мрчевац): переключатель у соседнего дома, зимой солнца меньше, источник и дата плана', async ({ page }) => {
+  await open(page, '?c=tivat&b=1422729342&f=1&s=3&lang=en'); // к северу от планируемых домов P+4+Pk
+  const box = page.locator('.plan-box');
+  await expect(box).toBeVisible();
+  await expect(page.locator('.plan-diff')).toContainText('may go up nearby');
+  await expect(page.locator('.plan-source')).toContainText('DUP Mrčevac');
+  await expect(page.locator('.plan-source')).toContainText('2013-06-20');
+  const winter = () => page.locator('.seasons .card[data-s="3"] strong').textContent().then((s) => parseFloat(s!.replace(',', '.')));
+  const before = await winter();
+  await page.locator('.plan-chip[data-pl="1"]').click();
+  await expect(page.locator('.plan-diff')).toContainText(/After planned building: .*winter −[\d.]+ h/);
+  expect(await winter()).toBeLessThan(before);
+  await page.locator('.plan-chip[data-pl="0"]').click();
+  expect(await winter()).toBe(before);
+  // Дом далеко от участков плана — переключателя нет.
+  await open(page, `?c=tivat&b=${B}&f=10&lang=en`);
+  await expect(box).toBeHidden();
+});

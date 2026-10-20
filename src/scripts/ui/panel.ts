@@ -2,7 +2,7 @@
 // Матрица и BRE — matrix.ts, рисунки — charts.ts, вид из окна — view.ts, сравнение, поиск, примеры — отдельные модули.
 import { dirBearing, dirIndex, eye, eyeHeight, reliability, SEASONS, seaRose, seasonCalc, seasonClimate, sunshineAt, type SeaDir, type Season } from '../analysis.ts';
 import { $, $$, ask, city, currentFacades, facadeOf, fmtH, fmtT, geojson, state, syncUrl, world } from '../app.ts';
-import { bareWorld, facades, nearestFacade, type Bld, type World } from '../grid.ts';
+import { bareWorld, facades, nearestFacade, plannedWorld, type Bld, type World } from '../grid.ts';
 import { buildingName, cityName, summaryText, t } from '../i18n.ts';
 import { applyColors, drawFacade, drawFloor, drawSectors, drawSunPath, lookAtFacade, map, setData, sheetPadding } from '../map/layers.ts';
 import { grabFrame, viewing } from '../map/window.ts';
@@ -23,6 +23,9 @@ let lastSeasons: Season[] = [], lastSea: SeaDir[] = [], ribbonSmall: HTMLCanvasE
 let ribbonReq = 0, lastRibbon: { cols: number; rows: number; data: Uint8Array } | null = null;
 // Мир без листвы на лиственных деревьях — строится один раз, при первом выбранном здании.
 let bare: World | null = null;
+// «После застройки»: тот же мир плюс планируемые объёмы (data/<id>/planned.geojson), строится при первом включении.
+let after = false, built: World | null = null;
+const cur = () => (after && world.planned ? (built ??= plannedWorld(world, world.planned)) : world);
 
 // face: false — не разворачивать карту к фасаду (ссылка открыта, а пользователь уже двигал карту).
 export function select(b: Bld, opts: { floor?: number; side?: number | null; dir?: number | null; floors?: number | null; face?: boolean } = {}) {
@@ -131,7 +134,8 @@ function render() {
   $('.eye').textContent = t.eye(fmtH.format(eyeHeight(world, b, state.floor)));
   $('.seasons').innerHTML = seasonsHtml();
   climateLine();
-  lastSea = seaRose(world, b, state.floor);
+  lastSea = seaRose(cur(), b, state.floor);
+  planBox(b);
   renderBre();
   $('.rose').innerHTML = roseSvg(lastSea, facadeOf() ? dirIndex(facadeOf()!.normal) : -1);
   drawSectors(b, lastSea);
@@ -151,6 +155,29 @@ export function refreshSeason() {
   climateLine();
 }
 
+// Переключатель «Сегодня / После застройки»: только у домов в 500 м от планируемых объёмов (дальше лучи
+// их не заденут). Разница — солнце по сезонам и направления с морем: сегодня против мира с планами.
+function planBox(b: Bld) {
+  const box = $('.plan-box'), pl = world.planned;
+  const near = !!pl && pl.features.some((f) => { const [x, y] = world.proj.toXY(...(f.geometry.coordinates[0][0] as [number, number])); return Math.hypot(x - b.xy[0], y - b.xy[1]) < 500; });
+  box.hidden = !near;
+  if (!near) { if (after) setAfter(false); return; }
+  $$('.plan-chip').forEach((el) => el.setAttribute('aria-checked', String((el.dataset.pl === '1') === after)));
+  const p = pl!.features[0].properties;
+  $('.plan-source').innerHTML = t.planSource(p.plan, p.date, pl!.features.length, p.source);
+  if (!after) { $('.plan-diff').textContent = t.planHint; return; }
+  const e = eye(world, b, state.floor, facadeOf());
+  const diffs = SEASONS.map((_, i) => seasonCalc(cur(), b, e, i).sun - seasonCalc(world, b, e, i).sun);
+  const sun = diffs.map((d, i) => (Math.abs(d) >= 0.05 ? `${t.seasons[i].toLowerCase()} ${d < 0 ? '−' : '+'}${fmtH.format(Math.abs(Math.round(d * 10) / 10))} ${t.h}` : '')).filter(Boolean);
+  const before = seaRose(world, b, state.floor), lost = lastSea.map((s, i) => (before[i].dist != null && s.dist == null ? t.dirs[i] : '')).filter(Boolean);
+  $('.plan-diff').textContent = t.planDiff(sun.length ? sun.join(', ') : t.planSunSame, lost.length ? t.planSeaLost(lost.join(', ')) : t.planSeaSame);
+}
+function setAfter(on: boolean) {
+  after = on && !!world.planned;
+  map.setLayoutProperty('planned-volume', 'visibility', after ? 'visible' : 'none');
+  render();
+}
+
 // Строка климата под фасадами: только для выбранного фасада и если у города есть температура и ветер.
 function climateLine() {
   const el = $('.climate-line'), f = facadeOf(), c = world.climate;
@@ -168,7 +195,7 @@ function summary() {
 
 function seasonsHtml() {
   const e = eye(world, state.current!, state.floor, facadeOf());
-  lastSeasons = SEASONS.map((_, i) => seasonCalc(world, state.current!, e, i));
+  lastSeasons = SEASONS.map((_, i) => seasonCalc(cur(), state.current!, e, i));
   return lastSeasons.map((s, i) => {
     const times = s.sunrise && s.sunset ? `${fmtT.format(s.sunrise)}–${fmtT.format(s.sunset)}` : t.polarNight;
     const pct = s.daylight ? Math.round((100 * s.sun) / s.daylight) : 0;
@@ -207,6 +234,11 @@ function renderBre() {
 export function initPanel() {
   $('.seasons-note').hidden = !world.sunshine;
   $('.sky-chips').hidden = !world.sunshine; // без климата переключать нечего
+  if (world.planned) setData('planned', world.planned.features);
+  $('.plan-chips').addEventListener('click', (e) => {
+    const el = (e.target as Element).closest<HTMLElement>('.plan-chip');
+    if (el) setAfter(el.dataset.pl === '1');
+  });
   setSky(state.cloudy);
   $('.sky-chips').addEventListener('click', (e) => {
     const el = (e.target as Element).closest<HTMLElement>('.sky-chip');

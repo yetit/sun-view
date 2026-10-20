@@ -56,6 +56,7 @@ stage(2);
 const world = createWorld(city, data.geojson, data.canopy, data.demMeta, data.demBuf, roofs);
 world.sunshine = data.sunshine;
 world.climate = data.climate;
+world.planned = data.planned;
 setWorld(world, data.geojson);
 mark('world');
 (data.geojson.features as any[]).forEach((f, i) => { f.properties.h = world.blds[i].h; f.properties.assumed = world.blds[i].assumed; });
