@@ -15,6 +15,14 @@ export function setSheet(s: Sheet, grow = false) {
 
 export function initSheet() {
   document.body.dataset.sheet = 'peek';
+  // Высоты таймбара и листа — в CSS-переменные: атрибуция карты и подсказка встают над ними, а не под ними.
+  const root = document.documentElement.style;
+  new ResizeObserver(() => {
+    root.setProperty('--timebar-h', `${$('.timebar').offsetHeight}px`);
+    root.setProperty('--panel-h', `${$('.panel').offsetHeight}px`);
+  }).observe($('.panel'));
+  new ResizeObserver(() => root.setProperty('--timebar-h', `${$('.timebar').offsetHeight}px`)).observe($('.timebar'));
+  new ResizeObserver(() => root.setProperty('--legend-h', `${$('.legend-box').offsetHeight}px`)).observe($('.legend-box'));
   const handle = $('.sheet-handle');
   const panel = $('.panel');
   let startY = 0, startH = 0, moved = false;

@@ -320,7 +320,18 @@ html[lang='ru'] [lang='en'], html[lang='en'] [lang='ru'] { display: none; }
 /* Подсказка о повороте — справа от кнопок навигации MapLibre (у них 29 px + отступ 10 px). */
 .rotate-hint { position: fixed; top: 10px; left: 52px; z-index: 3; max-width: max(160px, min(320px, calc(100vw - var(--panel) - 330px))); padding: 7px 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.7); background: var(--glass); box-shadow: var(--shadow); font-size: 12.5px; text-align: left; color: var(--ink); }
 .rotate-hint[hidden] { display: none; }
-@media (max-width: 720px) { .rotate-hint { top: auto; bottom: calc(50vh + 12px); left: 12px; max-width: calc(100vw - 24px); } }
+/* Узкая карта на десктопе (721–1040 px окна): справа легенда, рядом с кнопками места нет — подсказка под кнопками. */
+@media (min-width: 721px) and (max-width: 1040px) { .rotate-hint { top: max(110px, calc(var(--legend-h, 130px) + 26px)); left: 10px; max-width: min(320px, calc(100vw - var(--panel) - 20px)); } }
+/* Телефон: под кнопками и легендой — внизу над листом лежит атрибуция, развёрнутая при загрузке в 2–3 строки. */
+@media (max-width: 720px) { .rotate-hint { top: max(110px, calc(var(--legend-h, 130px) + 16px)); left: 12px; max-width: calc(100vw - 24px); } }
+/* До 360 px ряд режимов не помещается и в компактном виде: выбор этажа — второй строкой, свёрнутый лист выше на эту строку. */
+@media (max-width: 360px) {
+  .modes { flex-wrap: wrap; overflow-x: visible; row-gap: 6px; }
+  body[data-sheet='peek'] .panel { height: calc(196px + env(safe-area-inset-bottom)); }
+}
+/* Атрибуция карты — над таймбаром (десктоп) и над листом (телефон): иначе она под ними и её не прочесть. */
+body:not(.embed) .maplibregl-ctrl-bottom-right { bottom: calc(var(--timebar-h, 0px) + 24px); }
+@media (max-width: 720px) { body:not(.embed) .maplibregl-ctrl-bottom-right { bottom: calc(var(--panel-h, 50vh) + 4px); } }
 #map .maplibregl-canvas:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
 .map-keys { position: fixed; left: 50%; top: 16px; transform: translateX(calc(-50% - var(--panel) / 2)); z-index: 3; padding: 6px 12px; border-radius: 999px; background: rgba(31, 29, 26, 0.86); color: #fff; font-size: 12.5px; white-space: nowrap; pointer-events: none; }
 
