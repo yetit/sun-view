@@ -304,7 +304,7 @@ export function initPanel() {
     if (state.season !== ex.s) setSeason(ex.s);
     select(b, { floor: ex.f, dir: ex.d });
   });
-  initCompare((p) => select(p.b, { floor: p.floor, side: p.side }));
+  initCompare((p) => { const b = world.blds.find((x) => x.id === p.id); if (b) select(b, { floor: p.floor, side: p.side }); });
   initView();
   initBetter((b, floor) => select(b, { floor }));
   const floorSel = $<HTMLSelectElement>('.floor');
@@ -357,7 +357,8 @@ export function initPanel() {
 
   $('.pin-btn').addEventListener('click', () => {
     if (!state.current) return;
-    addPin({ b: state.current, floor: state.floor, side: state.side, label: facadeOf() ? fName(facadeOf()!) : t.whole, seasons: lastSeasons, bre: breNow()?.a.year ?? null, sea: lastSea.filter((s) => s.dist != null).length });
+    const b = state.current;
+    addPin({ city: city.id, cityName: cityName(city), id: b.id, name: buildingName(b), floor: state.floor, side: state.side, label: facadeOf() ? fName(facadeOf()!) : t.whole, sun: lastSeasons.map((s) => Math.round(s.sun * 10) / 10), bre: breNow()?.a.year ?? null, sea: lastSea.filter((s) => s.dist != null).length });
   });
 
   $('.share-btn').addEventListener('click', async () => {

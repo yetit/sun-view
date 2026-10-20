@@ -343,3 +343,20 @@ test('терраса на крыше: строка только у верхне�
   await page.locator('.floor').selectOption('3');
   await expect(page.locator('.roof-line')).toBeHidden();
 });
+
+test('сравнение между городами: квартиры из Тивата и Бергена в одной таблице, ссылка открывает другой город', async ({ page }) => {
+  await open(page, `?c=tivat&b=${B}&f=10&d=f2&lang=en`);
+  await page.locator('.pin-btn').click();
+  await open(page, '?c=bergen&b=289528809&f=13&d=f2&lang=en');
+  await expect(page.locator('.compare-rows tr')).toHaveCount(1); // список пережил переход в другой город
+  await page.locator('.pin-btn').click();
+  const rows = page.locator('.compare-rows tr');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toContainText('Tivat ·');
+  await expect(rows.nth(1)).toContainText('Bergen ·');
+  await rows.first().locator('a.link').click();
+  await expect(page).toHaveURL(new RegExp(`c=tivat.*b=${B}`));
+  await expect(page.locator('.result')).toBeVisible({ timeout: 60_000 });
+  await page.locator('.compare-rows tr').first().locator('.x').click();
+  await expect(page.locator('.compare-rows tr')).toHaveCount(1);
+});
