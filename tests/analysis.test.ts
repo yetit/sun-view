@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { annualSun, bestCell, breCell, eye, sunshineAt, facadeMatrix, seaRose, seasonCalc, floorAt, reliability, sunYear, verdict, windowView, yearRibbon } from '../src/scripts/analysis.ts';
+import { annualSun, bestCell, breCell, eye, seasonClimate, sunshineAt, facadeMatrix, seaRose, seasonCalc, floorAt, reliability, sunYear, verdict, windowView, yearRibbon } from '../src/scripts/analysis.ts';
 import { bareWorld, blocked, facades } from '../src/scripts/grid.ts';
 import { makeWorld, rect } from './world.ts';
 
@@ -180,4 +180,15 @@ test('BRE с облаками: пасмурная зима снижает зим
   assert.deepEqual(annualSun({ ...w, sunshine: new Array(12).fill(1) }, b, e), clear);
   const grey = annualSun({ ...w, sunshine: [0.2, 0.2, 0.5, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.5, 0.2, 0.2] }, b, e);
   assert.ok(grey.winter < clear.winter, `зима ${grey.winter} < ${clear.winter}`);
+});
+
+test('seasonClimate: температура между серединами месяцев, ветер — чаще всего за три месяца вокруг даты', () => {
+  const tday = [0, 0, 0, 0, 0, 20, 30, 30, 0, 0, 0, 0];
+  const wind = Array.from({ length: 12 }, () => new Array(8).fill(0));
+  wind[5][4] = 10; wind[6][2] = 6; wind[7][2] = 6; // июнь — с юга, июль и август — с востока
+  const c = seasonClimate({ tday, wind, windSpeed: new Array(12).fill(3) }, new Date(Date.UTC(2026, 6, 16)));
+  assert.ok(Math.abs(c.t - 30) < 0.5);
+  assert.equal(c.dir, 2); // 12 часов с востока против 10 с юга
+  assert.ok(Math.abs(c.share - 12 / 22) < 1e-9);
+  assert.equal(c.speed, 3);
 });

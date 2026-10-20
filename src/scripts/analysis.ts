@@ -21,6 +21,16 @@ export function sunshineAt(months: number[], date: Date) {
   return months[m] * (1 - k) + months[n] * k;
 }
 
+// Климат города на дату: дневная температура (между серединами месяцев) и ветер за три месяца вокруг даты —
+// чаще всего откуда дует (румб 0 = С … 7 = СЗ), его доля среди часов с ветром и средняя скорость.
+export function seasonClimate(c: { tday: number[]; wind: number[][]; windSpeed: number[] }, date: Date) {
+  const m = date.getUTCMonth(), ms = [(m + 11) % 12, m, (m + 1) % 12];
+  const hist = new Array(8).fill(0);
+  for (const k of ms) c.wind[k].forEach((v, i) => (hist[i] += v));
+  const dir = hist.indexOf(Math.max(...hist)), total = hist.reduce((a, b) => a + b, 0);
+  return { t: sunshineAt(c.tday, date), dir, share: total ? hist[dir] / total : 0, speed: ms.reduce((a, k) => a + c.windSpeed[k], 0) / 3 };
+}
+
 export const DIRECTIONS = ['С', 'СВ', 'В', 'ЮВ', 'Ю', 'ЮЗ', 'З', 'СЗ'];
 export const dirBearing = (i: number) => (i * Math.PI) / 4;
 export const dirIndex = (bearing: number) => Math.round(bearing / (Math.PI / 4)) % 8; // ближайший румб, bearing в [0, 2π)

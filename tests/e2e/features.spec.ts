@@ -248,3 +248,11 @@ test('подсказка о повороте: видна при первом з�
   await open(page, '?c=tivat&lang=en');
   await expect(hint).toBeHidden();
 });
+
+test('климат города у выбранного фасада: температура и ветер, без фасада строки нет', async ({ page }) => {
+  await open(page, `?c=tivat&b=${B}&f=10&s=1&lang=en`);
+  await expect(page.locator('.climate-line')).toBeHidden();
+  await page.locator('.side[data-c="2"]').click();
+  await expect(page.locator('.climate-line')).toContainText(/City climate around the June solstice: \+\d+° .* wind mostly from the [NESW]{1,2}, [\d.]+ m\/s/);
+  await expect(page.locator('.climate-line')).toContainText('Not the microclimate');
+});

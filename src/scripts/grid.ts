@@ -164,7 +164,9 @@ function roofAt(roofs: Roofs, x: number, y: number): [number, number] {
 }
 
 // sunshine — вероятность прямого солнца по месяцам (data/<id>/climate.json), если есть: с ней годовая оценка — по вероятным часам.
-export type World = { city: City; proj: Proj; dem: Dem; roofs: Roofs; blds: Bld[]; sunshine?: number[] | null };
+// climate — дневная температура и ветер по месяцам (тот же файл), для строки климата в панели.
+export type Climate = { tday: number[]; wind: number[][]; windSpeed: number[] };
+export type World = { city: City; proj: Proj; dem: Dem; roofs: Roofs; blds: Bld[]; sunshine?: number[] | null; climate?: Climate | null };
 
 // Тот же мир, но лиственные деревья без листвы — для верхней оценки солнца весной и зимой.
 // Голые ветви тоже дают тень, поэтому это граница сверху, а не прогноз. Пустая ячейка — z = 0.

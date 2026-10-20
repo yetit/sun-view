@@ -1,6 +1,6 @@
 // Правая панель (на телефоне — лист): выбор здания, этаж и фасад, сезоны, сводка и связка частей панели.
 // Матрица и BRE — matrix.ts, рисунки — charts.ts, вид из окна — view.ts, сравнение, поиск, примеры — отдельные модули.
-import { dirBearing, dirIndex, eye, eyeHeight, reliability, SEASONS, seaRose, seasonCalc, sunshineAt, type SeaDir, type Season } from '../analysis.ts';
+import { dirBearing, dirIndex, eye, eyeHeight, reliability, SEASONS, seaRose, seasonCalc, seasonClimate, sunshineAt, type SeaDir, type Season } from '../analysis.ts';
 import { $, $$, ask, city, currentFacades, facadeOf, fmtH, fmtT, geojson, state, syncUrl, world } from '../app.ts';
 import { bareWorld, facades, nearestFacade, type Bld, type World } from '../grid.ts';
 import { buildingName, cityName, summaryText, t } from '../i18n.ts';
@@ -130,6 +130,7 @@ function render() {
   drawFacade(b, facadeOf());
   $('.eye').textContent = t.eye(fmtH.format(eyeHeight(world, b, state.floor)));
   $('.seasons').innerHTML = seasonsHtml();
+  climateLine();
   lastSea = seaRose(world, b, state.floor);
   renderBre();
   $('.rose').innerHTML = roseSvg(lastSea, facadeOf() ? dirIndex(facadeOf()!.normal) : -1);
@@ -147,6 +148,17 @@ export function refreshSeason() {
   if (!state.current) return;
   drawSunPath();
   $('.seasons').innerHTML = seasonsHtml();
+  climateLine();
+}
+
+// Строка климата под фасадами: только для выбранного фасада и если у города есть температура и ветер.
+function climateLine() {
+  const el = $('.climate-line'), f = facadeOf(), c = world.climate;
+  el.hidden = !f || !c;
+  if (!f || !c) return;
+  const k = seasonClimate(c, SEASONS[state.season].date), t0 = Math.round(k.t);
+  const windward = Math.cos(f.normal - dirBearing(k.dir)) >= Math.SQRT1_2; // нормаль фасада в пределах 45° от ветра
+  el.textContent = t.climateLine(t.seasonsFull[state.season], `${t0 > 0 ? '+' : ''}${t0}`, t.dirs[k.dir], fmtH.format(Math.round(k.speed * 10) / 10), windward);
 }
 
 function summary() {

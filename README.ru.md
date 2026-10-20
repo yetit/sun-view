@@ -163,7 +163,7 @@ Lighthouse локально, по 5 прогонов: медиана произ�
 | Здания, этажность, высоты, береговая линия | [OpenStreetMap](https://www.openstreetmap.org/copyright) через Overpass API | ODbL, © участники OpenStreetMap |
 | Высота деревьев | [High Resolution Canopy Height Maps](https://registry.opendata.aws/dataforgood-fb-forests/), WRI и Meta, AWS Open Data; тип листвы — [Copernicus HRL Dominant Leaf Type 2018](https://land.copernicus.eu/en/products/high-resolution-layer-dominant-leaf-type) | CC BY 4.0, © Meta и World Resources Institute; © Европейский союз, Copernicus Land Monitoring Service |
 | Рельеф для расчёта в Бергене | [DTM 1 м Картверкета](https://hoydedata.no), WCS | © Kartverket, CC BY 4.0 |
-| Облачность (вероятность прямого солнца по месяцам) | [PVGIS](https://re.jrc.ec.europa.eu/pvg_tools/en/), почасовой ряд SARAH3, JRC | © Европейский союз, повторное использование с указанием источника |
+| Облачность (вероятность прямого солнца по месяцам), дневная температура и ветер | [PVGIS](https://re.jrc.ec.europa.eu/pvg_tools/en/): почасовой ряд SARAH3 2014–2023 (радиация, температура ERA5) и типичный метеогод (ветер ERA5 2005–2023), JRC | © Европейский союз, повторное использование с указанием источника |
 | Рельеф для расчёта | [Copernicus DEM GLO-30](https://registry.opendata.aws/copernicus-dem/), AWS Open Data | © DLR e.V. 2010–2014 и © Airbus Defence and Space GmbH 2014–2018, предоставлено ЕС и ESA в рамках Copernicus |
 | Подложка и рельеф для показа | [OpenFreeMap](https://openfreemap.org) / © OpenMapTiles, [Terrain Tiles](https://registry.opendata.aws/terrain-tiles/) | открытые |
 | Поиск адреса | [Photon](https://photon.komoot.io), Komoot | данные OSM, ODbL |

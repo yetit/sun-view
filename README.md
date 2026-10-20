@@ -163,7 +163,7 @@ Local Lighthouse, 5 runs each: performance median 62 before and 62 after. Total 
 | Buildings, floors, heights, coastline | [OpenStreetMap](https://www.openstreetmap.org/copyright) via Overpass API | ODbL, © OpenStreetMap contributors |
 | Tree heights | [High Resolution Canopy Height Maps](https://registry.opendata.aws/dataforgood-fb-forests/) by WRI and Meta, AWS Open Data; leaf type from [Copernicus HRL Dominant Leaf Type 2018](https://land.copernicus.eu/en/products/high-resolution-layer-dominant-leaf-type) | CC BY 4.0, © Meta and World Resources Institute; © European Union, Copernicus Land Monitoring Service |
 | Terrain for the computation in Bergen | [Kartverket DTM 1 m](https://hoydedata.no), WCS | © Kartverket, CC BY 4.0 |
-| Cloud (chance of direct sun by month) | [PVGIS](https://re.jrc.ec.europa.eu/pvg_tools/en/) SARAH3 hourly series, JRC | © European Union, reuse with attribution |
+| Cloud (chance of direct sun by month), daytime temperature and wind | [PVGIS](https://re.jrc.ec.europa.eu/pvg_tools/en/): SARAH3 hourly series 2014–2023 (radiation, ERA5 temperature) and the typical meteorological year (ERA5 wind 2005–2023), JRC | © European Union, reuse with attribution |
 | Terrain for the computation | [Copernicus DEM GLO-30](https://registry.opendata.aws/copernicus-dem/), AWS Open Data | © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the EU and ESA |
 | Basemap and display terrain | [OpenFreeMap](https://openfreemap.org) / © OpenMapTiles, [Terrain Tiles](https://registry.opendata.aws/terrain-tiles/) | open |
 | Address search | [Photon](https://photon.komoot.io) by Komoot | OSM data, ODbL |
