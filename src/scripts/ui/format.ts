@@ -9,3 +9,5 @@ export const fTitle = (f: Facade) => t.facade(t.dirs[dirIndex(f.normal)], deg(f)
 // Фасад по румбу 0..7 (старые ссылки, примеры) — ближайший по нормали; null — здание целиком.
 export const facadeByDir = (w: World, b: Bld, d: number | null) => (d == null ? null : nearestFacade(facades(w, b), dirBearing(d)));
 export const osmUrl = (b: Bld) => `https://www.openstreetmap.org/${b.osmType}/${b.id}`;
+// Редактор OSM (iD) сразу на этом доме — исправить этажность может сам пользователь.
+export const osmEditUrl = (b: Bld) => `https://www.openstreetmap.org/edit?editor=id&${b.osmType}=${b.id}`;

@@ -22,6 +22,8 @@ const ru = {
   legendLevelsNote: 'Серые — этажность в OSM есть. Цветные — нет: цвет показывает, у скольких соседей в радиусе 100 м меняются солнце зимой или вид на море, если дом 1 или 4 этажа. Список для обхода и как помочь — в README.',
   levelsImpact: (n: number) => `От этажности этого дома зависят солнце или вид у ${n} ${n % 10 === 1 && n % 100 !== 11 ? 'соседа' : 'соседей'}.`,
   levelsHelp: 'Как помочь OpenStreetMap ↗',
+  osmEdit: (n: number) => `Исправить в OpenStreetMap: building:levels=${n} ↗`,
+  osmEditTitle: 'Откроется редактор OpenStreetMap на этом доме. Добавьте тег building:levels с числом надземных этажей — после ежемесячной выгрузки данных расчёт обновится у всех.',
   trust: { high: 'Надёжность: высокая', medium: 'Надёжность: средняя', low: 'Надёжность: низкая' },
   trustOk: 'Этажность из OSM, место ровное, деревьев рядом нет.',
   reasons: {
@@ -178,6 +180,8 @@ const en: Dict = {
   legendLevelsNote: 'Grey: OSM has the floor count. Coloured: it does not, and the colour shows how many neighbours within 100 m get different winter sun or sea view if the building has 1 or 4 floors. The list to survey and how to help are in the README.',
   levelsImpact: (n: number) => `The sun or view of ${n} ${n === 1 ? 'neighbour depends' : 'neighbours depend'} on this building's floor count.`,
   levelsHelp: 'How to help OpenStreetMap ↗',
+  osmEdit: (n: number) => `Fix it in OpenStreetMap: building:levels=${n} ↗`,
+  osmEditTitle: 'Opens the OpenStreetMap editor on this building. Add the building:levels tag with the number of floors above ground; after the monthly data refresh the result updates for everyone.',
   trust: { high: 'Reliability: high', medium: 'Reliability: medium', low: 'Reliability: low' },
   trustOk: 'Floor count from OSM, flat ground, no trees nearby.',
   reasons: {

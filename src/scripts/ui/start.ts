@@ -39,5 +39,5 @@ export async function start(world: World, data: CityData, mark: (k: string) => v
   mark('painted');
   map.on('moveend', () => !state.current && updateLight()); // тени вокруг центра карты
   const b = world.blds.find((x) => x.id === num(params.get('b'), -1));
-  if (b) select(b, { floor: num(params.get('f'), 0) || undefined, side: state.side, dir: urlDir, floors: state.floorsOverride, face: !moved });
+  if (b) select(b, { floor: num(params.get('f'), 0) || undefined, side: state.side, dir: urlDir, floors: state.floorsOverride, face: !moved, push: false });
 }

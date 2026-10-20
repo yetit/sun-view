@@ -293,3 +293,31 @@ test('панель: после примера выбран лучший фаса
   await expect(page.locator('.bre')).toContainText('best facade', { timeout: 30_000 });
   await expect(page.locator('.side[aria-pressed="true"]')).toHaveText('All');
 });
+
+test('этажность предположена: ссылка в редактор OSM на этот дом с тегом и числом из поля', async ({ page }) => {
+  await open(page, '?c=tivat&b=1422729342&f=1&lang=en'); // этажность в OSM не указана
+  const a = page.locator('.osm-edit');
+  await expect(a).toHaveAttribute('href', 'https://www.openstreetmap.org/edit?editor=id&way=1422729342');
+  await expect(a).toContainText('building:levels=2');
+  await page.locator('.assumed-input').fill('5');
+  await expect(a).toContainText('building:levels=5');
+});
+
+test('история: «Назад» возвращает к прежнему дому, затем к карте без выбора; «Вперёд» — обратно', async ({ page }) => {
+  await open(page, '?c=tivat&lang=en');
+  await page.locator('.example').first().click();
+  await expect(page).toHaveURL(/b=\d+/);
+  const first = new URL(page.url()).searchParams.get('b');
+  // Второй дом — стрелкой с клавиатуры (примеры при выбранном доме скрыты).
+  await page.locator('.maplibregl-canvas').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => new URL(page.url()).searchParams.get('b')).not.toBe(first);
+  await page.goBack();
+  await expect(page).toHaveURL(new RegExp(`b=${first}`));
+  await expect(page.locator('.result')).toBeVisible();
+  await page.goBack();
+  await expect(page).not.toHaveURL(/b=/);
+  await expect(page.locator('.result')).toBeHidden();
+  await page.goForward();
+  await expect(page).toHaveURL(new RegExp(`b=${first}`));
+});

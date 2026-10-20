@@ -1,7 +1,7 @@
 // Правая панель (на телефоне — лист): выбор здания, этаж и фасад, сезоны, сводка и связка частей панели.
 // Матрица и BRE — matrix.ts, рисунки — charts.ts, вид из окна — view.ts, сравнение, поиск, примеры — отдельные модули.
 import { dirBearing, dirIndex, eye, eyeHeight, reliability, SEASONS, seaRose, seasonCalc, seasonClimate, sunshineAt, type SeaDir, type Season } from '../analysis.ts';
-import { $, $$, ask, city, currentFacades, facadeOf, fmtH, fmtT, geojson, state, syncUrl, world } from '../app.ts';
+import { $, $$, ask, city, currentFacades, embed, facadeOf, fmtH, fmtT, geojson, num, state, syncUrl, world } from '../app.ts';
 import { bareWorld, facades, nearestFacade, plannedWorld, type Bld, type World } from '../grid.ts';
 import { buildingName, cityName, summaryText, t } from '../i18n.ts';
 import { applyColors, drawFacade, drawFloor, drawSectors, drawSunPath, lookAtFacade, map, setData, sheetPadding } from '../map/layers.ts';
@@ -12,7 +12,7 @@ import { drawRibbon, roseSvg } from './charts.ts';
 import { initBetter, resetBetter } from './better.ts';
 import { addPin, initCompare } from './compare.ts';
 import { renderExamples } from './examples.ts';
-import { deg, facadeByDir, fName, fTitle, osmUrl } from './format.ts';
+import { deg, facadeByDir, fName, fTitle, osmEditUrl, osmUrl } from './format.ts';
 import { breHtml, breNow, loadMatrix, markMatrix } from './matrix.ts';
 import { initSearch } from './search.ts';
 import { setSheet } from './sheet.ts';
@@ -28,8 +28,11 @@ let after = false, built: World | null = null;
 let autoSide = false; // выбрать лучший фасад, когда посчитается матрица
 const cur = () => (after && world.planned ? (built ??= plannedWorld(world, world.planned)) : world);
 
-// face: false — не разворачивать карту к фасаду (ссылка открыта, а пользователь уже двигал карту).
-export function select(b: Bld, opts: { floor?: number; side?: number | null; dir?: number | null; floors?: number | null; face?: boolean } = {}) {
+// face: false — не разворачивать карту к фасаду (ссылка открыта, а пользователь уже двигал карту);
+// push: false — не добавлять запись в историю (восстановление из ссылки, кнопка «Назад»).
+export function select(b: Bld, opts: { floor?: number; side?: number | null; dir?: number | null; floors?: number | null; face?: boolean; push?: boolean } = {}) {
+  // Новый дом — новая запись в истории: «Назад» вернёт к прежнему дому или к карте. syncUrl дальше перепишет её адрес.
+  if (opts.push !== false && !embed && state.current !== b) history.pushState(null, '', location.href);
   if (state.current) map.setFeatureState({ source: 'buildings', id: state.current.id }, { selected: false });
   setView(false);
   state.current = b;
@@ -105,10 +108,18 @@ function fillFloors(b: Bld) {
   const box = $('.assumed');
   box.hidden = !b.assumed;
   $<HTMLInputElement>('.assumed-input').value = String(b.floors);
+  osmEdit(b);
   // Насколько эта неизвестная этажность важна соседям — из того же слоя, что режим «Этажность».
   const impact = $('.levels-impact');
   impact.hidden = true;
   if (b.assumed) loadLevels(city.id).then((lv) => { const n = lv.get(b.id)?.[0] ?? 0; if (state.current === b && n) { impact.textContent = t.levelsImpact(n); impact.hidden = false; } });
+}
+
+// Ссылка «Исправить в OpenStreetMap» с тегом и числом из поля ввода.
+function osmEdit(b: Bld) {
+  const a = $<HTMLAnchorElement>('.osm-edit'), n = Math.round(+$<HTMLInputElement>('.assumed-input').value) || b.floors;
+  a.href = osmEditUrl(b);
+  a.textContent = t.osmEdit(n);
 }
 
 // Уточнённая пользователем этажность: меняет только это здание (его высоту на карте и список этажей);
@@ -243,6 +254,13 @@ function renderBre() {
 }
 
 export function initPanel() {
+  // «Назад» / «Вперёд»: дом, этаж и фасад — из адреса записи; нет дома — снять выбор.
+  addEventListener('popstate', () => {
+    const q = new URL(location.href).searchParams, d = q.get('d');
+    const b = world.blds.find((x) => x.id === num(q.get('b'), -1));
+    if (!b) { if (state.current) deselect(); return; }
+    select(b, { floor: num(q.get('f'), 0) || undefined, side: d?.[0] === 'f' ? num(d.slice(1), 0) : null, push: false });
+  });
   $('.seasons-note').hidden = !world.sunshine;
   $('.sky-chips').hidden = !world.sunshine; // без климата переключать нечего
   if (world.planned) setData('planned', world.planned.features);
@@ -299,6 +317,7 @@ export function initPanel() {
     if (c) setSeason(+c.dataset.s!);
   });
 
+  $('.assumed-input').addEventListener('input', () => state.current && osmEdit(state.current));
   $('.assumed-apply').addEventListener('click', () => {
     const b = state.current;
     const n = Math.round(+$<HTMLInputElement>('.assumed-input').value);
