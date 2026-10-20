@@ -2,7 +2,7 @@
 // Матрица и BRE — matrix.ts, рисунки — charts.ts, вид из окна — view.ts, сравнение, поиск, примеры — отдельные модули.
 import { annualSun, dirBearing, dirIndex, eye, heatRisk, lateSun, roofEye, eyeHeight, reliability, SEASONS, seaRose, seasonCalc, seasonClimate, sunshineAt, type SeaDir, type Season } from '../analysis.ts';
 import { $, $$, ask, city, currentFacades, embed, facadeOf, fmtH, fmtT, geojson, num, state, syncUrl, tzOffset, world } from '../app.ts';
-import { bareWorld, facades, nearestFacade, plannedWorld, type Bld, type World } from '../grid.ts';
+import { bareWorld, facades, inRing, nearestFacade, plannedWorld, type Bld, type World } from '../grid.ts';
 import { buildingName, cityName, summaryText, t } from '../i18n.ts';
 import { applyColors, drawFacade, drawFloor, drawSectors, drawSunPath, lookAtFacade, map, setData, sheetPadding } from '../map/layers.ts';
 import { grabFrame, viewing } from '../map/window.ts';
@@ -176,9 +176,12 @@ export function refreshSeason() {
 // их не заденут). Разница — солнце по сезонам и направления с морем: сегодня против мира с планами.
 function planBox(b: Bld) {
   const box = $('.plan-box'), pl = world.planned;
-  const near = !!pl && pl.features.some((f) => { const [x, y] = world.proj.toXY(...(f.geometry.coordinates[0][0] as [number, number])); return Math.hypot(x - b.xy[0], y - b.xy[1]) < 500; });
-  box.hidden = !near;
-  if (!near) { if (state.after) setAfter(false); return; }
+  const ring = (f: any) => (f.geometry.coordinates[0] as [number, number][]).map((p) => world.proj.toXY(p[0], p[1]));
+  const near = !!pl && pl.features.some((f) => { const [x, y] = ring(f)[0]; return Math.hypot(x - b.xy[0], y - b.xy[1]) < 500; });
+  // Дом стоит внутри планируемого объёма — по плану на его месте будет другой дом, сравнивать нечего.
+  const inside = !!pl && pl.features.some((f) => inRing(b.xy[0], b.xy[1], ring(f)));
+  box.hidden = !near || inside;
+  if (box.hidden) { if (state.after) setAfter(false); return; }
   $$('.plan-chip').forEach((el) => el.setAttribute('aria-checked', String((el.dataset.pl === '1') === state.after)));
   const p = pl!.features[0].properties;
   $('.plan-source').innerHTML = t.planSource(p.plan, p.date, pl!.features.length, p.source);
