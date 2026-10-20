@@ -31,7 +31,7 @@ What this project does that the others don't: the sea view per facade and floor,
 - **Buildings** come from OpenStreetMap via the Overpass API: footprints, `building:levels`, `height` and addresses. Buildings without an address are labelled with the nearest street.
 - **Terrain** is Copernicus DEM GLO-30. It sits on AWS Open Data as cloud-optimised GeoTIFFs, so you can read just the window you need from a 1°×1° tile with HTTP range requests (the `geotiff` library), with no sign-up and no gigabyte downloads. The terrain extends about 15 km around the city, because mountains block the low winter sun from kilometres away. In Bergen the ground is Kartverket's 1 m lidar DTM, which its WCS serves straight on our grid.
 - **The sea** is not "elevation ≤ 0". It comes from the OSM coastline (`natural=coastline`, land on the left, water on the right). Otherwise low meadows and vacant lots by the waterfront count as sea.
-- **Trees** come from the Meta and WRI canopy height map (about 1 m per pixel, CC BY 4.0, also COGs on AWS), reduced to a 6 m grid; leaf type comes from Copernicus HRL Dominant Leaf Type.
+- **Trees** come from the Meta and WRI canopy height map (about 1 m per pixel, CC BY 4.0, also COGs on AWS), reduced to a 6 m grid; deciduous crowns come from Sentinel-2 imagery (also COGs on AWS).
 - **Cloud** comes from hourly PVGIS-SARAH3 direct irradiance for 2014–2023.
 - **The sun** comes from `suncalc`.
 
@@ -144,7 +144,7 @@ The first version treated OSM woods and parks as 10 m trees. But in Tivat and Ko
 
 That changes answers a lot: in Tivat winter sun on low floors changed for 26% of buildings, and the sea view for 19%. The "trees nearby" reliability reason had to be narrowed to trees taller than the roof; otherwise it fired for two thirds of buildings and told you nothing.
 
-In winter broadleaved trees are bare, but open data can't tell a deciduous oak from an evergreen olive. The Copernicus Dominant Leaf Type map only says broadleaved or coniferous, and in Montenegro broadleaved means olives and holm oaks too. So the computation always keeps leaves on, and for spring and winter the panel shows an upper bound: "🍂 up to N h with bare trees".
+In winter deciduous trees are bare, but a leaf type map can't tell a deciduous oak from an evergreen olive: the Copernicus Dominant Leaf Type map only says broadleaved or coniferous, and in Montenegro broadleaved means olives and holm oaks too. So I compared Sentinel-2 imagery of 2025 month by month for every crown: a crown is deciduous if its January–March NDVI is at least a quarter below summer. That is 13% of crowns in Tivat and 32% in Kotor. The deciduous crowns' monthly NDVI also gives the leaf-off months: December to April in Tivat. The computation still keeps leaves on, and in those months the panel adds "🍂 +N h through bare branches". Some buildings lost the old line entirely: their "broadleaved" neighbours turned out to stay green all winter.
 
 Cloud is the share of daytime hours when PVGIS-SARAH3 direct normal irradiance reaches 120 W/m², the WMO sunshine threshold. I first tried ERA5 via Open-Meteo, and it overstated the sun badly: 31% in January in Bergen. The satellite gives about 1,500 sunshine hours a year in Bergen and 2,900 in Tivat. The season cards show "☁ ≈ N h on average" next to the clear-sky hours.
 

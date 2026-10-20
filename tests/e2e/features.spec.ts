@@ -152,10 +152,13 @@ test('режим «Этажность»: дома без этажности ок
   await expect(page.locator('.levels-help')).toHaveAttribute('href', /help-fill-in-floor-counts/);
 });
 
-test('сезоны: среднее с облаками на каждой карточке, зимой — граница без листвы; «Солнечнее рядом»', async ({ page }) => {
-  await open(page, '?c=tivat&b=193467074&f=1&lang=en'); // лиственные деревья рядом: зимой 0,7 ч, без листвы 2,8
+test('сезоны: среднее с облаками на каждой карточке; зимой — часы сквозь голые ветви листопадных крон (Sentinel-2); «Солнечнее рядом»', async ({ page }) => {
+  // Широколиственные кроны у этого дома по Sentinel-2 вечнозелёные (зимой зелень не пропадает) — строки нет.
+  await open(page, '?c=tivat&b=193467074&f=1&lang=en');
   await expect(page.locator('.seasons .card .cloud')).toHaveCount(4);
-  await expect(page.locator('.seasons .card[data-s="3"] .bare')).toContainText('with bare trees');
+  await expect(page.locator('.seasons .bare')).toHaveCount(0);
+  await open(page, '?c=tivat&b=1422730960&f=1&lang=en'); // листопадные кроны к югу: зимой +2,7 ч сквозь ветви
+  await expect(page.locator('.seasons .card[data-s="3"] .bare')).toContainText(/\+[\d.]+ h through bare branches/);
   await expect(page.locator('.seasons .card[data-s="1"] .bare')).toHaveCount(0); // летом листва
   await expect(page.locator('.seasons-note')).toBeVisible();
   await page.locator('.better-btn').click();
@@ -163,7 +166,7 @@ test('сезоны: среднее с облаками на каждой кар�
   const link = page.locator('.better-out .link');
   if (await link.count()) {
     await link.click();
-    await expect(page).not.toHaveURL(/b=193467074/);
+    await expect(page).not.toHaveURL(/b=1422730960/);
   }
 });
 

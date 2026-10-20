@@ -36,6 +36,6 @@ export function makeWorld(extra: { ring: number[][]; levels: number | null; heig
     const p: [number, number] = [city.bbox.west + (c + 0.5) * dlon, city.bbox.north - (r + 0.5) * dlat];
     if (woods.some((ring) => inRing(p[0], p[1], ring as [number, number][]))) h[r * cw + c] = broad ? 20 | 128 : 20;
   }
-  const canopy = { west: city.bbox.west, north: city.bbox.north, cols: cw, rows: ch, dlon, dlat, h };
+  const canopy = { west: city.bbox.west, north: city.bbox.north, cols: cw, rows: ch, dlon, dlat, h, leafOff: [11, 12, 1, 2, 3] };
   return createWorld(city, { type: 'FeatureCollection', features }, canopy, { bbox, cols, rows, cell, nodata: -32768, min: 0, max: 400 }, data.buffer);
 }

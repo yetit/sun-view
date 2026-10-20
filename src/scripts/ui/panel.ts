@@ -2,7 +2,7 @@
 // Матрица и BRE — matrix.ts, рисунки — charts.ts, вид из окна — view.ts, сравнение, поиск, примеры — отдельные модули.
 import { annualSun, dayCalc, dirBearing, dirIndex, eye, heatRisk, lateSun, roofEye, eyeHeight, reliability, SEASONS, seaRose, seasonCalc, seasonClimate, sunshineAt, type SeaDir, type Season } from '../analysis.ts';
 import { $, $$, ask, city, currentFacades, dayDate, embed, facadeOf, fmtDay, fmtH, fmtT, geojson, num, state, syncUrl, tzOffset, world } from '../app.ts';
-import { bareWorld, facades, inRing, nearestFacade, plannedWorld, type Bld, type World } from '../grid.ts';
+import { bareWorld, facades, inRing, leafless, nearestFacade, plannedWorld, type Bld, type World } from '../grid.ts';
 import { buildingName, cityName, summaryText, t } from '../i18n.ts';
 import { applyColors, drawFacade, drawFloor, drawSectors, drawSunPath, enableTerrain, lookAtFacade, map, setData, sheetPadding } from '../map/layers.ts';
 import { grabFrame, viewing } from '../map/window.ts';
@@ -21,8 +21,7 @@ import { currentViewText, initView, loadView, setView } from './view.ts';
 
 let lastSeasons: Season[] = [], lastSea: SeaDir[] = [], ribbonSmall: HTMLCanvasElement | null = null;
 let ribbonReq = 0, lastRibbon: { cols: number; rows: number; data: Uint8Array } | null = null;
-// Мир без листвы на лиственных деревьях — строится один раз, при первом выбранном здании.
-let bare: World | null = null;
+const bares = new WeakMap<World, World>(); // мир без листопадных крон — свой у «сегодня» и «после застройки»
 // «После застройки»: тот же мир плюс планируемые объёмы (data/<id>/planned.geojson), строится при первом включении.
 let built: World | null = null;
 let autoSide = false; // выбрать лучший фасад, когда посчитается матрица
@@ -248,9 +247,8 @@ function seasonsHtml() {
     const pct = s.daylight ? Math.round((100 * s.sun) / s.daylight) : 0;
     // С облаками — часы при ясном небе × вероятность прямого солнца в этот день года.
     const cloud = world.sunshine && s.sun ? `<small class="cloud">${t.cloudy(fmtH.format(s.sun * sunshineAt(world.sunshine, SEASONS[i].date)))}</small>` : '';
-    // Весной и зимой лиственные деревья могут стоять голыми — верхняя граница, если она другая.
-    const nb = i === 0 || i === 3 ? fmtH.format(seasonCalc((bare ??= bareWorld(world)), state.current!, e, i).sun) : null;
-    const leafless = nb && nb !== fmtH.format(s.sun) ? `<small class="bare">${t.bare(nb)}</small>` : '';
+    // В месяцы без листвы — сколько ещё часов солнце светит сквозь голые ветви листопадных крон.
+    const leafless = bareLine(e, SEASONS[i].date, s.sun);
     return `<button type="button" class="card${i === state.season && !state.day ? ' current' : ''}" data-s="${i}" style="--pct:${pct}%" title="${t.seasonsFull[i]}"><b>${t.seasons[i]}</b><strong>${fmtH.format(s.sun)} ${t.h}</strong><small>${t.of} ${fmtH.format(s.daylight)} · ${times}</small>${cloud}${leafless}<i></i></button>`;
   }).join('');
 }
@@ -263,7 +261,12 @@ function dayCard(e: ReturnType<typeof eye>) {
   const lit = d.firstLit && d.lastLit ? t.sunWindow(fmtT.format(d.firstLit), fmtT.format(d.lastLit)) : t.noSunWindow;
   const cloud = world.sunshine && d.sun ? `<small class="cloud">${t.cloudy(fmtH.format(d.sun * sunshineAt(world.sunshine, state.day)))}</small>` : '';
   const pct = d.daylight ? Math.round((100 * d.sun) / d.daylight) : 0;
-  return `<div class="card current day-card" style="--pct:${pct}%"><b>${fmtDay.format(state.day)}</b><strong>${fmtH.format(d.sun)} ${t.h}</strong><small>${t.of} ${fmtH.format(d.daylight)} · ${times}</small><small>${lit}</small>${cloud}<i></i></div>`;
+  return `<div class="card current day-card" style="--pct:${pct}%"><b>${fmtDay.format(state.day)}</b><strong>${fmtH.format(d.sun)} ${t.h}</strong><small>${t.of} ${fmtH.format(d.daylight)} · ${times}</small><small>${lit}</small>${cloud}${bareLine(e, state.day, d.sun)}<i></i></div>`;
+}
+function bareLine(e: ReturnType<typeof eye>, date: Date, sun: number) {
+  if (!leafless(world, date)) return '';
+  const extra = dayCalc(bares.get(cur()) ?? bares.set(cur(), bareWorld(cur())).get(cur())!, state.current!, e, date).sun - sun;
+  return extra >= 0.05 ? `<small class="bare">${t.bare(fmtH.format(extra))}</small>` : '';
 }
 
 // Лента года — ясное небо или с облаками (переключатель над ней, cl=1 в ссылке). Тот же canvas идёт в PNG-карточку.

@@ -2,7 +2,7 @@
 // лента года (день × час), годовая оценка окна по BRE, видимость моря по 8 румбам, вид из окна,
 // матрица «этажи × фасады», массовые расчёты для карты.
 import SunCalc from 'suncalc';
-import { BCELL, blocked, BROAD, demAt, facades, HIT, horizonTan, rayHit, seaVisible, TREE, wallPoint, type Bld, type City, type Facade, type World } from './grid.ts';
+import { BCELL, blocked, DECID, demAt, facades, HIT, horizonTan, rayHit, seaVisible, TREE, wallPoint, type Bld, type City, type Facade, type World } from './grid.ts';
 
 export const STEP_MIN = 10;
 export const N = (24 * 60) / STEP_MIN; // отсчётов в сутках
@@ -264,7 +264,7 @@ function treesNear(w: World, b: Bld, d: number): boolean {
   const c0 = Math.max(0, Math.floor((b.xy[0] - R - x0) / BCELL)), c1 = Math.min(cols - 1, Math.floor((b.xy[0] + R - x0) / BCELL));
   const r0 = Math.max(0, Math.floor((b.xy[1] - R - y0) / BCELL)), r1 = Math.min(rows - 1, Math.floor((b.xy[1] + R - y0) / BCELL));
   for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
-    if ((idx[r * cols + c] !== TREE && idx[r * cols + c] !== BROAD) || z[r * cols + c] <= roof) continue;
+    if ((idx[r * cols + c] !== TREE && idx[r * cols + c] !== DECID) || z[r * cols + c] <= roof) continue;
     if (Math.hypot(x0 + (c + 0.5) * BCELL - b.xy[0], y0 + (r + 0.5) * BCELL - b.xy[1]) <= R) return true;
   }
   return false;

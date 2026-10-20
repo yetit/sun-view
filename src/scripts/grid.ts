@@ -102,21 +102,22 @@ export function prepareBuildings(city: City, geojson: any, dem: Dem, proj: Proj)
 }
 
 // Высота крон (scripts/fetch-canopy.mjs): сетка ~6 м в градусах от северо-западного угла, метры над землёй, 0 — нет дерева.
-// Старший бит — лиственная крона (Copernicus Dominant Leaf Type). В файле — RLE: пары (нулей перед значением, значение).
-export type Canopy = { west: number; north: number; cols: number; rows: number; dlon: number; dlat: number; h: Uint8Array };
+// Старший бит — листопадная крона (Sentinel-2, scripts/fetch-leaf.mjs), leafOff — месяцы 1–12, когда такие кроны без листвы.
+// В файле — RLE: пары (нулей перед значением, значение).
+export type Canopy = { west: number; north: number; cols: number; rows: number; dlon: number; dlat: number; h: Uint8Array; leafOff: number[] };
 export function makeCanopy(meta: any, buf: ArrayBuffer): Canopy {
   const rle = new Uint8Array(buf), h = new Uint8Array(meta.cols * meta.rows);
   for (let i = 0, k = 0; i < rle.length; i += 2) { k += rle[i]; h[k++] = rle[i + 1]; }
-  return { west: meta.west, north: meta.north, cols: meta.cols, rows: meta.rows, dlon: meta.dlon, dlat: meta.dlat, h };
+  return { west: meta.west, north: meta.north, cols: meta.cols, rows: meta.rows, dlon: meta.dlon, dlat: meta.dlat, h, leafOff: meta.leafOff ?? [] };
 }
 const canopyAt = (t: Canopy, lon: number, lat: number) => {
   const c = Math.floor((lon - t.west) / t.dlon), r = Math.floor((t.north - lat) / t.dlat);
   return c < 0 || r < 0 || c >= t.cols || r >= t.rows ? 0 : t.h[r * t.cols + c];
 };
 
-// Растр препятствий: абсолютная отметка верха и индекс здания (+1) в каждой ячейке; деревья — TREE, лиственные — BROAD.
+// Растр препятствий: абсолютная отметка верха и индекс здания (+1) в каждой ячейке; деревья — TREE, листопадные — DECID.
 export const BCELL = 6; // м
-export const TREE = 0xffff, BROAD = 0xfffe, PLANNED = 0xfffd;
+export const TREE = 0xffff, DECID = 0xfffe, PLANNED = 0xfffd;
 export type Roofs = { x0: number; y0: number; cols: number; rows: number; z: Float32Array; idx: Uint16Array };
 
 export function inRing(x: number, y: number, ring: [number, number][]): boolean {
@@ -150,7 +151,7 @@ export function rasterizeRoofs(city: City, proj: Proj, dem: Dem, blds: Bld[], ca
   if (canopy) for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
     const [lon, lat] = proj.toLonLat(x0 + (c + 0.5) * BCELL, y0 + (r + 0.5) * BCELL);
     const v = canopyAt(canopy, lon, lat);
-    if (v) { z[r * cols + c] = (demAt(dem, lon, lat) ?? 0) + (v & 127); idx[r * cols + c] = v & 128 ? BROAD : TREE; }
+    if (v) { z[r * cols + c] = (demAt(dem, lon, lat) ?? 0) + (v & 127); idx[r * cols + c] = v & 128 ? DECID : TREE; }
   }
   for (const b of blds) for (const ring of b.rings) paint(ring, () => b.ground + b.h, b.idx + 1);
   return { x0, y0, cols, rows, z, idx };
@@ -166,7 +167,8 @@ function roofAt(roofs: Roofs, x: number, y: number): [number, number] {
 // sunshine — вероятность прямого солнца по месяцам (data/<id>/climate.json), если есть: с ней годовая оценка — по вероятным часам.
 // climate — дневная температура и ветер по месяцам (тот же файл), для строки климата в панели.
 export type Climate = { tday: number[]; wind: number[][]; windSpeed: number[] };
-export type World = { city: City; proj: Proj; dem: Dem; roofs: Roofs; blds: Bld[]; sunshine?: number[] | null; climate?: Climate | null; planned?: { features: any[] } | null };
+export type World = { city: City; proj: Proj; dem: Dem; roofs: Roofs; blds: Bld[]; sunshine?: number[] | null; climate?: Climate | null; planned?: { features: any[] } | null; leafOff?: number[] };
+export const leafless = (w: World, d: Date) => !!w.leafOff?.includes(d.getUTCMonth() + 1);
 
 // Тот же мир плюс планируемые объёмы (data/<id>/planned.geojson): контур × высота над землёй, PLANNED в растре.
 // Деревья под ними уходят, существующий дом остаётся, если он выше.
@@ -181,17 +183,17 @@ export function plannedWorld(w: World, planned: { features: any[] }): World {
       const x = x0 + (c + 0.5) * BCELL, y = y0 + (rr + 0.5) * BCELL;
       if (!inRing(x, y, r)) continue;
       const k = rr * cols + c, top = (demAt(w.dem, ...w.proj.toLonLat(x, y)) ?? 0) + f.properties.height;
-      if (top > z[k] || idx[k] === TREE || idx[k] === BROAD) { z[k] = top; idx[k] = PLANNED; } // деревья на участке под стройку уходят
+      if (top > z[k] || idx[k] === TREE || idx[k] === DECID) { z[k] = top; idx[k] = PLANNED; } // деревья на участке под стройку уходят
     }
   }
   return { ...w, roofs: { ...w.roofs, z, idx } };
 }
 
-// Тот же мир, но лиственные деревья без листвы — для верхней оценки солнца весной и зимой.
-// Голые ветви тоже дают тень, поэтому это граница сверху, а не прогноз. Пустая ячейка — z = 0.
+// Тот же мир без листопадных крон — сколько ещё часов солнце светит сквозь голые ветви в месяцы без листвы.
+// Сквозь ветви солнце слабее, поэтому эти часы показываются отдельно. Пустая ячейка — z = 0.
 export function bareWorld(w: World): World {
   const z = w.roofs.z.slice(), idx = w.roofs.idx.slice();
-  for (let k = 0; k < idx.length; k++) if (idx[k] === BROAD) { z[k] = 0; idx[k] = 0; }
+  for (let k = 0; k < idx.length; k++) if (idx[k] === DECID) { z[k] = 0; idx[k] = 0; }
   return { ...w, roofs: { ...w.roofs, z, idx } };
 }
 
@@ -200,7 +202,7 @@ export function createWorld(city: City, geojson: any, canopy: Canopy | null, dem
   const proj = makeProj(city.camera.center);
   const dem = makeDem(demMeta, demBuf);
   const blds = prepareBuildings(city, geojson, dem, proj);
-  return { city, proj, dem, roofs: roofs ?? rasterizeRoofs(city, proj, dem, blds, canopy), blds };
+  return { city, proj, dem, roofs: roofs ?? rasterizeRoofs(city, proj, dem, blds, canopy), blds, leafOff: canopy?.leafOff ?? [] };
 }
 
 // Фасады — реальные стены контура. Соседние рёбра, почти лежащие на одной прямой (OSM дробит стену
