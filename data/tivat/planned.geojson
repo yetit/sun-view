@@ -558,7 +558,9 @@
     "parcel_m2_check": 6984.9,
     "max_footprint_m2": 2091,
     "envelope_m2": 5292.1,
-    "rule": "inset5"
+    "rule": "inset5",
+    "status": "under construction",
+    "status_note": "Строится: панорамы Google Street View (май 2026) показывают монолитный каркас в 5 уровней, в OSM участок — landuse=construction (way 1455746641), дома ещё нет."
    },
    "geometry": {
     "type": "Polygon",
@@ -843,153 +845,6 @@
     "envelope_m2": 288.3,
     "bgp_m2": 840,
     "osm_overlap": 0.24
-   }
-  },
-  {
-   "type": "Feature",
-   "geometry": {
-    "type": "Polygon",
-    "coordinates": [
-     [
-      [
-       18.6991926,
-       42.4293185
-      ],
-      [
-       18.6991917,
-       42.4293309
-      ],
-      [
-       18.6997538,
-       42.4293131
-      ],
-      [
-       18.6998554,
-       42.4293803
-      ],
-      [
-       18.6998788,
-       42.4297141
-      ],
-      [
-       18.6998688,
-       42.4297209
-      ],
-      [
-       18.699731,
-       42.4297257
-      ],
-      [
-       18.6997337,
-       42.4298196
-      ],
-      [
-       18.6997369,
-       42.4298297
-      ],
-      [
-       18.6998763,
-       42.4298219
-      ],
-      [
-       18.6998874,
-       42.4298278
-      ],
-      [
-       18.6999151,
-       42.4301783
-      ],
-      [
-       18.6998428,
-       42.4302381
-      ],
-      [
-       18.6999444,
-       42.4302368
-      ],
-      [
-       18.6999464,
-       42.43019
-      ],
-      [
-       18.6999361,
-       42.4300952
-      ],
-      [
-       18.6999388,
-       42.4300761
-      ],
-      [
-       18.6999228,
-       42.4298939
-      ],
-      [
-       18.6999255,
-       42.4298744
-      ],
-      [
-       18.6999171,
-       42.4298051
-      ],
-      [
-       18.6999147,
-       42.4297106
-      ],
-      [
-       18.6999105,
-       42.4297045
-      ],
-      [
-       18.699909,
-       42.4296223
-      ],
-      [
-       18.6999038,
-       42.4296038
-      ],
-      [
-       18.6999072,
-       42.4295968
-      ],
-      [
-       18.6998848,
-       42.4293137
-      ],
-      [
-       18.6998881,
-       42.4293067
-      ],
-      [
-       18.69987,
-       42.4292939
-      ],
-      [
-       18.699208,
-       42.4293177
-      ],
-      [
-       18.6991926,
-       42.4293185
-      ]
-     ]
-    ]
-   },
-   "properties": {
-    "up": "UP-97C",
-    "floors": "P+4+Pk",
-    "levels": 6,
-    "height": 18,
-    "plan": "DUP Tivat Centar, Opština Tivat",
-    "decision": "Odluka br. 0304-350-160 od 12.06.2018, «Sl. list CG – opštinski propisi» br. 21/18",
-    "date": "2018-06-12",
-    "source": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/08b.Parcelacija%20i%20regulacija%20sa%20koordinatama%20GL%20i%20RL.pdf",
-    "georef": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/08a.Parcelacija%20i%20regulacija%20sa%20koordinatama%20UP.pdf",
-    "table": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/Tekst%20%20Tivat%20Centar21.06.2018%20T.pdf",
-    "rule": "gl",
-    "note": "Новый объём на участке, не застроенном в 2018 г. («novi objekti na neizgrađenim parcelama», Tabela 1): заштрихованный объём B–C на листе за вычетом домов OSM (часть B уже стоит); высота — этажи над землёй × 3 м, мансарда (Pk) — как этаж.",
-    "envelope_m2": 538.8,
-    "bgp_m2": 8642,
-    "osm_overlap": 0.0
    }
   }
  ]

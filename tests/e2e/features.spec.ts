@@ -287,8 +287,8 @@ test('после застройки (пилот, ДУП Мрчевац): пер�
   await expect(box).toBeHidden();
 });
 
-test('после застройки, ДУП «Тиват Центр»: у дома рядом с участком 97C источник — план центра, зимой солнца меньше', async ({ page }) => {
-  await open(page, '?c=tivat&b=193467352&f=1&s=3&lang=en'); // в 24 м от объёма 97C (P+4+Pk)
+test('после застройки, ДУП «Тиват Центр»: у дома рядом с участком 134b источник — план центра, зимой солнца меньше', async ({ page }) => {
+  await open(page, '?c=tivat&b=246698203&f=1&s=3&lang=en'); // в 25 м от объёма 134b (P+3+Pk): зимой −2,2 ч на 1-м этаже
   await expect(page.locator('.plan-box')).toBeVisible();
   await expect(page.locator('.plan-source')).toContainText('DUP Tivat Centar');
   await expect(page.locator('.plan-source')).toContainText('2018-06-12');
