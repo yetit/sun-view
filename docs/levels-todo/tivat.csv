@@ -4,98 +4,98 @@ rank,osm,label,building,neighbours_affected,winter_sun_hours,sea_directions,neig
 3,https://www.openstreetmap.org/way/193683050,building near Podgorička,yes,7,10,0,60,18.695309,42.441267
 4,https://www.openstreetmap.org/way/193876415,building near Zagrebačka,yes,7,9,2,69,18.694698,42.440327
 5,https://www.openstreetmap.org/way/193467288,building near Mažina III,yes,7,4.7,5,42,18.704363,42.435615
-6,https://www.openstreetmap.org/way/206541444,Hotel Palma,yes,6,13.2,0,44,18.699211,42.428146
-7,https://www.openstreetmap.org/way/192084332,building,yes,6,13.2,0,26,18.671142,42.398651
-8,https://www.openstreetmap.org/way/192084334,building,yes,6,12.7,0,58,18.670935,42.397375
-9,https://www.openstreetmap.org/way/193683200,building near Jurija Gagarina,yes,6,10.2,0,64,18.695614,42.439700
-10,https://www.openstreetmap.org/way/1065345550,building,yes,6,9.3,3,35,18.702969,42.405639
-11,https://www.openstreetmap.org/way/193467335,building near Trg Dara Petkovića,yes,6,9.3,0,31,18.697838,42.431027
-12,https://www.openstreetmap.org/way/193683203,building near Jurija Gagarina,yes,6,8.7,2,62,18.695843,42.439494
-13,https://www.openstreetmap.org/way/193645148,building near Kalimanjska II,yes,6,8.2,0,55,18.704014,42.428791
-14,https://www.openstreetmap.org/way/97209241,building,yes,6,7.7,0,58,18.671247,42.397577
-15,https://www.openstreetmap.org/way/484944149,building near Markuševina,yes,6,7.2,2,43,18.699107,42.435937
-16,https://www.openstreetmap.org/way/193467086,building near Gornji Kalimanj I,yes,6,7,0,51,18.703033,42.429299
-17,https://www.openstreetmap.org/way/247581975,detached near Od rogača,detached,6,6.5,1,38,18.687413,42.446430
-18,https://www.openstreetmap.org/way/193644994,building,yes,6,6,4,57,18.705171,42.428840
-19,https://www.openstreetmap.org/way/1518722594,building near Kava I,yes,6,5.2,3,48,18.714397,42.422470
-20,https://www.openstreetmap.org/way/277891218,building near Komat,yes,6,5.2,1,34,18.715080,42.421720
-21,https://www.openstreetmap.org/way/192084409,building,yes,6,5.2,0,59,18.671611,42.397237
-22,https://www.openstreetmap.org/way/193683060,building near Risanska,yes,6,4.3,4,56,18.696966,42.439426
-23,https://www.openstreetmap.org/way/485939785,building near Obala Filipa Miloševića,yes,5,14.3,2,33,18.687164,42.441139
-24,https://www.openstreetmap.org/way/193645171,building near Kalimanjska II,yes,5,12.8,0,62,18.704250,42.428534
-25,https://www.openstreetmap.org/way/1211281331,building near Donja Lastva II,yes,5,12.3,1,52,18.688147,42.444721
-26,https://www.openstreetmap.org/way/252335297,building,yes,5,11.8,0,8,18.678041,42.410647
-27,https://www.openstreetmap.org/way/193683185,building near Risanska,yes,5,11,1,43,18.697663,42.439220
-28,https://www.openstreetmap.org/way/192084440,building,yes,5,10.5,0,61,18.671081,42.397285
-29,https://www.openstreetmap.org/way/239495375,building near Popovine,yes,5,10,4,35,18.711380,42.425934
-30,https://www.openstreetmap.org/way/239493264,building near Kalimanjska IV,yes,5,9.7,0,57,18.703004,42.427578
-31,https://www.openstreetmap.org/way/239493052,building near Gornji Kalimanj III,yes,5,9,1,60,18.706062,42.428174
-32,https://www.openstreetmap.org/way/193467165,building near Kalimanjska IV,yes,5,9,0,47,18.702641,42.427572
-33,https://www.openstreetmap.org/way/239495380,building near Brijeg Gverovića,yes,5,8.8,1,32,18.702501,42.425040
-34,https://www.openstreetmap.org/way/1211283911,building near Aerodromska,yes,5,8.5,0,20,18.716023,42.414846
-35,https://www.openstreetmap.org/way/252332400,detached near Šetalište Seljanovo,detached,5,8.2,0,41,18.687415,42.439880
-36,https://www.openstreetmap.org/way/1211283404,building near Bradasevo,yes,5,7.3,3,25,18.711647,42.424294
-37,https://www.openstreetmap.org/way/258789846,building near Бјелила,yes,5,7.3,0,29,18.665650,42.405733
-38,https://www.openstreetmap.org/way/486108450,building near Učuri,yes,5,7.3,0,43,18.701634,42.432720
-39,https://www.openstreetmap.org/way/1211283159,building near Kalimanjska III,yes,5,7.3,0,43,18.702295,42.428159
-40,https://www.openstreetmap.org/way/192084348,building,yes,5,7.3,0,26,18.671330,42.398590
-41,https://www.openstreetmap.org/way/1530055345,building near Kapetana Marka Martinovića,yes,5,7,2,46,18.687710,42.440108
-42,https://www.openstreetmap.org/way/193683215,building near Hercegnovska,yes,5,7,1,61,18.696628,42.439850
-43,https://www.openstreetmap.org/way/1422729302,building near Mrčevac I,yes,5,7,1,34,18.721376,42.420704
-44,https://www.openstreetmap.org/way/193645157,building near Gornji Kalimanj III,yes,5,7,0,59,18.705238,42.427889
-45,https://www.openstreetmap.org/way/247581984,apartments near Obala Filipa Miloševića,apartments,5,6.8,0,30,18.687095,42.446162
-46,https://www.openstreetmap.org/way/1422729973,building near Mrčevac I,yes,5,6.7,0,45,18.722043,42.422686
-47,https://www.openstreetmap.org/way/1211283878,building near Bonići II,yes,5,6.5,1,24,18.711767,42.419237
-48,https://www.openstreetmap.org/way/1209714623,building near Od palaca,yes,5,6.3,2,39,18.687506,42.445873
-49,https://www.openstreetmap.org/way/194016175,building near Sedmi kvart,yes,5,6,1,45,18.688169,42.445388
-50,https://www.openstreetmap.org/way/194016434,building near Markuševina,yes,5,6,1,38,18.699213,42.435649
-51,https://www.openstreetmap.org/way/97209173,building,yes,5,5.8,0,54,18.671859,42.397422
-52,https://www.openstreetmap.org/way/277891303,building near Gornji Dumidran I,yes,5,5.7,1,58,18.720395,42.421524
-53,https://www.openstreetmap.org/way/1341612623,building near Brijeg Gverovića,yes,5,5.7,1,41,18.702421,42.425367
-54,https://www.openstreetmap.org/way/1211283420,building near Popovine,yes,5,5.5,3,33,18.711138,42.425712
-55,https://www.openstreetmap.org/way/194016376,building near Mažina III,yes,5,5.5,3,43,18.703217,42.435416
-56,https://www.openstreetmap.org/way/239493084,building near Kalimanjska,yes,5,5.3,1,51,18.703559,42.425738
-57,https://www.openstreetmap.org/way/193683035,building near Cetinjska,yes,5,5.3,4,51,18.696901,42.439101
-58,https://www.openstreetmap.org/way/97210512,building near Гошићи III,yes,5,5.3,1,20,18.662072,42.397834
-59,https://www.openstreetmap.org/way/194016400,detached near Obala Filipa Miloševića,detached,5,5.3,1,31,18.687329,42.444237
-60,https://www.openstreetmap.org/way/193876548,building near Zagrebačka,yes,5,5.3,0,35,18.694147,42.440798
-61,https://www.openstreetmap.org/way/193876396,building near Kamelija (Donja Lastva),yes,5,5.2,0,26,18.688720,42.442613
-62,https://www.openstreetmap.org/way/239493480,building near Belani,yes,5,5,0,44,18.702026,42.426293
-63,https://www.openstreetmap.org/way/486079957,building near Mažina IV,yes,5,4.8,1,44,18.700403,42.435683
-64,https://www.openstreetmap.org/way/193645129,building near Gornji Kalimanj III,yes,5,4.8,0,58,18.704674,42.428518
-65,https://www.openstreetmap.org/way/239495382,Gornji Kalimanj III 42,detached,5,4.8,3,37,18.707501,42.427520
-66,https://www.openstreetmap.org/way/277891330,building near Dumidran II,yes,5,4.8,3,42,18.715777,42.421447
-67,https://www.openstreetmap.org/way/193683198,building near Risanska,yes,5,4.8,2,58,18.696846,42.439569
-68,https://www.openstreetmap.org/way/1458335390,building near Kalimanjska,yes,5,4.8,1,61,18.703412,42.425808
-69,https://www.openstreetmap.org/way/193467052,building near Mažina III,yes,5,4.7,4,37,18.704588,42.435694
-70,https://www.openstreetmap.org/way/1211281303,building near Sedmi kvart,yes,5,4.7,4,45,18.689419,42.446126
-71,https://www.openstreetmap.org/way/247581980,building near Cacovo I,yes,5,4.5,2,53,18.688214,42.447179
-72,https://www.openstreetmap.org/way/277891262,building near Dumidran II,yes,5,4.3,2,41,18.715696,42.421624
-73,https://www.openstreetmap.org/way/1079760006,retail near Boka,retail,5,4.3,2,36,18.694968,42.438067
-74,https://www.openstreetmap.org/way/193683189,building near Beogradska,yes,5,4.3,1,33,18.697151,42.440791
-75,https://www.openstreetmap.org/way/239495343,building near Bradasevo II,yes,5,4.3,3,45,18.713795,42.423768
-76,https://www.openstreetmap.org/way/1308034401,building near Brstin,yes,5,4.2,3,14,18.712853,42.425680
-77,https://www.openstreetmap.org/way/193467082,building near Tripovići,yes,5,4.2,2,42,18.700084,42.432252
-78,https://www.openstreetmap.org/way/193467315,building near Mažina,yes,5,4.2,2,34,18.702710,42.436085
-79,https://www.openstreetmap.org/way/194016371,building near Tripovići,yes,5,4.2,1,26,18.704415,42.432253
-80,https://www.openstreetmap.org/way/239493025,building near Marići,yes,5,4.2,1,44,18.706423,42.426802
-81,https://www.openstreetmap.org/way/277891208,building near Gornji Dumidran I,yes,5,4,1,58,18.720721,42.421545
-82,https://www.openstreetmap.org/way/247581967,building near Od rogača,yes,5,3.8,1,39,18.687353,42.446559
-83,https://www.openstreetmap.org/way/194016256,building near Češljar,yes,5,3.8,4,18,18.706859,42.431622
-84,https://www.openstreetmap.org/way/194016041,building near Tripovići,yes,5,3.8,3,20,18.706764,42.431785
-85,https://www.openstreetmap.org/way/1422730944,building near Lorovina,yes,5,3.8,1,33,18.718619,42.418628
-86,https://www.openstreetmap.org/way/1211283121,building near Mažina IV,yes,5,3.7,3,46,18.700063,42.435581
-87,https://www.openstreetmap.org/way/239495356,building near Bradasevo I,yes,5,3.5,4,50,18.713963,42.423498
-88,https://www.openstreetmap.org/way/193683171,building near Novosadska,yes,5,3.2,3,30,18.697304,42.438631
-89,https://www.openstreetmap.org/way/1422729304,building near Mrčevac I,yes,5,3.2,3,40,18.721024,42.420687
-90,https://www.openstreetmap.org/way/1422729990,building near Mrčevac I,yes,5,3,2,51,18.721352,42.421264
-91,https://www.openstreetmap.org/way/193645059,building,yes,5,3,3,47,18.706590,42.428797
-92,https://www.openstreetmap.org/way/1211283160,building near Kalimanjska II,yes,5,3,1,48,18.702581,42.428351
-93,https://www.openstreetmap.org/way/193467226,building near Mažina,yes,5,2.8,3,42,18.703632,42.436260
-94,https://www.openstreetmap.org/way/294538170,building,yes,5,2.3,4,50,18.705888,42.428822
-95,https://www.openstreetmap.org/way/193876630,building near Tomičići,yes,5,2,3,29,18.697117,42.443718
-96,https://www.openstreetmap.org/way/1079760009,retail near Jurija Gagarina,retail,5,1.8,5,51,18.695581,42.438344
-97,https://www.openstreetmap.org/way/192084403,building,yes,4,13.2,0,55,18.671249,42.396774
-98,https://www.openstreetmap.org/way/1211283882,building near Bonići II,yes,4,11.3,0,21,18.712116,42.419169
-99,https://www.openstreetmap.org/way/1065345528,building,yes,4,11,0,25,18.702186,42.406037
-100,https://www.openstreetmap.org/way/247581996,apartments near Obala Filipa Miloševića,apartments,4,10.8,1,34,18.687181,42.446250
+6,https://www.openstreetmap.org/way/192084332,building,yes,6,13.2,0,26,18.671142,42.398651
+7,https://www.openstreetmap.org/way/192084334,building,yes,6,12.7,0,58,18.670935,42.397375
+8,https://www.openstreetmap.org/way/193683200,building near Jurija Gagarina,yes,6,10.2,0,64,18.695614,42.439700
+9,https://www.openstreetmap.org/way/1065345550,building,yes,6,9.3,3,35,18.702969,42.405639
+10,https://www.openstreetmap.org/way/193683203,building near Jurija Gagarina,yes,6,8.7,2,62,18.695843,42.439494
+11,https://www.openstreetmap.org/way/193645148,building near Kalimanjska II,yes,6,8.2,0,55,18.704014,42.428791
+12,https://www.openstreetmap.org/way/97209241,building,yes,6,7.7,0,58,18.671247,42.397577
+13,https://www.openstreetmap.org/way/484944149,building near Markuševina,yes,6,7.2,2,43,18.699107,42.435937
+14,https://www.openstreetmap.org/way/193467086,building near Gornji Kalimanj I,yes,6,7,0,51,18.703033,42.429299
+15,https://www.openstreetmap.org/way/247581975,detached near Od rogača,detached,6,6.5,1,38,18.687413,42.446430
+16,https://www.openstreetmap.org/way/193644994,building,yes,6,6,4,57,18.705171,42.428840
+17,https://www.openstreetmap.org/way/1518722594,building near Kava I,yes,6,5.2,3,48,18.714397,42.422470
+18,https://www.openstreetmap.org/way/277891218,building near Komat,yes,6,5.2,1,34,18.715080,42.421720
+19,https://www.openstreetmap.org/way/192084409,building,yes,6,5.2,0,59,18.671611,42.397237
+20,https://www.openstreetmap.org/way/193683060,building near Risanska,yes,6,4.3,4,56,18.696966,42.439426
+21,https://www.openstreetmap.org/way/485939785,building near Obala Filipa Miloševića,yes,5,14.3,2,33,18.687164,42.441139
+22,https://www.openstreetmap.org/way/193645171,building near Kalimanjska II,yes,5,12.8,0,62,18.704250,42.428534
+23,https://www.openstreetmap.org/way/1211281331,building near Donja Lastva II,yes,5,12.3,1,52,18.688147,42.444721
+24,https://www.openstreetmap.org/way/252335297,building,yes,5,11.8,0,8,18.678041,42.410647
+25,https://www.openstreetmap.org/way/193683185,building near Risanska,yes,5,11,1,43,18.697663,42.439220
+26,https://www.openstreetmap.org/way/192084440,building,yes,5,10.5,0,61,18.671081,42.397285
+27,https://www.openstreetmap.org/way/239495375,building near Popovine,yes,5,10,4,35,18.711380,42.425934
+28,https://www.openstreetmap.org/way/239493264,building near Kalimanjska IV,yes,5,9.7,0,57,18.703004,42.427578
+29,https://www.openstreetmap.org/way/193467165,building near Kalimanjska IV,yes,5,9,0,47,18.702641,42.427572
+30,https://www.openstreetmap.org/way/239495380,building near Brijeg Gverovića,yes,5,8.8,1,32,18.702501,42.425040
+31,https://www.openstreetmap.org/way/1211283911,building near Aerodromska,yes,5,8.5,0,20,18.716023,42.414846
+32,https://www.openstreetmap.org/way/252332400,detached near Šetalište Seljanovo,detached,5,8.2,0,41,18.687415,42.439880
+33,https://www.openstreetmap.org/way/1211283404,building near Bradasevo,yes,5,7.3,3,25,18.711647,42.424294
+34,https://www.openstreetmap.org/way/258789846,building near Бјелила,yes,5,7.3,0,29,18.665650,42.405733
+35,https://www.openstreetmap.org/way/486108450,building near Učuri,yes,5,7.3,0,43,18.701634,42.432720
+36,https://www.openstreetmap.org/way/1211283159,building near Kalimanjska III,yes,5,7.3,0,43,18.702295,42.428159
+37,https://www.openstreetmap.org/way/192084348,building,yes,5,7.3,0,26,18.671330,42.398590
+38,https://www.openstreetmap.org/way/1530055345,building near Kapetana Marka Martinovića,yes,5,7,2,46,18.687710,42.440108
+39,https://www.openstreetmap.org/way/193683215,building near Hercegnovska,yes,5,7,1,61,18.696628,42.439850
+40,https://www.openstreetmap.org/way/1422729302,building near Mrčevac I,yes,5,7,1,34,18.721376,42.420704
+41,https://www.openstreetmap.org/way/193645157,building near Gornji Kalimanj III,yes,5,7,0,59,18.705238,42.427889
+42,https://www.openstreetmap.org/way/247581984,apartments near Obala Filipa Miloševića,apartments,5,6.8,0,30,18.687095,42.446162
+43,https://www.openstreetmap.org/way/1422729973,building near Mrčevac I,yes,5,6.7,0,45,18.722043,42.422686
+44,https://www.openstreetmap.org/way/1211283878,building near Bonići II,yes,5,6.5,1,24,18.711767,42.419237
+45,https://www.openstreetmap.org/way/1209714623,building near Od palaca,yes,5,6.3,2,39,18.687506,42.445873
+46,https://www.openstreetmap.org/way/194016175,building near Sedmi kvart,yes,5,6,1,45,18.688169,42.445388
+47,https://www.openstreetmap.org/way/194016434,building near Markuševina,yes,5,6,1,38,18.699213,42.435649
+48,https://www.openstreetmap.org/way/97209173,building,yes,5,5.8,0,54,18.671859,42.397422
+49,https://www.openstreetmap.org/way/277891303,building near Gornji Dumidran I,yes,5,5.7,1,58,18.720395,42.421524
+50,https://www.openstreetmap.org/way/1341612623,building near Brijeg Gverovića,yes,5,5.7,1,41,18.702421,42.425367
+51,https://www.openstreetmap.org/way/1211283420,building near Popovine,yes,5,5.5,3,33,18.711138,42.425712
+52,https://www.openstreetmap.org/way/194016376,building near Mažina III,yes,5,5.5,3,43,18.703217,42.435416
+53,https://www.openstreetmap.org/way/239493084,building near Kalimanjska,yes,5,5.3,1,51,18.703559,42.425738
+54,https://www.openstreetmap.org/way/193683035,building near Cetinjska,yes,5,5.3,4,51,18.696901,42.439101
+55,https://www.openstreetmap.org/way/97210512,building near Гошићи III,yes,5,5.3,1,20,18.662072,42.397834
+56,https://www.openstreetmap.org/way/194016400,detached near Obala Filipa Miloševića,detached,5,5.3,1,31,18.687329,42.444237
+57,https://www.openstreetmap.org/way/193876548,building near Zagrebačka,yes,5,5.3,0,35,18.694147,42.440798
+58,https://www.openstreetmap.org/way/193876396,building near Kamelija (Donja Lastva),yes,5,5.2,0,26,18.688720,42.442613
+59,https://www.openstreetmap.org/way/486079957,building near Mažina IV,yes,5,4.8,1,44,18.700403,42.435683
+60,https://www.openstreetmap.org/way/193645129,building near Gornji Kalimanj III,yes,5,4.8,0,58,18.704674,42.428518
+61,https://www.openstreetmap.org/way/239495382,Gornji Kalimanj III 42,detached,5,4.8,3,37,18.707501,42.427520
+62,https://www.openstreetmap.org/way/277891330,building near Dumidran II,yes,5,4.8,3,42,18.715777,42.421447
+63,https://www.openstreetmap.org/way/193683198,building near Risanska,yes,5,4.8,2,58,18.696846,42.439569
+64,https://www.openstreetmap.org/way/1458335390,building near Kalimanjska,yes,5,4.8,1,61,18.703412,42.425808
+65,https://www.openstreetmap.org/way/193467052,building near Mažina III,yes,5,4.7,4,37,18.704588,42.435694
+66,https://www.openstreetmap.org/way/1211281303,building near Sedmi kvart,yes,5,4.7,4,45,18.689419,42.446126
+67,https://www.openstreetmap.org/way/247581980,building near Cacovo I,yes,5,4.5,2,53,18.688214,42.447179
+68,https://www.openstreetmap.org/way/277891262,building near Dumidran II,yes,5,4.3,2,41,18.715696,42.421624
+69,https://www.openstreetmap.org/way/1079760006,retail near Boka,retail,5,4.3,2,36,18.694968,42.438067
+70,https://www.openstreetmap.org/way/193683189,building near Beogradska,yes,5,4.3,1,33,18.697151,42.440791
+71,https://www.openstreetmap.org/way/239495343,building near Bradasevo II,yes,5,4.3,3,45,18.713795,42.423768
+72,https://www.openstreetmap.org/way/1308034401,building near Brstin,yes,5,4.2,3,14,18.712853,42.425680
+73,https://www.openstreetmap.org/way/193467082,building near Tripovići,yes,5,4.2,2,42,18.700084,42.432252
+74,https://www.openstreetmap.org/way/193467315,building near Mažina,yes,5,4.2,2,34,18.702710,42.436085
+75,https://www.openstreetmap.org/way/194016371,building near Tripovići,yes,5,4.2,1,26,18.704415,42.432253
+76,https://www.openstreetmap.org/way/239493025,building near Marići,yes,5,4.2,1,44,18.706423,42.426802
+77,https://www.openstreetmap.org/way/277891208,building near Gornji Dumidran I,yes,5,4,1,58,18.720721,42.421545
+78,https://www.openstreetmap.org/way/247581967,building near Od rogača,yes,5,3.8,1,39,18.687353,42.446559
+79,https://www.openstreetmap.org/way/194016256,building near Češljar,yes,5,3.8,4,18,18.706859,42.431622
+80,https://www.openstreetmap.org/way/194016041,building near Tripovići,yes,5,3.8,3,20,18.706764,42.431785
+81,https://www.openstreetmap.org/way/1422730944,building near Lorovina,yes,5,3.8,1,33,18.718619,42.418628
+82,https://www.openstreetmap.org/way/1211283121,building near Mažina IV,yes,5,3.7,3,46,18.700063,42.435581
+83,https://www.openstreetmap.org/way/239495356,building near Bradasevo I,yes,5,3.5,4,50,18.713963,42.423498
+84,https://www.openstreetmap.org/way/193683171,building near Novosadska,yes,5,3.2,3,30,18.697304,42.438631
+85,https://www.openstreetmap.org/way/1422729304,building near Mrčevac I,yes,5,3.2,3,40,18.721024,42.420687
+86,https://www.openstreetmap.org/way/1422729990,building near Mrčevac I,yes,5,3,2,51,18.721352,42.421264
+87,https://www.openstreetmap.org/way/193645059,building,yes,5,3,3,47,18.706590,42.428797
+88,https://www.openstreetmap.org/way/1211283160,building near Kalimanjska II,yes,5,3,1,48,18.702581,42.428351
+89,https://www.openstreetmap.org/way/193467226,building near Mažina,yes,5,2.8,3,42,18.703632,42.436260
+90,https://www.openstreetmap.org/way/294538170,building,yes,5,2.3,4,50,18.705888,42.428822
+91,https://www.openstreetmap.org/way/193876630,building near Tomičići,yes,5,2,3,29,18.697117,42.443718
+92,https://www.openstreetmap.org/way/1079760009,retail near Jurija Gagarina,retail,5,1.8,5,51,18.695581,42.438344
+93,https://www.openstreetmap.org/way/192084403,building,yes,4,13.2,0,55,18.671249,42.396774
+94,https://www.openstreetmap.org/way/1211283882,building near Bonići II,yes,4,11.3,0,21,18.712116,42.419169
+95,https://www.openstreetmap.org/way/1065345528,building,yes,4,11,0,25,18.702186,42.406037
+96,https://www.openstreetmap.org/way/247581996,apartments near Obala Filipa Miloševića,apartments,4,10.8,1,34,18.687181,42.446250
+97,https://www.openstreetmap.org/way/193644972,building near Gornji Kalimanj III,yes,4,10.8,0,56,18.704716,42.427550
+98,https://www.openstreetmap.org/way/1080930265,building,yes,4,10.2,1,20,18.711150,42.399942
+99,https://www.openstreetmap.org/way/97209213,building,yes,4,9.8,0,57,18.671727,42.397474
+100,https://www.openstreetmap.org/way/193467040,building near Stari Put,yes,4,9.7,0,59,18.701869,42.430919

@@ -237,7 +237,7 @@ export function breCell(m: { floors: number; cols: number; score: ArrayLike<numb
 // (docs/horizon-check.md, п. 4); деревья выше крыши в 20 м от описанной окружности — кроны из спутниковой модели
 // (ошибка ~3 м, листва по сезонам не учтена), а влияют на все этажи. Деревья ниже крыши у дома почти везде.
 // Нет причин — высокая, одна — средняя, две и больше — низкая.
-export type Reason = 'assumed' | 'slope' | 'trees';
+export type Reason = 'assumed' | 'plan' | 'slope' | 'trees';
 export type Reliability = { level: 'high' | 'medium' | 'low'; reasons: Reason[]; drop: number };
 const SLOPE_R = 60, SLOPE_DROP = 30, TREES_R = 20; // м
 
@@ -251,6 +251,7 @@ export function reliability(w: World, b: Bld, assumed = b.assumed): Reliability 
   const drop = hi > lo ? hi - lo : 0;
   const reasons: Reason[] = [];
   if (assumed) reasons.push('assumed');
+  else if (b.levelsSrc === 'plan') reasons.push('plan'); // съёмка плана старая, надстройки с тех пор не учтены
   if (drop > SLOPE_DROP) reasons.push('slope');
   if (treesNear(w, b, TREES_R)) reasons.push('trees');
   return { level: reasons.length === 0 ? 'high' : reasons.length === 1 ? 'medium' : 'low', reasons, drop };

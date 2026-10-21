@@ -14,6 +14,7 @@ const ru = {
   examples: 'Примеры',
   building: (id: number) => `Здание ${id}`,
   srcLevels: (n: number) => `${n} эт. по OSM`,
+  srcPlan: (n: number, plan: string, year: string, url: string) => `${n} эт. по <a href="${url}" target="_blank" rel="noopener">${plan}</a> (съёмка ${year} г.)`,
   srcHeight: (h: number, n: number) => `${h} м по OSM, ≈${n} эт.`,
   srcAssumed: (n: number) => `этажность в OSM не указана, оценка ${n} эт.`,
   ground: (m: number) => `земля ${m} м`,
@@ -28,6 +29,7 @@ const ru = {
   trustOk: 'Этажность из OSM, место ровное, деревьев рядом нет.',
   reasons: {
     assumed: 'этажность не указана в OSM — взята по типу и площади здания',
+    plan: 'этажность из плана застройки по съёмке 2007 года: надстройки с тех пор не учтены',
     slope: (m: number) => `крутой склон, перепад рельефа ${m} м рядом: солнце со стороны склона может быть занижено`,
     trees: 'рядом деревья выше дома — высота крон из спутниковой модели (ошибка около 3 м), а зимой листопадные пропускают больше света',
   },
@@ -190,6 +192,7 @@ const en: Dict = {
   examples: 'Examples',
   building: (id: number) => `Building ${id}`,
   srcLevels: (n: number) => `${n} floors (OSM)`,
+  srcPlan: (n: number, plan: string, year: string, url: string) => `${n} floors per <a href="${url}" target="_blank" rel="noopener">${plan}</a> (${year} survey)`,
   srcHeight: (h: number, n: number) => `${h} m (OSM), ≈${n} floors`,
   srcAssumed: (n: number) => `no floor count in OSM, estimated ${n}`,
   ground: (m: number) => `ground ${m} m`,
@@ -204,6 +207,7 @@ const en: Dict = {
   trustOk: 'Floor count from OSM, flat ground, no trees nearby.',
   reasons: {
     assumed: 'no floor count in OSM — estimated from building type and size',
+    plan: 'floor count from the zoning plan’s 2007 survey: extensions since then are not reflected',
     slope: (m: number) => `steep slope, ${m} m of relief nearby: sun from the uphill side may be underestimated`,
     trees: 'trees taller than the building nearby — crown heights come from a satellite model (about 3 m error), and bare deciduous trees let more light through in winter',
   },

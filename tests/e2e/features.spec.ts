@@ -297,6 +297,15 @@ test('после застройки, ДУП «Тиват Центр»: у дом
   await expect(page.locator('.plan-diff')).toContainText(/After planned building: .*winter −[\d.]+ h/);
 });
 
+test('этажность из плана: у дома без этажности в OSM — этажи с листа ДУП «Тиват Центр», источник со ссылкой, надёжность средняя', async ({ page }) => {
+  await open(page, '?c=tivat&b=193467335&f=1&lang=en'); // P+2+Pk на листе 04 → 4 этажа; в OSM этажности нет
+  await expect(page.locator('.b-meta')).toContainText('4 floors per DUP Tivat Centar (2007 survey)');
+  await expect(page.locator('.b-meta a[href*="Postojeca"]')).toHaveCount(1);
+  await expect(page.locator('.floor option')).toHaveCount(4);
+  await expect(page.locator('.trust-reasons')).toContainText('2007 survey');
+  await expect(page.locator('.trust')).not.toContainText('estimated');
+});
+
 test('панель: после примера выбран лучший фасад, действия сразу под сводкой, пояснения свёрнуты', async ({ page }) => {
   await open(page, '?c=tivat&lang=en');
   await page.locator('.example').first().click();

@@ -1,0 +1,246 @@
+{
+ "source": "DUP Tivat Centar (Opština Tivat, 2018), sheet «04. Postojeća spratnost» — existing storeys as surveyed in 2007",
+ "plan": "DUP Tivat Centar",
+ "surveyed": "2007",
+ "adopted": "2018-06-12",
+ "url": "https://opstinativat.fra1.digitaloceanspaces.com/documents/DUP/2017/DUPTivatCentar/usvojeno/04.Postojeca%20spratnost.pdf",
+ "note": "Only buildings without building:levels/height in OSM. Storeys = P (ground) + upper floors + Pk/M (attic) as one; S/Su (basement) not counted. Label positions georeferenced through sheet 08a (median residual 0.4 m); one OSM footprint with several plan labels takes the highest. Extensions after 2007 are not reflected.",
+ "items": {
+  "193467059": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467068": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467078": {
+   "levels": 4,
+   "label": "P+3"
+  },
+  "193467115": {
+   "levels": 4,
+   "label": "P+3"
+  },
+  "193467117": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467129": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467131": {
+   "levels": 1,
+   "label": "P"
+  },
+  "193467148": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467150": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467161": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467169": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467174": {
+   "levels": 3,
+   "label": "P+1+Pk"
+  },
+  "193467181": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467195": {
+   "levels": 3,
+   "label": "P+1+Pk"
+  },
+  "193467202": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467206": {
+   "levels": 1,
+   "label": "P"
+  },
+  "193467221": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467224": {
+   "levels": 1,
+   "label": "P"
+  },
+  "193467251": {
+   "levels": 1,
+   "label": "P"
+  },
+  "193467255": {
+   "levels": 3,
+   "label": "P+1+Pk"
+  },
+  "193467260": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467263": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467293": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467294": {
+   "levels": 2,
+   "label": "P+Pk"
+  },
+  "193467303": {
+   "levels": 3,
+   "label": "P+1+Pk"
+  },
+  "193467304": {
+   "levels": 4,
+   "label": "S+P+3"
+  },
+  "193467310": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467314": {
+   "levels": 3,
+   "label": "P+1+Pk"
+  },
+  "193467317": {
+   "levels": 2,
+   "label": "S+P+1"
+  },
+  "193467323": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467335": {
+   "levels": 4,
+   "label": "P+2+Pk"
+  },
+  "193467336": {
+   "levels": 3,
+   "label": "P+1+Pk"
+  },
+  "193467361": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193467363": {
+   "levels": 3,
+   "label": "P+1+Pk"
+  },
+  "193467369": {
+   "levels": 3,
+   "label": "P+1+Pk"
+  },
+  "193644991": {
+   "levels": 3,
+   "label": "P+1+Pk"
+  },
+  "193645043": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "193645190": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "194016172": {
+   "levels": 1,
+   "label": "P"
+  },
+  "206541444": {
+   "levels": 6,
+   "label": "P+4+Pk"
+  },
+  "223248489": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "223248501": {
+   "levels": 1,
+   "label": "P"
+  },
+  "223248504": {
+   "levels": 1,
+   "label": "P"
+  },
+  "223248505": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "239493012": {
+   "levels": 3,
+   "label": "P+1+Pk"
+  },
+  "239493036": {
+   "levels": 3,
+   "label": "P+2"
+  },
+  "239493115": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "239493172": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "239493228": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "239493262": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "239493289": {
+   "levels": 3,
+   "label": "P+1+Pk"
+  },
+  "239493480": {
+   "levels": 2,
+   "label": "P+1"
+  },
+  "246698170": {
+   "levels": 4,
+   "label": "P+2+Pk"
+  },
+  "246698172": {
+   "levels": 1,
+   "label": "P"
+  },
+  "246698190": {
+   "levels": 3,
+   "label": "P+1+Pk"
+  },
+  "246698202": {
+   "levels": 5,
+   "label": "P+3+Pk"
+  },
+  "274313153": {
+   "levels": 1,
+   "label": "P"
+  },
+  "1211283152": {
+   "levels": 1,
+   "label": "P"
+  },
+  "1340720573": {
+   "levels": 2,
+   "label": "P+1"
+  }
+ }
+}

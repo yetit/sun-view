@@ -1,6 +1,6 @@
 // Согласованность закоммиченных данных data/<id>/ между собой и с cities.config.mjs.
 import assert from 'node:assert/strict';
-import { readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { test } from 'node:test';
 import { cities } from '../cities.config.mjs';
 import { packBuildings, unpackBuildings } from '../src/scripts/buildings-bin.ts';
@@ -24,12 +24,19 @@ for (const city of cities) {
     const raw = readFileSync(`data/${city.id}/buildings.bin`);
     const got = unpackBuildings(meta, raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength));
     assert.equal(got.features.length, src.features.length, 'buildings.bin: число зданий не совпадает с buildings.json — запустите npm run pack -- <id>');
-    assert.equal(Buffer.compare(Buffer.from(packBuildings(src).buf), raw), 0, 'buildings.bin устарел относительно buildings.json — запустите npm run pack -- <id>');
+    const plan = existsSync(`data/${city.id}/levels-plan.json`) ? json(city.id, 'levels-plan') : null;
+    assert.equal(Buffer.compare(Buffer.from(packBuildings(src, plan).buf), raw), 0, 'buildings.bin устарел относительно buildings.json — запустите npm run pack -- <id>');
     const tol = meta.scale; // м
     src.features.forEach((f: any, i: number) => {
       const g = got.features[i];
       // 0 этажей / 0 м в OSM — «нет данных» (так их понимает и grid.ts), в формате это null.
-      for (const k of ['id', 'levels', 'height', 'name', 'addr', 'street', 'building']) assert.equal(g.properties[k] ?? null, f.properties[k] || null, `здание ${f.properties.id}: ${k}`);
+      for (const k of ['id', 'levels', 'height', 'name', 'addr', 'street', 'building']) {
+        // Этажность из плана застройки (levels-plan.json) — только у домов без неё в OSM, с пометкой источника.
+        const fromPlan = k === 'levels' && g.properties.levelsSrc === 'plan';
+        if (fromPlan) { assert.ok(!f.properties.levels && !f.properties.height && plan?.items[f.properties.id], `здание ${f.properties.id}: этажность из плана там, где она есть в OSM`); continue; }
+        assert.equal(g.properties[k] ?? null, f.properties[k] || null, `здание ${f.properties.id}: ${k}`);
+      }
+      if (plan?.items[f.properties.id] && !f.properties.levels && !f.properties.height) assert.equal(g.properties.levels, plan.items[f.properties.id].levels, `здание ${f.properties.id}: этажность из плана не применена`);
       assert.equal(g.geometry.type, f.geometry.type);
       const a = g.geometry.coordinates.flat(2), b = f.geometry.coordinates.flat(2);
       assert.equal(a.length, b.length, `здание ${f.properties.id}: число вершин`);

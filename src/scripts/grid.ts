@@ -61,6 +61,7 @@ export type Bld = {
   street: string | null; // ближайшая улица, если адреса нет
   kind: string | null; // тег building
   levels: number | null;
+  levelsSrc: 'osm' | 'plan' | null; // откуда этажность: OSM или план застройки (levels-plan.json)
   height: number | null;
   floors: number; // этажей (из OSM или оценка)
   assumed: boolean; // этажность неизвестна, взято по умолчанию
@@ -94,7 +95,7 @@ export function prepareBuildings(city: City, geojson: any, dem: Dem, proj: Proj)
     const area = rings.reduce((s, r) => s + ringArea(r), 0);
     const floors = levels ?? (height ? Math.max(1, Math.round(height / city.floorHeight)) : defaultFloors(f.properties.building ?? null, area));
     return {
-      idx, id: f.properties.id, osmType: f.geometry.type === 'MultiPolygon' ? 'relation' : 'way', name: f.properties.name, addr: f.properties.addr ?? null, street: f.properties.street ?? null, kind: f.properties.building ?? null, levels, height, floors, assumed: levels == null && height == null,
+      idx, id: f.properties.id, osmType: f.geometry.type === 'MultiPolygon' ? 'relation' : 'way', name: f.properties.name, addr: f.properties.addr ?? null, street: f.properties.street ?? null, kind: f.properties.building ?? null, levels, levelsSrc: levels == null ? null : f.properties.levelsSrc ?? 'osm', height, floors, assumed: levels == null && height == null,
       h: height ?? floors * city.floorHeight, ground: groundAt(dem, center[0], center[1]), center, xy,
       radius: Math.max(...pts.map((p) => Math.hypot(p[0] - xy[0], p[1] - xy[1]))), rings,
     };
@@ -167,7 +168,7 @@ function roofAt(roofs: Roofs, x: number, y: number): [number, number] {
 // sunshine — вероятность прямого солнца по месяцам (data/<id>/climate.json), если есть: с ней годовая оценка — по вероятным часам.
 // climate — дневная температура и ветер по месяцам (тот же файл), для строки климата в панели.
 export type Climate = { tday: number[]; wind: number[][]; windSpeed: number[] };
-export type World = { city: City; proj: Proj; dem: Dem; roofs: Roofs; blds: Bld[]; sunshine?: number[] | null; climate?: Climate | null; planned?: { features: any[] } | null; leafOff?: number[] };
+export type World = { city: City; proj: Proj; dem: Dem; roofs: Roofs; blds: Bld[]; sunshine?: number[] | null; climate?: Climate | null; planned?: { features: any[] } | null; leafOff?: number[]; levelsPlan?: { plan: string; surveyed: string; url: string } | null };
 export const leafless = (w: World, d: Date) => !!w.leafOff?.includes(d.getUTCMonth() + 1);
 
 // Тот же мир плюс планируемые объёмы (data/<id>/planned.geojson): контур × высота над землёй, PLANNED в растре.
@@ -202,7 +203,7 @@ export function createWorld(city: City, geojson: any, canopy: Canopy | null, dem
   const proj = makeProj(city.camera.center);
   const dem = makeDem(demMeta, demBuf);
   const blds = prepareBuildings(city, geojson, dem, proj);
-  return { city, proj, dem, roofs: roofs ?? rasterizeRoofs(city, proj, dem, blds, canopy), blds, leafOff: canopy?.leafOff ?? [] };
+  return { city, proj, dem, roofs: roofs ?? rasterizeRoofs(city, proj, dem, blds, canopy), blds, leafOff: canopy?.leafOff ?? [], levelsPlan: geojson.levelsPlan ?? null };
 }
 
 // Фасады — реальные стены контура. Соседние рёбра, почти лежащие на одной прямой (OSM дробит стену

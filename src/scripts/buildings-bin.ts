@@ -6,18 +6,22 @@
 // остальные — разности с предыдущей (gzip сжимает их лучше), замыкающая точка не хранится.
 // Секции: ring (Uint32, начала колец в вершинах), bld (Uint32, начала зданий в кольцах), id (Uint32),
 // height (Uint16, дециметры, 0 — нет), name/addr/street (Uint16, индекс в strings, 0 — нет),
-// xy (Int16), levels (Uint8, 0 — нет), kind (Uint8, индекс в kinds, 0 — нет), flags (Uint8, бит 0 — relation).
+// xy (Int16), levels (Uint8, 0 — нет), kind (Uint8, индекс в kinds, 0 — нет), flags (Uint8, бит 0 — relation,
+// бит 1 — этажность не из OSM, а из плана застройки: data/<id>/levels-plan.json, описание плана — meta.levelsPlan).
 
 type Section = [offset: number, count: number];
 export type BuildingsMeta = {
   version: 1; n: number; origin: [number, number]; scale: number; kx: number; ky: number;
   strings: (string | null)[]; kinds: (string | null)[]; sections: Record<string, Section>; source?: string; fetched?: string;
+  levelsPlan?: LevelsPlan;
 };
+// Этажность из плана застройки для домов, у которых в OSM нет ни building:levels, ни height.
+export type LevelsPlan = { plan: string; surveyed: string; url: string; items: Record<string, { levels: number }> };
 
 const TYPES = { ring: Uint32Array, bld: Uint32Array, id: Uint32Array, height: Uint16Array, name: Uint16Array, addr: Uint16Array, street: Uint16Array, xy: Int16Array, levels: Uint8Array, kind: Uint8Array, flags: Uint8Array };
 type Name = keyof typeof TYPES;
 
-export function packBuildings(geojson: any): { meta: BuildingsMeta; buf: Uint8Array } {
+export function packBuildings(geojson: any, plan: LevelsPlan | null = null): { meta: BuildingsMeta; buf: Uint8Array } {
   const fs = geojson.features as any[];
   const [w, s, e, n] = (() => { let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity; for (const f of fs) for (const r of rings(f)) for (const [x, y] of r) { a = Math.min(a, x); b = Math.min(b, y); c = Math.max(c, x); d = Math.max(d, y); } return [a, b, c, d]; })();
   const origin: [number, number] = [+((w + e) / 2).toFixed(6), +((s + n) / 2).toFixed(6)];
@@ -44,9 +48,10 @@ export function packBuildings(geojson: any): { meta: BuildingsMeta; buf: Uint8Ar
     col.id.push(p.id);
     col.height.push(p.height ? Math.min(65535, Math.round(p.height * 10)) : 0);
     col.name.push(str(p.name)); col.addr.push(str(p.addr)); col.street.push(str(p.street));
-    col.levels.push(p.levels ? Math.min(255, Math.round(p.levels)) : 0);
+    const fromPlan = !p.levels && !p.height ? plan?.items[p.id]?.levels : undefined;
+    col.levels.push(fromPlan ?? (p.levels ? Math.min(255, Math.round(p.levels)) : 0));
     col.kind.push(kind(p.building));
-    col.flags.push(f.geometry.type === 'MultiPolygon' ? 1 : 0);
+    col.flags.push((f.geometry.type === 'MultiPolygon' ? 1 : 0) | (fromPlan ? 2 : 0));
   }
   if (xy.some((v) => v < -32768 || v > 32767)) throw new Error('координата не влезла в Int16 — увеличьте scale');
   if (strings.length > 65535 || kinds.length > 255) throw new Error('слишком много строк или типов');
@@ -57,7 +62,9 @@ export function packBuildings(geojson: any): { meta: BuildingsMeta; buf: Uint8Ar
   for (const k of Object.keys(TYPES) as Name[]) { size = Math.ceil(size / 4) * 4; sections[k] = [size, arrays[k].length]; size += arrays[k].length * TYPES[k].BYTES_PER_ELEMENT; }
   const buf = new Uint8Array(size);
   for (const k of Object.keys(TYPES) as Name[]) new TYPES[k](buf.buffer, sections[k][0], sections[k][1]).set(arrays[k]);
-  return { meta: { version: 1, n: fs.length, origin, scale, kx, ky, strings, kinds, sections, source: geojson.source, fetched: geojson.fetched }, buf };
+  const meta: BuildingsMeta = { version: 1, n: fs.length, origin, scale, kx, ky, strings, kinds, sections, source: geojson.source, fetched: geojson.fetched };
+  if (plan) meta.levelsPlan = { plan: plan.plan, surveyed: plan.surveyed, url: plan.url, items: {} };
+  return { meta, buf };
 }
 
 const rings = (f: any): number[][][] => (f.geometry.type === 'Polygon' ? [f.geometry.coordinates[0]] : f.geometry.coordinates.map((p: any) => p[0]));
@@ -81,9 +88,9 @@ export function unpackBuildings(meta: BuildingsMeta, buf: ArrayBuffer): any {
     const id = a.id[i];
     features[i] = {
       type: 'Feature', id,
-      properties: { id, levels: a.levels[i] || null, height: a.height[i] ? a.height[i] / 10 : null, name: strings[a.name[i]], addr: strings[a.addr[i]], street: strings[a.street[i]], building: kinds[a.kind[i]] },
+      properties: { id, levels: a.levels[i] || null, levelsSrc: a.flags[i] & 2 ? 'plan' : null, height: a.height[i] ? a.height[i] / 10 : null, name: strings[a.name[i]], addr: strings[a.addr[i]], street: strings[a.street[i]], building: kinds[a.kind[i]] },
       geometry: a.flags[i] & 1 ? { type: 'MultiPolygon', coordinates: rs.map((r) => [r]) } : { type: 'Polygon', coordinates: [rs[0]] },
     };
   }
-  return { type: 'FeatureCollection', features };
+  return { type: 'FeatureCollection', features, levelsPlan: meta.levelsPlan ?? null };
 }

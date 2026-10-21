@@ -95,7 +95,8 @@ function fillFloors(b: Bld) {
   const floorSel = $<HTMLSelectElement>('.floor');
   floorSel.innerHTML = Array.from({ length: b.floors }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
   floorSel.value = String(state.floor);
-  const src = b.levels != null ? t.srcLevels(b.levels) : b.height != null ? t.srcHeight(b.height, b.floors) : t.srcAssumed(b.floors);
+  const lp = world.levelsPlan;
+  const src = b.levelsSrc === 'plan' && lp ? t.srcPlan(b.levels!, lp.plan, lp.surveyed, lp.url) : b.levels != null ? t.srcLevels(b.levels) : b.height != null ? t.srcHeight(b.height, b.floors) : t.srcAssumed(b.floors);
   $('.b-meta').innerHTML = `${src} · ${t.ground(Math.round(b.ground))} · <a href="${osmUrl(b)}" target="_blank" rel="noopener">OSM ↗</a>`;
   // Надёжность: уточнённая пользователем этажность уже не предположение.
   const r = reliability(world, b, b.assumed && state.floorsOverride == null);
