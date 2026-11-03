@@ -50,52 +50,52 @@ rank,osm,label,building,neighbours_affected,winter_sun_hours,sea_directions,neig
 49,https://www.openstreetmap.org/way/1411904944,building near Donji put,yes,6,5.8,2,68,18.766561,42.446978
 50,https://www.openstreetmap.org/way/963726467,building near Monda Sbutege,yes,6,5.7,2,58,18.751256,42.448231
 51,https://www.openstreetmap.org/way/1411904960,building near Sveti Ivan,yes,6,5.5,1,82,18.766775,42.447924
-52,https://www.openstreetmap.org/way/305518338,building near Zanatska ulica,yes,6,5.5,0,107,18.772109,42.425512
-53,https://www.openstreetmap.org/way/236429080,building near Donji put,yes,6,5.2,3,44,18.765182,42.443881
-54,https://www.openstreetmap.org/way/225999155,building near Zlatne njive,yes,6,5,5,63,18.769759,42.431055
-55,https://www.openstreetmap.org/way/963726393,building near Monda Sbutege,yes,6,5,2,49,18.753419,42.448526
-56,https://www.openstreetmap.org/way/224396402,building near Zlatne njive,yes,6,4.8,4,59,18.769204,42.430554
-57,https://www.openstreetmap.org/way/236429133,building near Donji put,yes,6,4.8,4,63,18.766064,42.446978
-58,https://www.openstreetmap.org/way/236424629,building near Donji put,yes,6,4.8,3,42,18.765566,42.445365
-59,https://www.openstreetmap.org/way/236429998,building,yes,6,4.7,4,39,18.764725,42.466898
-60,https://www.openstreetmap.org/way/224396407,building near Zlatne njive,yes,6,4.7,3,59,18.769222,42.430710
-61,https://www.openstreetmap.org/way/239493500,building,yes,6,4.7,2,50,18.761208,42.420672
-62,https://www.openstreetmap.org/way/363908554,building,yes,6,4.5,4,29,18.765250,42.449631
-63,https://www.openstreetmap.org/way/236424972,building near Put I Bokeljske Brigade,yes,6,4.3,3,47,18.764843,42.443478
-64,https://www.openstreetmap.org/way/963726465,building near Monda Sbutege,yes,6,4.3,3,69,18.751717,42.448317
-65,https://www.openstreetmap.org/way/269997312,building near Zanatska ulica,yes,6,4.3,3,48,18.771849,42.423128
-66,https://www.openstreetmap.org/way/963726472,building near Monda Sbutege,yes,6,4.3,3,64,18.751388,42.448673
-67,https://www.openstreetmap.org/way/1411904951,building near Donji put,yes,6,4.3,2,78,18.766821,42.447246
-68,https://www.openstreetmap.org/way/225999192,building near Put I Bokeljske Brigade,yes,6,4.2,4,57,18.768276,42.431374
-69,https://www.openstreetmap.org/way/226311493,building near Ivo Brkanović,yes,6,4.2,3,46,18.761514,42.418889
-70,https://www.openstreetmap.org/way/192113912,building near Put II Dalmatinske Brigade,yes,6,4,4,21,18.758729,42.426915
-71,https://www.openstreetmap.org/way/225999191,building near Put I Bokeljske Brigade,yes,6,3.8,5,56,18.768280,42.431930
-72,https://www.openstreetmap.org/way/963726462,building near Monda Sbutege,yes,6,3.8,4,68,18.751834,42.448195
-73,https://www.openstreetmap.org/way/963727186,building near Monda Sbutege,yes,6,3.8,3,48,18.750258,42.448604
-74,https://www.openstreetmap.org/way/1211277263,building near Put II Dalmatinske Brigade,yes,6,3.8,3,32,18.753619,42.442717
-75,https://www.openstreetmap.org/way/224396441,building near Zlatne njive,yes,6,3.8,4,53,18.769459,42.430516
-76,https://www.openstreetmap.org/way/226148229,building near Ulica Sv. Luke,yes,6,3.8,2,45,18.767605,42.412994
-77,https://www.openstreetmap.org/way/236424654,building,yes,6,3.7,4,42,18.766259,42.444837
-78,https://www.openstreetmap.org/way/963726461,building near Monda Sbutege,yes,6,3.7,4,62,18.751596,42.448175
-79,https://www.openstreetmap.org/way/225999184,building near Put I Bokeljske Brigade,yes,6,3.7,4,36,18.767588,42.431737
-80,https://www.openstreetmap.org/way/1442684661,building near Ivo Brkanović,yes,6,3.7,4,52,18.761687,42.419124
-81,https://www.openstreetmap.org/way/305481265,building near Zanatska ulica,yes,6,3.5,1,96,18.772282,42.425222
-82,https://www.openstreetmap.org/way/236429010,building near Put I Bokeljske Brigade,yes,6,3.5,3,38,18.765102,42.443006
-83,https://www.openstreetmap.org/way/225999180,building near Put I Bokeljske Brigade,yes,6,3.3,5,56,18.768752,42.432134
-84,https://www.openstreetmap.org/way/236424632,building near Donji put,yes,6,3.3,4,51,18.766327,42.446598
-85,https://www.openstreetmap.org/way/1176697956,building near Zlatne njive,yes,6,3.3,4,65,18.768749,42.430916
-86,https://www.openstreetmap.org/way/1176699887,building near Sveti Ivan,yes,6,3.3,4,80,18.767668,42.447985
-87,https://www.openstreetmap.org/way/225992586,building near Zlatne njive,yes,6,3.2,5,66,18.768697,42.430767
-88,https://www.openstreetmap.org/way/632228906,Bokeljski Dvori,house,6,2.8,4,27,18.754254,42.442130
-89,https://www.openstreetmap.org/way/963726476,building near Monda Sbutege,yes,6,2.8,3,60,18.750944,42.448760
-90,https://www.openstreetmap.org/way/236429145,building,yes,6,2.7,4,41,18.765634,42.443189
-91,https://www.openstreetmap.org/way/963726438,building near Monda Sbutege,yes,6,2.7,4,63,18.752305,42.448263
-92,https://www.openstreetmap.org/way/236424671,building near Donji put,yes,6,2.7,6,52,18.765822,42.447072
-93,https://www.openstreetmap.org/way/963726441,building near Monda Sbutege,yes,6,2.5,3,69,18.751702,42.448698
-94,https://www.openstreetmap.org/way/192308902,building near Put II Dalmatinske Brigade,yes,6,2.2,4,26,18.754619,42.442470
-95,https://www.openstreetmap.org/way/185949086,building near Ulica Juraj Caric,yes,6,2,5,49,18.768520,42.435292
-96,https://www.openstreetmap.org/way/225992533,building near Put I Bokeljske Brigade,yes,6,1.5,5,57,18.768433,42.430876
-97,https://www.openstreetmap.org/way/963726445,building near Put II Dalmatinske Brigade,yes,6,1.3,5,61,18.751728,42.449122
-98,https://www.openstreetmap.org/way/225999209,building near Put I Bokeljske Brigade,yes,6,1,4,36,18.767624,42.431986
-99,https://www.openstreetmap.org/way/225999161,building near Put I Bokeljske Brigade,yes,6,0.8,5,44,18.767722,42.431446
-100,https://www.openstreetmap.org/way/192308918,building near Put II Dalmatinske Brigade,yes,6,0.3,8,27,18.754502,42.442759
+52,https://www.openstreetmap.org/way/305518338,Stari Grad 492,yes,6,5.5,0,107,18.772109,42.425512
+53,https://www.openstreetmap.org/way/225999155,building near Zlatne njive,yes,6,5,5,63,18.769759,42.431055
+54,https://www.openstreetmap.org/way/963726393,building near Monda Sbutege,yes,6,5,2,49,18.753419,42.448526
+55,https://www.openstreetmap.org/way/224396402,Jadranska 10,yes,6,4.8,4,59,18.769204,42.430554
+56,https://www.openstreetmap.org/way/236429133,building near Donji put,yes,6,4.8,4,63,18.766064,42.446978
+57,https://www.openstreetmap.org/way/236424629,building near Donji put,yes,6,4.8,3,42,18.765566,42.445365
+58,https://www.openstreetmap.org/way/236429998,building,yes,6,4.7,4,39,18.764725,42.466898
+59,https://www.openstreetmap.org/way/224396407,building near Zlatne njive,yes,6,4.7,3,59,18.769222,42.430710
+60,https://www.openstreetmap.org/way/239493500,building,yes,6,4.7,2,50,18.761208,42.420672
+61,https://www.openstreetmap.org/way/363908554,building,yes,6,4.5,4,29,18.765250,42.449631
+62,https://www.openstreetmap.org/way/963726465,building near Monda Sbutege,yes,6,4.3,3,69,18.751717,42.448317
+63,https://www.openstreetmap.org/way/269997312,building near Zanatska ulica,yes,6,4.3,3,48,18.771849,42.423128
+64,https://www.openstreetmap.org/way/963726472,building near Monda Sbutege,yes,6,4.3,3,64,18.751388,42.448673
+65,https://www.openstreetmap.org/way/1411904951,building near Donji put,yes,6,4.3,2,78,18.766821,42.447246
+66,https://www.openstreetmap.org/way/225999192,building near Put I Bokeljske Brigade,yes,6,4.2,4,57,18.768276,42.431374
+67,https://www.openstreetmap.org/way/226311493,building near Ivo Brkanović,yes,6,4.2,3,46,18.761514,42.418889
+68,https://www.openstreetmap.org/way/192113912,building near Put II Dalmatinske Brigade,yes,6,4,4,21,18.758729,42.426915
+69,https://www.openstreetmap.org/way/225999191,building near Put I Bokeljske Brigade,yes,6,3.8,5,56,18.768280,42.431930
+70,https://www.openstreetmap.org/way/963726462,building near Monda Sbutege,yes,6,3.8,4,68,18.751834,42.448195
+71,https://www.openstreetmap.org/way/963727186,building near Monda Sbutege,yes,6,3.8,3,48,18.750258,42.448604
+72,https://www.openstreetmap.org/way/1211277263,building near Put II Dalmatinske Brigade,yes,6,3.8,3,32,18.753619,42.442717
+73,https://www.openstreetmap.org/way/224396441,building near Zlatne njive,yes,6,3.8,4,53,18.769459,42.430516
+74,https://www.openstreetmap.org/way/226148229,building near Ulica Sv. Luke,yes,6,3.8,2,45,18.767605,42.412994
+75,https://www.openstreetmap.org/way/236424654,building,yes,6,3.7,4,42,18.766259,42.444837
+76,https://www.openstreetmap.org/way/963726461,building near Monda Sbutege,yes,6,3.7,4,62,18.751596,42.448175
+77,https://www.openstreetmap.org/way/225999184,building near Put I Bokeljske Brigade,yes,6,3.7,4,36,18.767588,42.431737
+78,https://www.openstreetmap.org/way/1442684661,building near Ivo Brkanović,yes,6,3.7,4,52,18.761687,42.419124
+79,https://www.openstreetmap.org/way/305481265,building near Zanatska ulica,yes,6,3.5,1,96,18.772282,42.425222
+80,https://www.openstreetmap.org/way/236429010,building near Put I Bokeljske Brigade,yes,6,3.5,3,38,18.765102,42.443006
+81,https://www.openstreetmap.org/way/225999180,building near Put I Bokeljske Brigade,yes,6,3.3,5,56,18.768752,42.432134
+82,https://www.openstreetmap.org/way/236424632,building near Donji put,yes,6,3.3,4,51,18.766327,42.446598
+83,https://www.openstreetmap.org/way/1176697956,Jadranska 19,yes,6,3.3,4,65,18.768749,42.430916
+84,https://www.openstreetmap.org/way/1176699887,building near Sveti Ivan,yes,6,3.3,4,80,18.767668,42.447985
+85,https://www.openstreetmap.org/way/225992586,building near Zlatne njive,yes,6,3.2,5,66,18.768697,42.430767
+86,https://www.openstreetmap.org/way/632228906,Bokeljski Dvori,house,6,2.8,4,27,18.754254,42.442130
+87,https://www.openstreetmap.org/way/963726476,building near Monda Sbutege,yes,6,2.8,3,60,18.750944,42.448760
+88,https://www.openstreetmap.org/way/236429145,building,yes,6,2.7,4,41,18.765634,42.443189
+89,https://www.openstreetmap.org/way/963726438,building near Monda Sbutege,yes,6,2.7,4,63,18.752305,42.448263
+90,https://www.openstreetmap.org/way/236424671,building near Donji put,yes,6,2.7,6,52,18.765822,42.447072
+91,https://www.openstreetmap.org/way/963726441,building near Monda Sbutege,yes,6,2.5,3,69,18.751702,42.448698
+92,https://www.openstreetmap.org/way/192308902,building near Put II Dalmatinske Brigade,yes,6,2.2,4,26,18.754619,42.442470
+93,https://www.openstreetmap.org/way/185949086,building near Ulica Juraj Caric,yes,6,2,5,49,18.768520,42.435292
+94,https://www.openstreetmap.org/way/225992533,building near Put I Bokeljske Brigade,yes,6,1.5,5,57,18.768433,42.430876
+95,https://www.openstreetmap.org/way/963726445,building near Put II Dalmatinske Brigade,yes,6,1.3,5,61,18.751728,42.449122
+96,https://www.openstreetmap.org/way/225999209,building near Put I Bokeljske Brigade,yes,6,1,4,36,18.767624,42.431986
+97,https://www.openstreetmap.org/way/225999161,building near Put I Bokeljske Brigade,yes,6,0.8,5,44,18.767722,42.431446
+98,https://www.openstreetmap.org/way/192308918,building near Put II Dalmatinske Brigade,yes,6,0.3,8,27,18.754502,42.442759
+99,https://www.openstreetmap.org/way/1211277595,building near Put II Dalmatinske Brigade,yes,6,0,7,26,18.746183,42.455949
+100,https://www.openstreetmap.org/way/305481236,building near Pjaca od Oružja,yes,5,13,1,120,18.770760,42.424708
